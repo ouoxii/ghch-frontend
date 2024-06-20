@@ -6,6 +6,7 @@ import CreateTeamBlock from './CreateTeamBlock';
 import OptionSection from './OptionSection';
 import TeamOverview from './TeamOverview';
 import PRDiscussion from './PRDiscussion';
+import BranchChart from './BranchChart';
 
 function App() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -30,6 +31,7 @@ function App() {
         <main className="content">
           <Routes>
             <Route path="/" element={<CreateTeamBlock />} />
+            <Route path="/branchchart" element={<BranchChart />} />
             <Route path="/team-overview" element={<TeamOverview />} />
             <Route path="/PRDiscussion" element={<PRDiscussion />} />
           </Routes>
