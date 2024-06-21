@@ -16,26 +16,26 @@ function App() {
   };
 
   const location = window.location;
-  useEffect(() => {
-    const queryParams = new URLSearchParams(location.search);
-    const id = queryParams.get('id');
-    const username = queryParams.get('username');
-    const token = queryParams.get('token');
+  const queryParams = new URLSearchParams(location.search);
+  const paraId = queryParams.get('id');
+  const paraIusername = queryParams.get('username');
+  const paraToken = queryParams.get('token');
 
-    if (id && username && token) {
-      Cookies.set('id', id, { expires: 1 });
-      Cookies.set('username', username, { expires: 1 });
-      Cookies.set('token', token, { expires: 1 });
-    }
-  }, [location]);
+  if (paraId && paraIusername && paraToken) {
+    Cookies.set('id', paraId, { expires: 1 });
+    Cookies.set('username', paraIusername, { expires: 1 });
+    Cookies.set('token', paraToken, { expires: 1 });
+  }
 
   // 在這裡檢查 id、username、token 是否存在
+  //window.location.reload();
   const id = Cookies.get('id');
   const username = Cookies.get('username');
   const token = Cookies.get('token');
+  console.log(id, username, token);
 
   const handleLogin = () => {
-    window.location.href = `https://localhost:3000/login`;
+    window.location.href = `http://localhost:8080/login`;
   };
 
   if (id && username && token) {
