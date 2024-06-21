@@ -35,7 +35,7 @@ function App() {
   const token = Cookies.get('token');
 
   const handleLogin = () => {
-    window.location.href = `https://github.com/login/oauth/authorize?client_id=YOUR_CLIENT_ID&redirect_uri=${encodeURIComponent('http://localhost:3000/')}`;
+    window.location.href = `https://localhost:3000/login`;
   };
 
   if (id && username && token) {
