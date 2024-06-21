@@ -71,8 +71,9 @@ function App() {
         <button onClick={handleLogin} className="relative px-6 py-3 z-10 bg-white text-gray-800 font-semibold rounded-lg shadow-lg opacity-75">
           <span>Login with GitHub</span>
         </button>
-        <div className="absolute inset-0 w-[200px] h-[200px] z-0 top-1/2 left-[calc(50%-100px)] rounded-full bg-blue-200 blur-2xl"></div>
-        <div className="absolute inset-0 w-[200px] h-[200px] z-1 top-[calc(50%-100px)] left-1/2 rounded-full bg-white blur-lg"></div>
+        <div className="absolute inset-0 w-[200px] h-[200px] z-10 top-[calc(50%-80px)] left-[calc(50%-170px)] rounded-full bg-blue-200 blur-2xl"></div>
+        <div style={{backgroundImage: 'radial-gradient(circle, #ffffff, #fafafa)'}} 
+        className="absolute inset-0 w-[200px] h-[200px] z-0 top-[calc(50%-150px)] left-[calc(50%-50px)] rounded-full bg-white blur-lg"></div>
       </div>
     );
   }
