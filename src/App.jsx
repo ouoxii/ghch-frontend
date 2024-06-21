@@ -35,7 +35,7 @@ function App() {
   const token = Cookies.get('token');
 
   const handleLogin = () => {
-    window.location.href = `https://github.com/login/oauth/authorize?client_id=YOUR_CLIENT_ID&redirect_uri=${encodeURIComponent('http://localhost:3000/')}`;
+    window.location.href = `http://localhost:8080/login`;
   };
 
   if (id && username && token) {
@@ -67,13 +67,19 @@ function App() {
   } else {
     return (
       <div className="w-full flex flex-col items-center justify-center h-screen bg-gradient-to-b from-neutral-200 to-slate-50">
-        <h1 className="text-4xl z-20 font-bold mb-8">GHCH</h1>
-        <button onClick={handleLogin} className="relative px-6 py-3 z-10 bg-white text-gray-800 font-semibold rounded-lg shadow-lg opacity-75">
+        <h1 className="text-6xl text-black z-30 font-bold mb-8 opacity-70 font-red-hat">GHCH</h1>
+        <p className="text-base font-courier z-30 mb-10">new version control experiences with intuitive guidance and visualizations.</p>
+        <button onClick={handleLogin} className="relative px-6 py-3 z-20 bg-white text-gray-800 font-semibold rounded-lg shadow-lg opacity-60
+        hover:transform hover:-translate-y-0.2 hover:shadow-2xl transition duration-300">
           <span>Login with GitHub</span>
         </button>
-        <div className="absolute inset-0 w-[200px] h-[200px] z-10 top-[calc(50%-80px)] left-[calc(50%-170px)] rounded-full bg-blue-200 blur-2xl"></div>
-        <div style={{backgroundImage: 'radial-gradient(circle, #ffffff, #fafafa)'}} 
-        className="absolute inset-0 w-[200px] h-[200px] z-0 top-[calc(50%-150px)] left-[calc(50%-50px)] rounded-full bg-white blur-lg"></div>
+        <div className="absolute inset-0 w-[200px] h-[250px] z-0 top-[calc(50%-180px)] left-[calc(50%-80px)] rounded-full blur-md
+        bg-gradient-radial from-white to-neutral-50"></div>
+        <div className="absolute inset-0 w-[100px] h-[100px] z-0 top-[calc(50%+10px)] left-[calc(50%-0px)] rounded-full blur-2xl
+        bg-gradient-radial from-pink-300 to-neutral-50"></div>
+        <div className="absolute inset-0 w-[200px] h-[250px] z-0 top-[calc(50%-120px)] left-[calc(50%-180px)] rounded-full blur-2xl
+        bg-gradient-radial from-indigo-300 to-neutral-50"></div>
+
       </div>
     );
   }
