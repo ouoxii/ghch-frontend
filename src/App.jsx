@@ -35,7 +35,7 @@ function App() {
   const token = Cookies.get('token');
 
   const handleLogin = () => {
-    window.location.href = `http://localhost:8080/login`;
+    window.location.href = `https://localhost:3000/login`;
   };
 
   if (id && username && token) {
