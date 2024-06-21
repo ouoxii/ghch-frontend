@@ -66,11 +66,11 @@ function App() {
     );
   } else {
     return (
-      <div className="w-full flex flex-col items-center justify-center h-screen bg-gradient-to-b from-neutral-200 to-slate-50">
+      <div className="w-full flex flex-col items-center justify-center h-screen bg-gradient-to-b from-slate-200 to-white">
         <h1 className="text-6xl text-black z-30 font-bold mb-8 opacity-70 font-red-hat">GHCH</h1>
         <p className="text-base font-courier z-30 mb-10">new version control experiences with intuitive guidance and visualizations.</p>
         <button onClick={handleLogin} className="relative px-6 py-3 z-20 bg-white text-gray-800 font-semibold rounded-lg shadow-lg opacity-60
-        hover:transform hover:-translate-y-0.2 hover:shadow-2xl transition duration-300">
+        hover:transform hover:-translate-y-0.5 hover:shadow-2xl transition duration-300">
           <span>Login with GitHub</span>
         </button>
         <div className="absolute inset-0 w-[200px] h-[250px] z-0 top-[calc(50%-180px)] left-[calc(50%-80px)] rounded-full blur-md
