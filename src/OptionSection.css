@@ -43,7 +43,6 @@
 
 .avatar {
     /*個人頭貼*/
-    background: #ddd;
     border-radius: 50%;
     width: 60px;
     height: 60px;
@@ -59,7 +58,8 @@
     background-color: #c6cfdc;
     color: rgb(0, 0, 0);
     border: none;
-    border-radius: 5px;
+    padding: 5px;
+    border-radius: 10px;
     height: 35px;
     cursor: pointer;
     outline: none;

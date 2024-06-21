@@ -34,6 +34,10 @@ function App() {
   const username = Cookies.get('username');
   const token = Cookies.get('token');
 
+  const handleLogin = () => {
+    window.location.href = `https://github.com/login/oauth/authorize?client_id=YOUR_CLIENT_ID&redirect_uri=${encodeURIComponent('http://localhost:3000/')}`;
+  };
+
   if (id && username && token) {
     return (
       <Router>
@@ -64,7 +68,7 @@ function App() {
     return (
       <div className="w-full flex flex-col items-center justify-center h-screen bg-gradient-to-b from-neutral-200 to-slate-50">
         <h1 className="text-4xl z-20 font-bold mb-8">GHCH</h1>
-        <button className="relative px-6 py-3 z-10 bg-white text-gray-800 font-semibold rounded-lg shadow-lg opacity-75">
+        <button onClick={handleLogin} className="relative px-6 py-3 z-10 bg-white text-gray-800 font-semibold rounded-lg shadow-lg opacity-75">
           <span>Login with GitHub</span>
         </button>
         <div className="absolute inset-0 w-[200px] h-[200px] z-0 top-1/2 left-[calc(50%-100px)] rounded-full bg-blue-200 blur-2xl"></div>

@@ -1,23 +1,51 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import Cookies from 'js-cookie';
 import './OptionSection.css';
+import { useNavigate } from 'react-router-dom';
+import avatar from './img/avatar.jpg';
 
 const OptionSection = ({ isVisible, onClose }) => {
     const [activeSection, setActiveSection] = useState('account');
-
-    const toggleSection = (section) => {
-        setActiveSection(section);
-    };
     const [inputData, setInputData] = useState({
         Name: '',
         Email: '',
         dfBranch: ''
     });
+    const [userData, setUserData] = useState({
+        id: '',
+        username: ''
+    });
+
+    const navigate = useNavigate();
+
+    useEffect(() => {
+        const id = Cookies.get('id');
+        const username = Cookies.get('username');
+        if (id && username) {
+            setUserData({ id, username });
+        }
+    }, []);
+
+    const toggleSection = (section) => {
+        setActiveSection(section);
+    };
+
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setInputData(prevState => ({
             ...prevState,
             [name]: value
         }));
+    };
+
+    const handleLogout = () => {
+        Cookies.remove('id');
+        Cookies.remove('username');
+        Cookies.remove('token');
+        setUserData({ id: '', username: '' });
+        onClose();
+        navigate('/'); // Redirect to the root path
+        window.location.reload(); // Reload the page to ensure redirect and clear URL parameters
     };
 
     const handleSubmit = (e) => {
@@ -32,7 +60,6 @@ const OptionSection = ({ isVisible, onClose }) => {
             <div className="info-section" onClick={(e) => e.stopPropagation()}>
                 <div className="info-header">
                     <h2>Options</h2>
-                    {/* close*/}
                 </div>
                 <div className="info-content">
                     <div className="info-hamburgar">
@@ -43,23 +70,27 @@ const OptionSection = ({ isVisible, onClose }) => {
                             Git
                         </div>
                     </div>
-                    <div className="info-item">{/*右邊區塊 */}
+                    <div className="info-item">
                         {activeSection === 'account' && (
                             <div className='info-account-content'>
                                 GitHub.com
-                                <div className='NotLoggedIn'>
-                                    <div>Sing in to your GitHub account to access your repositories.</div>
-                                    <button className='button-class'>Sign into GitHub.com</button>
-                                </div>
-                                <div className='HadLoggedIn'>
-                                    <div className='avatar'></div>
-                                    <div className='user-info'>
-                                        <div className='username'>username</div>
-                                        <div>email:github@gmail.com</div>
+                                {!userData.username ? (
+                                    <div className='NotLoggedIn'>
+                                        <div>Sign in to your GitHub account to access your repositories.</div>
+                                        <button className='button-class'>Sign into GitHub.com</button>
                                     </div>
-                                    <div><button className='button-class'>Sign out of GitHub.com</button></div>
-
-                                </div>
+                                ) : (
+                                    <div className='HadLoggedIn'>
+                                        <div className='avatar'><img src={avatar} alt="頭像" /></div>
+                                        <div className='user-info'>
+                                            <div className='username'>{userData.username}</div>
+                                            <div>ID: {userData.id}</div>
+                                        </div>
+                                        <div>
+                                            <button className='button-class' onClick={handleLogout}>Sign out of GitHub.com</button>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         )}
                         {activeSection === 'git' && (
@@ -76,7 +107,7 @@ const OptionSection = ({ isVisible, onClose }) => {
                                                 placeholder=""
                                             />
                                         </div>
-                                        <div>email</div>
+                                        <div>Email</div>
                                         <div className="form-group">
                                             <input
                                                 type="text"
@@ -86,7 +117,7 @@ const OptionSection = ({ isVisible, onClose }) => {
                                                 placeholder=""
                                             />
                                         </div>
-                                        <div>default branch name for new repositories</div>
+                                        <div>Default branch name for new repositories</div>
                                         <div className="form-group">
                                             <input
                                                 type="text"
@@ -98,18 +129,16 @@ const OptionSection = ({ isVisible, onClose }) => {
                                         </div>
                                     </form>
                                 </div>
-
-
                             </div>
                         )}
                     </div>
                 </div>
                 <div className="info-footer">
-                    <button className="button-class2" onClick={onClose}>save</button>
-                    <button className="button-class2" onClick={onClose}>cancel</button>
+                    <button className="button-class2" onClick={onClose}>Save</button>
+                    <button className="button-class2" onClick={onClose}>Cancel</button>
                 </div>
-            </div >
-        </div >
+            </div>
+        </div>
     );
 };
 
