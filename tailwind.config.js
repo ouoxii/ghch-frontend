@@ -5,5 +5,15 @@ module.exports = {
   theme: {
     extend: {},
   },
+  theme: {
+    extend: {
+      colors: {
+        
+      },
+    },
+  },
+  variants: {
+    extend: {},
+  },
   plugins: [],
 }
