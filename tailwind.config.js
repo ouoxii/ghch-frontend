@@ -10,6 +10,13 @@ module.exports = {
       colors: {
         
       },
+      fontFamily: {
+        'courier': ['Courier New', 'monospace'],
+        'red-hat': ['Red Hat Display', 'sans-serif'],
+      },
+      backgroundImage: {
+        'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
+      },
     },
   },
   variants: {
