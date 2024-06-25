@@ -1,6 +1,14 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import './Sidebar.css';
+import TeamInfo from './TeamInfo';
+
+const pullrequests = [
+    {id: 1, name: 'fix: homepage loading #4'},
+    {id: 2, name: 'feature: add homepage #3'}
+];
+
+const teamname = 'ghch';
 
 const Sidebar = ({ toggleSettings }) => {
     const [openIndexes, setOpenIndexes] = useState([]);
@@ -28,6 +36,7 @@ const Sidebar = ({ toggleSettings }) => {
                     <div className="avatar"></div>
                     <div className="profile-text">我的團隊</div>
                 </div>
+                <TeamInfo teamName={teamname} pullrequests={pullrequests}/>
                 <Link to="/team-overview" className="menu-item">
                     <div className="menu-title" onClick={() => toggleItem(1)}>
                         專案1
@@ -45,7 +54,7 @@ const Sidebar = ({ toggleSettings }) => {
                         </div>
                     )}
                 </Link>
-                <Link to="#" className="menu-item" onClick={() => toggleItem(2)}>
+                {/* <Link to="#" className="menu-item" onClick={() => toggleItem(2)}>
                     <div className="menu-title">
                         專案2
                         {openIndexes.includes(2) ? (
@@ -60,7 +69,7 @@ const Sidebar = ({ toggleSettings }) => {
                             <div>Pull request #2 討論區</div>
                         </div>
                     )}
-                </Link>
+                </Link> */}
                 <div className="settings">
                     <button className="create-team-button"><Link to="/">建立新團隊</Link></button>
                     <div className="settings-icon" onClick={toggleSettings}></div>
