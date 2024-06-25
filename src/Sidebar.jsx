@@ -96,7 +96,7 @@ const Sidebar = ({ toggleSettings }) => {
                     )}
                 </Link> */}
                 <div className="settings">
-                    <button className="create-team-button"><Link to="/">建立新團隊</Link></button>
+                    <Link to="/"> <button className="create-team-button">建立新團隊</button></Link>
                     <div className="settings-icon" onClick={toggleSettings}></div>
                 </div>
             </div>

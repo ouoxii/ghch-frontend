@@ -1,5 +1,6 @@
 import React, { useEffect } from 'react';
 import './TeamOverview.css';
+import { Link } from 'react-router-dom';
 import timelineData from './data/timelineData.json'; // Adjust the path as necessary
 
 const TeamOverview = () => {
@@ -48,7 +49,9 @@ const TeamOverview = () => {
     return (
         <div className="team-overview">
             <div id="example7.1" style={{ height: '300px' }}></div>
+            <div><Link to="/branchchart"> <button >分支進度圖</button></Link></div>
         </div>
+
     );
 };
 

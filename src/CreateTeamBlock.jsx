@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import $ from 'jquery';
+import Cookies from 'js-cookie';
 import './CreateTeamBlock.css';
 
 const CreateTeamBlock = () => {
@@ -16,14 +18,47 @@ const CreateTeamBlock = () => {
         }));
     };
 
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        console.log(inputData);
-    };
+    useEffect(() => {
+        const handleSubmit = (event) => {
+            event.preventDefault();
+
+            const teamName = inputData.teamName;
+            const repoName = inputData.repoName;
+            const owner = Cookies.get('username');
+            const token = Cookies.get('token');
+
+            const requestData = {
+                teamName: teamName,
+                repoName: repoName,
+                owner: owner
+            };
+
+            $.ajax({
+                url: `http://localhost:8081/teams?token=${token}`,
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify(requestData),
+                success: function (response) {
+                    console.log("成功：" + JSON.stringify(response));
+                    alert("創建成功");
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    console.error("There was an error creating the team!", errorThrown);
+                }
+            });
+        };
+
+        $("#createTeamForm").on("submit", handleSubmit);
+
+        // Cleanup event listener on component unmount
+        return () => {
+            $("#createTeamForm").off("submit", handleSubmit);
+        };
+    }, [inputData]);
 
     return (
         <div className="form-container">
-            <form onSubmit={handleSubmit}>
+            <form id="createTeamForm">
                 <div className="form-group">
                     <input
                         type="text"
@@ -48,7 +83,7 @@ const CreateTeamBlock = () => {
                         name="member"
                         value={inputData.member}
                         onChange={handleInputChange}
-                        placeholder="選擇要邀請的成員"
+                        placeholder="選擇要邀請的成員 (用逗號分隔)"
                     />
                 </div>
                 <button type="submit" className="submit-button">創建團隊</button>
