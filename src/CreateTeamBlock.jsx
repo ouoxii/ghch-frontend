@@ -25,7 +25,7 @@ const CreateTeamBlock = () => {
             const teamName = inputData.teamName;
             const repoName = inputData.repoName;
             const owner = Cookies.get('username');
-            const token = Cookies.get('Token');
+            const token = Cookies.get('token');
 
             const requestData = {
                 teamName: teamName,
