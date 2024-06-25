@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import './Sidebar.css';
 import TeamInfo from './TeamInfo';
+import Cookies from 'js-cookie';
 
 const pullrequests = [
-    {id: 1, name: 'fix: homepage loading #4'},
-    {id: 2, name: 'feature: add homepage #3'}
+    { id: 1, name: 'fix: homepage loading #4' },
+    { id: 2, name: 'feature: add homepage #3' }
 ];
 
 const teamname = 'ghch';
@@ -13,6 +14,8 @@ const teamname = 'ghch';
 const Sidebar = ({ toggleSettings }) => {
     const [openIndexes, setOpenIndexes] = useState([]);
     const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+    const [teams, setTeam] = useState([]);
+    const [error, setError] = useState(null);
 
     const toggleItem = (index) => {
         setOpenIndexes(prevIndexes =>
@@ -26,6 +29,26 @@ const Sidebar = ({ toggleSettings }) => {
         setIsSidebarOpen(!isSidebarOpen);
     };
 
+    const username = Cookies.get('username');
+
+    useEffect(() => {
+        const fetchTeamMembers = async () => {
+            try {
+                const response = await fetch(`http://localhost:8081/team-members/${username}`);
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                const data = await response.json();
+                setTeam(data);
+                console.log(teams)
+            } catch (error) {
+                setError(error);
+            }
+        };
+
+        fetchTeamMembers();
+    }, [username]);
+
     return (
         <>
             <button className="menu-icon" onClick={toggleSidebar}>
@@ -36,7 +59,9 @@ const Sidebar = ({ toggleSettings }) => {
                     <div className="avatar"></div>
                     <div className="profile-text">我的團隊</div>
                 </div>
-                <TeamInfo teamName={teamname} pullrequests={pullrequests}/>
+                {teams.map(team => (
+                    <TeamInfo teamName={teamname} pullrequests={pullrequests} team={team}/>
+                ))}
                 <Link to="/team-overview" className="menu-item">
                     <div className="menu-title" onClick={() => toggleItem(1)}>
                         專案1
