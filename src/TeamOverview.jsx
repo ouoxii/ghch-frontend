@@ -12,6 +12,7 @@ const TeamOverview = () => {
         homepage: '',
         auto_init: true
     });
+    const [errors, setErrors] = useState({});
 
     useEffect(() => {
         const script = document.createElement('script');
@@ -63,7 +64,31 @@ const TeamOverview = () => {
         }));
     };
 
+    const validateForm = () => {
+        const newErrors = {};
+        const specialCharPattern = /[!@#$%^&*(),.?":{}|<>]/;
+
+        if (!repoData.name || specialCharPattern.test(repoData.name)) {
+            newErrors.name = '名稱不能為空白或包含特殊符號';
+        }
+
+        if (!repoData.description || specialCharPattern.test(repoData.description)) {
+            newErrors.description = '描述不能為空白或包含特殊符號';
+        }
+
+        if (!repoData.homepage || specialCharPattern.test(repoData.homepage)) {
+            newErrors.homepage = '主頁不能為空白或包含特殊符號';
+        }
+
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
     const createRepo = async () => {
+        if (!validateForm()) {
+            return;
+        }
+
         const token = Cookies.get('token');
 
         try {
@@ -112,6 +137,7 @@ const TeamOverview = () => {
                                     onChange={handleInputChange}
                                     placeholder="儲存庫名稱"
                                 />
+                                {errors.name && <span className="error">{errors.name}</span>}
                             </div>
                             <div className="form-group">
                                 <label>描述:</label>
@@ -122,6 +148,7 @@ const TeamOverview = () => {
                                     onChange={handleInputChange}
                                     placeholder="儲存庫描述"
                                 />
+                                {errors.description && <span className="error">{errors.description}</span>}
                             </div>
                             <div className="form-group">
                                 <label>主頁:</label>
@@ -132,6 +159,7 @@ const TeamOverview = () => {
                                     onChange={handleInputChange}
                                     placeholder="主頁URL"
                                 />
+                                {errors.homepage && <span className="error">{errors.homepage}</span>}
                             </div>
                             <div className="form-group">
                                 <label>
@@ -146,13 +174,10 @@ const TeamOverview = () => {
                                     />
                                     自動初始化
                                 </label>
-
-
                             </div>
                             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', width: '100%', }}>
                                 <button type="button" className='feat-button' onClick={createRepo}>創建儲存庫</button>
                             </div>
-
                         </form>
                     </div>
                 </div>
