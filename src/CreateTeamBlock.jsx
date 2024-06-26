@@ -12,6 +12,8 @@ const CreateTeamBlock = () => {
         auto_init: true
     });
 
+    const [errors, setErrors] = useState({});
+
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setInputData(prevState => ({
@@ -20,8 +22,23 @@ const CreateTeamBlock = () => {
         }));
     };
 
+    const validateForm = () => {
+        const newErrors = {};
+        if (!inputData.teamName) {
+            newErrors.teamName = '團隊名稱是必填項';
+        }
+        if (!inputData.repoName) {
+            newErrors.repoName = '儲存庫名稱是必填項';
+        }
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
+
     const handleSubmit = async (event) => {
         event.preventDefault();
+        if (!validateForm()) {
+            return;
+        }
 
         const teamName = inputData.teamName;
         const repoName = inputData.repoName;
@@ -52,7 +69,7 @@ const CreateTeamBlock = () => {
 
             console.log("成功創建團隊：" + JSON.stringify(teamResponse));
             alert("成功創建團隊");
-            console.log(repoRequestData);
+
             // Create repository
             const repoResponse = await fetch(`http://localhost:3001/repo/create?token=${token}`, {
                 method: 'POST',
@@ -86,6 +103,7 @@ const CreateTeamBlock = () => {
                         onChange={handleInputChange}
                         placeholder="團隊名稱"
                     />
+                    {errors.teamName && <span className="error">{errors.teamName}</span>}
                 </div>
                 <div className="form-group">
                     <input
@@ -95,6 +113,7 @@ const CreateTeamBlock = () => {
                         onChange={handleInputChange}
                         placeholder="儲存庫名稱"
                     />
+                    {errors.repoName && <span className="error">{errors.repoName}</span>}
                 </div>
                 <div className="form-group">
                     <input
