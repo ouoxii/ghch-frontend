@@ -9,10 +9,17 @@ import PRDiscussion from './PRDiscussion';
 import BranchChart from './BranchChart';
 import Cookies from 'js-cookie';
 
+
 function App() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+
   const toggleSettings = () => {
     setIsSettingsOpen(!isSettingsOpen);
+  };
+
+  const toggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen);
   };
 
   const location = window.location;
@@ -50,15 +57,24 @@ function App() {
             </div>
           </div>
         )}
-        <div className="app">
-          <Sidebar toggleSettings={toggleSettings} />
-          <main className="content">
-            <Routes>
-              <Route path="/" element={<CreateTeamBlock />} />
-              <Route path="/branchchart" element={<BranchChart />} />
-              <Route path="/team-overview" element={<TeamOverview />} />
-              <Route path="/PRDiscussion" element={<PRDiscussion />} />
-            </Routes>
+        <div className='flex h-screen overflow-hidden'>
+
+          <Sidebar toggleSettings={toggleSettings} isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
+          <main className={`absolute flex overflow-hidden h-screen top-0 left-[220px] z-0 transition-transform transform ${isSidebarOpen ? 'translate-x-0 w-[calc(100%-220px)]' : '-translate-x-[220px] w-[calc(100%-1px)]'}`}>
+            <div className='flex'>
+              <button className="h-10 w-10 " onClick={toggleSidebar}>
+                ☰
+              </button>
+            </div>
+            <div className='flex overflow-hidden'>
+              <Routes>
+                <Route path="/" element={<CreateTeamBlock />} />
+                <Route path="/branchchart" element={<BranchChart />} />
+                <Route path="/team-overview" element={<TeamOverview />} />
+                <Route path="/PRDiscussion" element={<PRDiscussion />} />
+              </Routes>
+            </div>
+
           </main>
         </div>
       </Router>

@@ -1,9 +1,9 @@
-.sidebar {
+/* .sidebar {
     width: 300px;
     background: #475468;
     padding: 10px;
     height: 100%;
-}
+} */
 
 .profile-section {
     text-align: center;
@@ -68,7 +68,7 @@
     align-items: center;
 }
 
-.settings-icon {
+/* .settings-icon {
     background-image: url('./img/gear.png');
     background-size: contain;
     position: absolute;
@@ -78,7 +78,7 @@
     width: 45px;
     height: 45px;
     vertical-align: middle;
-}
+} */
 
 .menu-right {
     float: right;
@@ -123,9 +123,9 @@
     background-color: #365f9b;
 }
 
-.menu-icon {
+/* .menu-icon {
     display: none;
-}
+} */
 
 /* RWD not completed */
 @media (max-width: 768px) {
@@ -133,10 +133,10 @@
         display: none;
     }
 
-    .menu-icon {
+    /* .menu-icon {
         display: block;
         position: fixed;
         top: 0;
         left: 0;
-    }
+    } */
 }

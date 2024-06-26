@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import Cookies from 'js-cookie';
+import downChevron from './img/down-chevron.png';
+import rightChevron from './img/right-chevron.png';
 
 
 const TeamInfo = ({ teamName, pullrequests, team }) => {
@@ -19,15 +20,15 @@ const TeamInfo = ({ teamName, pullrequests, team }) => {
                     <div>{team.teamName}</div>
                 </Link>
                 {open ? (
-                    <img className="ml-auto w-[20px] h-[20px]" src="down-chevron.png" alt="向下" onClick={() => toggleItem()} />
+                    <img className="ml-auto w-[20px] h-[20px]" src={downChevron} alt="向下" onClick={() => toggleItem()} />
                 ) : (
-                    <img className="ml-auto w-[20px] h-[20px]" src="right-chevron.png" alt="向右" onClick={() => toggleItem()} />
+                    <img className="ml-auto w-[20px] h-[20px]" src={rightChevron} alt="向右" onClick={() => toggleItem()} />
                 )}
             </div>
             {open && (
-                <ul className="">
+                <ul >
                     {pullrequests.map(pr => (
-                        <li key={pr.id}><Link to={`/PRDiscussion`} className=' p-2 block transition duration-300 ease-in-out rounded-lg'>{pr.name}</Link></li>
+                        <li key={pr.id} className><Link to={`/PRDiscussion?prId=id`} className=' hover:bg-blue-200 p-2 block rounded-lg'>{pr.name}</Link></li>
                     ))}
                     {/* <div><Link to="/PRDiscussion">Pull request #1 討論區</Link></div>
                     <div><Link to="/PRDiscussion">Pull request #2 討論區</Link></div> */}

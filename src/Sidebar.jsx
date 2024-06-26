@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import './Sidebar.css';
 import TeamInfo from './TeamInfo';
 import Cookies from 'js-cookie';
+import settingImg from './img/gear.png';
 
 const pullrequests = [
     { id: 1, name: 'fix: homepage loading #4' },
@@ -11,23 +12,11 @@ const pullrequests = [
 
 const teamname = 'ghch';
 
-const Sidebar = ({ toggleSettings }) => {
-    const [openIndexes, setOpenIndexes] = useState([]);
-    const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+const Sidebar = ({ toggleSettings, isSidebarOpen, toggleSidebar}) => {
     const [teams, setTeam] = useState([]);
     const [error, setError] = useState(null);
 
-    const toggleItem = (index) => {
-        setOpenIndexes(prevIndexes =>
-            prevIndexes.includes(index)
-                ? prevIndexes.filter(i => i !== index)
-                : [...prevIndexes, index]
-        );
-    };
-
-    const toggleSidebar = () => {
-        setIsSidebarOpen(!isSidebarOpen);
-    };
+   
 
     const username = Cookies.get('username');
 
@@ -49,12 +38,13 @@ const Sidebar = ({ toggleSettings }) => {
         fetchTeamMembers();
     }, [username]);
 
+
     return (
-        <>
-            <button className="menu-icon" onClick={toggleSidebar}>
+        <div className={`h-screen z-10 bg-slate-100 flex flex-col items-start  transition-transform transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+            <button className="h-10 w-10 " onClick={toggleSidebar}>
                 ☰
             </button>
-            <div className={`sidebar ${isSidebarOpen ? 'open' : ''}`}>
+            <div className={`w-[250px] p-1 h-full`}>
                 <div className="profile-section">
                     <div className="avatar"></div>
                     <div className="profile-text">我的團隊</div>
@@ -62,7 +52,7 @@ const Sidebar = ({ toggleSettings }) => {
                 {teams.map(team => (
                     <TeamInfo teamName={teamname} pullrequests={pullrequests} team={team}/>
                 ))}
-                <Link to="/team-overview" className="menu-item">
+                {/* <Link to="/team-overview" className="menu-item">
                     <div className="menu-title" onClick={() => toggleItem(1)}>
                         專案1
                         {openIndexes.includes(1) ? (
@@ -78,29 +68,13 @@ const Sidebar = ({ toggleSettings }) => {
 
                         </div>
                     )}
-                </Link>
-                {/* <Link to="#" className="menu-item" onClick={() => toggleItem(2)}>
-                    <div className="menu-title">
-                        專案2
-                        {openIndexes.includes(2) ? (
-                            <img className="menu-right" src="down-chevron.png" alt="向下" />
-                        ) : (
-                            <img className="menu-right" src="right-chevron.png" alt="向右" />
-                        )}
-                    </div>
-                    {openIndexes.includes(2) && (
-                        <div className="submenu">
-                            <div>Pull request #1 討論區</div>
-                            <div>Pull request #2 討論區</div>
-                        </div>
-                    )}
                 </Link> */}
                 <div className="settings">
                     <Link to="/"> <button className="create-team-button">建立新團隊</button></Link>
-                    <div className="settings-icon" onClick={toggleSettings}></div>
+                    <img className="w-10 h-10"  src={settingImg} onClick={toggleSettings}></img>
                 </div>
             </div>
-        </>
+        </div>
     );
 };
 
