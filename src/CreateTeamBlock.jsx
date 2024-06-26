@@ -59,17 +59,6 @@ const CreateTeamBlock = () => {
         };
 
         try {
-            // Create team
-            const teamResponse = await $.ajax({
-                url: `http://localhost:8081/teams?token=${token}`,
-                type: "POST",
-                contentType: "application/json",
-                data: JSON.stringify(teamRequestData)
-            });
-
-            console.log("成功創建團隊：" + JSON.stringify(teamResponse));
-            alert("成功創建團隊");
-
             // Create repository
             const repoResponse = await fetch(`http://localhost:3001/repo/create?token=${token}`, {
                 method: 'POST',
@@ -87,8 +76,25 @@ const CreateTeamBlock = () => {
             console.log('成功創建儲存庫:', repoData);
             alert('成功創建儲存庫');
         } catch (error) {
-            console.error('創建團隊或儲存庫時出錯:', error);
-            alert('創建團隊或儲存庫時出錯');
+            console.error('創建儲存庫時出錯:', error);
+            alert('創建儲存庫時出錯');
+            return; // If creating the repository fails, do not proceed to create the team
+        }
+
+        try {
+            // Create team
+            const teamResponse = await $.ajax({
+                url: `http://localhost:8081/teams?token=${token}`,
+                type: "POST",
+                contentType: "application/json",
+                data: JSON.stringify(teamRequestData)
+            });
+
+            console.log("成功創建團隊：" + JSON.stringify(teamResponse));
+            alert("成功創建團隊");
+        } catch (error) {
+            console.error('創建團隊時出錯:', error);
+            alert('創建團隊時出錯');
         }
     };
 
