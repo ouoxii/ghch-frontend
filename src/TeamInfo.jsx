@@ -14,9 +14,9 @@ const TeamInfo = ({ teamName, pullrequests, team }) => {
 
 
     return (
-        <div className="block bg-slate-100 rounded-lg p-2 mb-2">
-            <div className='flex items-center'>
-                <Link to={`/team-overview/?teamId=${team.teamId}`} className='flex-grow mb-1 ml-2'>
+        <div className="block bg-slate-50 rounded-lg p-0 mb-2 mx-1 border shadow-sm">
+            <div className='flex items-center p-2 rounded-lg hover:bg-zinc-200'>
+                <Link to={`/team-overview/?teamId=${team.teamId}`} className='flex-grow  mb-1 ml-2 '>
                     <div>{team.teamName}</div>
                 </Link>
                 {open ? (
