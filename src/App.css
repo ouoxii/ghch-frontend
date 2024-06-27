@@ -2,11 +2,11 @@
   box-sizing: border-box;
 }
 
-.app {
+/* .app {
   display: flex;
   position: relative;
   height: 100vh;
-}
+} */
 
 .sidebar ul {
   list-style: none;
@@ -21,16 +21,13 @@
   text-decoration: none;
 }
 
-.sidebar ul li a:hover {
-  background-color: #ddd;
-}
 
-.content {
+/* .content {
   flex: 1;
   padding: 20px;
   background-color: #fff;
   height: 100%;
-}
+} */
 
 .createTeamBlock {
   display: flex;

@@ -9,10 +9,17 @@ import PRDiscussion from './PRDiscussion';
 import BranchChart from './BranchChart';
 import Cookies from 'js-cookie';
 
+
 function App() {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+
   const toggleSettings = () => {
     setIsSettingsOpen(!isSettingsOpen);
+  };
+
+  const toggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen);
   };
 
   const location = window.location;
@@ -32,7 +39,6 @@ function App() {
   const id = Cookies.get('id');
   const username = Cookies.get('username');
   const token = Cookies.get('token');
-  console.log(id, username, token);
 
   const handleLogin = () => {
     window.location.href = `http://localhost:8080/login`;
@@ -51,15 +57,24 @@ function App() {
             </div>
           </div>
         )}
-        <div className="app">
-          <Sidebar toggleSettings={toggleSettings} />
-          <main className="content">
-            <Routes>
-              <Route path="/" element={<CreateTeamBlock />} />
-              <Route path="/branchchart" element={<BranchChart />} />
-              <Route path="/team-overview" element={<TeamOverview />} />
-              <Route path="/PRDiscussion" element={<PRDiscussion />} />
-            </Routes>
+        <div className='flex h-screen overflow-hidden'>
+
+          <Sidebar toggleSettings={toggleSettings} isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
+          <main className={`absolute flex overflow-hidden h-screen top-0 left-[220px] z-0 transition-transform transform ${isSidebarOpen ? 'translate-x-0 w-[calc(100%-220px)]' : '-translate-x-[220px] w-[calc(100%-1px)]'}`}>
+            <div className='flex'>
+              <button className="h-10 w-10 " onClick={toggleSidebar}>
+                ☰
+              </button>
+            </div>
+            <div className='flex overflow-hidden'>
+              <Routes>
+                <Route path="/" element={<CreateTeamBlock />} />
+                <Route path="/branchchart" element={<BranchChart />} />
+                <Route path="/team-overview" element={<TeamOverview />} />
+                <Route path="/PRDiscussion" element={<PRDiscussion />} />
+              </Routes>
+            </div>
+
           </main>
         </div>
       </Router>
@@ -69,7 +84,7 @@ function App() {
       <div className="w-full flex flex-col items-center justify-center h-screen bg-gradient-to-b from-slate-200 to-white">
         <h1 className="text-6xl text-black z-30 font-bold mb-8 opacity-70 font-red-hat">GHCH</h1>
         <p className="text-base font-courier z-30 mb-10">new version control experiences with intuitive guidance and visualizations.</p>
-        <button onClick={handleLogin} className="relative px-6 py-3 z-20 bg-white text-gray-800 font-semibold rounded-lg shadow-lg opacity-60
+        <button onClick={handleLogin} className="relative px-6 py-3 z-20 bg-white text-gray-800 font-semibold rounded-lg shadow-lg bg-opacity-60
         hover:transform hover:-translate-y-0.5 hover:shadow-2xl transition duration-300">
           <span>Login with GitHub</span>
         </button>
