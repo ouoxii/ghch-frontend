@@ -54,20 +54,48 @@ const TeamOverview = () => {
 
     const deleteTeam = async () => {
         const token = Cookies.get('token');
+
         try {
-            const response = await fetch(`http://localhost:8081/teams/${teamId}?token=${token}`, {
+            // 先獲取團隊資料
+            const teamResponse = await fetch(`http://localhost:8081/teams/${teamId}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (!teamResponse.ok) {
+                throw new Error('無法獲取團隊資料');
+            }
+
+            const teamData = await teamResponse.json();
+            const { owner, repoName } = teamData;
+
+            // 刪除儲存庫
+            const deleteRepoResponse = await fetch(`http://localhost:3001/repo/delete?token=${token}&owner=${owner}&repo=${repoName}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!deleteRepoResponse.ok) {
+                throw new Error('刪除儲存庫時出錯');
+            }
+
+            // 刪除團隊
+            const deleteTeamResponse = await fetch(`http://localhost:8081/teams/${teamId}?token=${token}`, {
                 method: 'DELETE'
             });
 
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
+            if (!deleteTeamResponse.ok) {
+                throw new Error('刪除團隊時出錯');
             }
 
-            alert('成功刪除團隊');
+            alert('成功刪除團隊及其儲存庫');
             navigate('/'); // 重導向到首頁
         } catch (error) {
-            console.error('刪除團隊時出錯:', error);
-            alert('刪除團隊時出錯');
+            console.error('刪除過程中出錯:', error);
+            alert('刪除過程中出錯');
         }
     };
 
