@@ -8,8 +8,8 @@ const primaryOptions = {
     // colors: ['#475468', '#365f9b', '#c6cfdc'],
     allowHtml: true,
     explorer: { axis: 'horizontal' },
-    width: 1400,
-    //height: 400
+    width: 14000,
+    // height: 200
 };
 
 const tooltipOptions = {
@@ -121,7 +121,7 @@ const BranchChart = (/*帳號跟repo名稱*/) => {
     return (
         <>
             <div id='hidden_div' style={{ display: 'none' }}></div>
-            <div id='branch_chart' class="max-w-6xl p-4 shadow overflow-auto"></div>
+            <div id='branch_chart' style={{overflow: 'overlay'}} class="w-screen h-96 p-4 ml-0 mr-4 my-4 shadow-lg  bg-slate-50"></div>
         </>
     );
 };

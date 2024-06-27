@@ -41,6 +41,7 @@ const CreateTeamBlock = () => {
                 success: function (response) {
                     console.log("成功：" + JSON.stringify(response));
                     alert("創建成功");
+                    window.location.reload();
                 },
                 error: function (jqXHR, textStatus, errorThrown) {
                     console.error("There was an error creating the team!", errorThrown);
