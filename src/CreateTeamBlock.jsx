@@ -7,8 +7,12 @@ const CreateTeamBlock = () => {
     const [inputData, setInputData] = useState({
         teamName: '',
         repoName: '',
-        member: ''
+        description: '',
+        homepage: '',
+        auto_init: true
     });
+
+    const [errors, setErrors] = useState({});
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -18,48 +22,85 @@ const CreateTeamBlock = () => {
         }));
     };
 
-    useEffect(() => {
-        const handleSubmit = (event) => {
-            event.preventDefault();
+    const validateForm = () => {
+        const newErrors = {};
+        if (!inputData.teamName) {
+            newErrors.teamName = '團隊名稱是必填項';
+        }
+        if (!inputData.repoName) {
+            newErrors.repoName = '儲存庫名稱是必填項';
+        }
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
 
-            const teamName = inputData.teamName;
-            const repoName = inputData.repoName;
-            const owner = Cookies.get('username');
-            const token = Cookies.get('token');
+    const handleSubmit = async (event) => {
+        event.preventDefault();
+        if (!validateForm()) {
+            return;
+        }
 
-            const requestData = {
-                teamName: teamName,
-                repoName: repoName,
-                owner: owner
-            };
+        const teamName = inputData.teamName;
+        const repoName = inputData.repoName;
+        const owner = Cookies.get('username');
+        const token = Cookies.get('token');
 
-            $.ajax({
+        const teamRequestData = {
+            teamName: teamName,
+            repoName: repoName,
+            owner: owner
+        };
+
+        const repoRequestData = {
+            name: repoName,
+            description: inputData.description,
+            homepage: inputData.homepage,
+            auto_init: inputData.auto_init
+        };
+
+        try {
+            // Create repository
+            const repoResponse = await fetch(`http://localhost:3001/repo/create?token=${token}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(repoRequestData)
+            });
+
+            if (!repoResponse.ok) {
+                throw new Error('Network response was not ok');
+            }
+
+            const repoData = await repoResponse.json();
+            console.log('成功創建儲存庫:', repoData);
+            alert('成功創建儲存庫');
+        } catch (error) {
+            console.error('創建儲存庫時出錯:', error);
+            alert('創建儲存庫時出錯');
+            return; // If creating the repository fails, do not proceed to create the team
+        }
+
+        try {
+            // Create team
+            const teamResponse = await $.ajax({
                 url: `http://localhost:8081/teams?token=${token}`,
                 type: "POST",
                 contentType: "application/json",
-                data: JSON.stringify(requestData),
-                success: function (response) {
-                    console.log("成功：" + JSON.stringify(response));
-                    alert("創建成功");
-                    window.location.reload();
-                },
-                error: function (jqXHR, textStatus, errorThrown) {
-                    console.error("There was an error creating the team!", errorThrown);
-                }
+                data: JSON.stringify(teamRequestData)
             });
-        };
 
-        $("#createTeamForm").on("submit", handleSubmit);
-
-        // Cleanup event listener on component unmount
-        return () => {
-            $("#createTeamForm").off("submit", handleSubmit);
-        };
-    }, [inputData]);
+            console.log("成功創建團隊：" + JSON.stringify(teamResponse));
+            alert("成功創建團隊");
+        } catch (error) {
+            console.error('創建團隊時出錯:', error);
+            alert('創建團隊時出錯');
+        }
+    };
 
     return (
         <div className="form-container">
-            <form id="createTeamForm">
+            <form id="createTeamForm" onSubmit={handleSubmit}>
                 <div className="form-group">
                     <input
                         type="text"
@@ -68,6 +109,7 @@ const CreateTeamBlock = () => {
                         onChange={handleInputChange}
                         placeholder="團隊名稱"
                     />
+                    {errors.teamName && <span className="error">{errors.teamName}</span>}
                 </div>
                 <div className="form-group">
                     <input
@@ -77,15 +119,39 @@ const CreateTeamBlock = () => {
                         onChange={handleInputChange}
                         placeholder="儲存庫名稱"
                     />
+                    {errors.repoName && <span className="error">{errors.repoName}</span>}
                 </div>
                 <div className="form-group">
                     <input
                         type="text"
-                        name="member"
-                        value={inputData.member}
+                        name="description"
+                        value={inputData.description}
                         onChange={handleInputChange}
-                        placeholder="選擇要邀請的成員 (用逗號分隔)"
+                        placeholder="儲存庫描述"
                     />
+                </div>
+                <div className="form-group">
+                    <input
+                        type="text"
+                        name="homepage"
+                        value={inputData.homepage}
+                        onChange={handleInputChange}
+                        placeholder="主頁URL"
+                    />
+                </div>
+                <div className="form-group">
+                    <label>
+                        <input
+                            type="checkbox"
+                            name="auto_init"
+                            checked={inputData.auto_init}
+                            onChange={() => setInputData(prevState => ({
+                                ...prevState,
+                                auto_init: !prevState.auto_init
+                            }))}
+                        />
+                        自動初始化
+                    </label>
                 </div>
                 <button type="submit" className="submit-button">創建團隊</button>
             </form>
