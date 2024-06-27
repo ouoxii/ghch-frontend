@@ -40,7 +40,7 @@ const Sidebar = ({ toggleSettings, isSidebarOpen, toggleSidebar}) => {
 
 
     return (
-        <div className={`h-screen z-10 bg-slate-200 flex flex-col items-start transition-transform transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+        <div className={`h-screen z-10 bg-gradient-to-b from-slate-200 to-indigo-100 flex flex-col items-start transition-transform transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
             <button className="h-10 w-10 " onClick={toggleSidebar}>
                 ☰
             </button>
@@ -70,8 +70,8 @@ const Sidebar = ({ toggleSettings, isSidebarOpen, toggleSidebar}) => {
                     )}
                 </Link> */}
                 <div className="w-[250px] absolute bottom-3 flex ">
-                    <Link to="/"> <button className="w-44 h-10 rounded-lg bg-slate-50 border-2 ml-2 hover:bg-zinc-200">建立新團隊</button></Link>
-                    <img className="w-10 h-10 ml-auto mr-4"  src={settingImg} onClick={toggleSettings}></img>
+                    <Link to="/"> <button className="w-40 h-11 rounded-2xl bg-blue-800  text-white bg-opacity-70 shadow-lg ml-3 hover:bg-opacity-100">建立新團隊</button></Link>
+                    <img className="w-10 h-10 ml-auto mr-4 mt-2 hover:cursor-pointer"  src={settingImg} onClick={toggleSettings}></img>
                 </div>
             </div>
         </div>

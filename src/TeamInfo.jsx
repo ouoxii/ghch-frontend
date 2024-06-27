@@ -14,9 +14,9 @@ const TeamInfo = ({ teamName, pullrequests, team }) => {
 
 
     return (
-        <div className="block bg-slate-50 rounded-lg p-0 mb-2 mx-1 border shadow-sm">
-            <div className='flex items-center p-2 rounded-lg hover:bg-zinc-200'>
-                <Link to={`/team-overview/?teamId=${team.teamId}`} className='flex-grow  mb-1 ml-2 '>
+        <div className="block bg-white bg-opacity-60 rounded-xl p-0 mb-2 mx-1 shadow-sm">
+            <div className='flex items-center p-2 rounded-xl hover:bg-indigo-200'>
+                <Link to={`/team-overview/?teamId=${team.teamId}`} className='flex-grow  mb-1 ml-2 font-red-hat'>
                     <div>{team.teamName}</div>
                 </Link>
                 {open ? (
@@ -28,7 +28,7 @@ const TeamInfo = ({ teamName, pullrequests, team }) => {
             {open && (
                 <ul >
                     {pullrequests.map(pr => (
-                        <li key={pr.id} className><Link to={`/PRDiscussion?prId=id`} className=' hover:bg-blue-200 p-2 block rounded-lg'>{pr.name}</Link></li>
+                        <li key={pr.id}><Link to={`/PRDiscussion?prId=id`} className=' hover:bg-indigo-200 py-2 pl-4 pr-2 block rounded-xl'>{pr.name}</Link></li>
                     ))}
                     {/* <div><Link to="/PRDiscussion">Pull request #1 討論區</Link></div>
                     <div><Link to="/PRDiscussion">Pull request #2 討論區</Link></div> */}
