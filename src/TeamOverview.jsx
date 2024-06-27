@@ -1,9 +1,14 @@
 import React, { useEffect } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import Cookies from 'js-cookie';
 import './TeamOverview.css';
-import { Link } from 'react-router-dom';
 import timelineData from './data/timelineData.json';
 
 const TeamOverview = () => {
+    const location = useLocation();
+    const navigate = useNavigate();
+    const queryParams = new URLSearchParams(location.search);
+    const teamId = queryParams.get('teamId');
 
     useEffect(() => {
         const script = document.createElement('script');
@@ -47,15 +52,36 @@ const TeamOverview = () => {
         chart.draw(dataTable, options);
     };
 
+    const deleteTeam = async () => {
+        const token = Cookies.get('token');
+        try {
+            const response = await fetch(`http://localhost:8081/teams/${teamId}?token=${token}`, {
+                method: 'DELETE'
+            });
 
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
 
+            alert('成功刪除團隊');
+            navigate('/'); // 重導向到首頁
+        } catch (error) {
+            console.error('刪除團隊時出錯:', error);
+            alert('刪除團隊時出錯');
+        }
+    };
 
     return (
         <div>
             <div className="team-overview">
                 <div id="example7.1" style={{ height: '300px' }}></div>
             </div>
-            <div><Link to="/branchchart"> <button>分支進度圖</button></Link></div>
+            <div>
+                <Link to="/branchchart">
+                    <button>分支進度圖</button>
+                </Link>
+                <button onClick={deleteTeam} className="delete-button">刪除團隊</button>
+            </div>
         </div>
     );
 };
