@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
 import './TeamOverview.css';
@@ -9,6 +9,8 @@ const TeamOverview = () => {
     const navigate = useNavigate();
     const queryParams = new URLSearchParams(location.search);
     const teamId = queryParams.get('teamId');
+
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
     useEffect(() => {
         const script = document.createElement('script');
@@ -99,6 +101,19 @@ const TeamOverview = () => {
         }
     };
 
+    const handleDeleteClick = () => {
+        setIsModalOpen(true);
+    };
+
+    const handleCloseModal = () => {
+        setIsModalOpen(false);
+    };
+
+    const handleConfirmDelete = () => {
+        deleteTeam();
+        setIsModalOpen(false);
+    };
+
     return (
         <div>
             <div className="team-overview">
@@ -108,8 +123,19 @@ const TeamOverview = () => {
                 <Link to="/branchchart">
                     <button>分支進度圖</button>
                 </Link>
-                <button onClick={deleteTeam} className="delete-button">刪除團隊</button>
+                <button onClick={handleDeleteClick} className="delete-button">刪除團隊</button>
             </div>
+            {isModalOpen && (
+                <div className="modal">
+                    <div className="modal-content">
+                        <span className="close-button" onClick={handleCloseModal}>&times;</span>
+                        <h2>確認刪除</h2>
+                        <p>確定要刪除此團隊及其儲存庫嗎？</p>
+                        <button onClick={handleConfirmDelete} className="confirm-button">確認</button>
+                        <button onClick={handleCloseModal} className="cancel-button">取消</button>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
