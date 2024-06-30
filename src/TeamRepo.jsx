@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
 
 const TeamRepo = () => {
@@ -18,6 +18,7 @@ const TeamRepo = () => {
     });
 
     const [errors, setErrors] = useState({});
+    const [repos, setRepos] = useState([]);
 
     useEffect(() => {
         const fetchTeamData = async () => {
@@ -34,9 +35,22 @@ const TeamRepo = () => {
 
                 const teamData = await teamResponse.json();
                 setTeamData(teamData);
+
+                const repoResponse = await fetch(`http://localhost:8081/team-repos/${teamData.teamName}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (repoResponse.ok) {
+                    const repoData = await repoResponse.json();
+                    setRepos(repoData);
+                } else {
+                    setRepos([]);
+                }
             } catch (error) {
-                console.error('獲取團隊資料時出錯:', error);
-                alert('獲取團隊資料時出錯');
+                console.error('獲取資料時出錯:', error);
+                alert('獲取資料時出錯');
             }
         };
 
@@ -66,10 +80,8 @@ const TeamRepo = () => {
             return;
         }
 
-        const repoName = inputData.repoName;
-
         const repoRequestData = {
-            name: repoName,
+            name: inputData.repoName,
             description: inputData.description,
             homepage: inputData.homepage,
             auto_init: inputData.auto_init
@@ -78,7 +90,7 @@ const TeamRepo = () => {
         const teamRepoRequestData = {
             teamId: teamId,
             teamName: teamData.teamName,
-            repoName: repoName
+            repoName: inputData.repoName
         };
 
         try {
@@ -108,10 +120,10 @@ const TeamRepo = () => {
                 throw new Error('Network response was not ok');
             }
 
-            const repoData = await repoResponse.json();
-            console.log('成功創建儲存庫:', repoData);
+            const createdRepoData = await repoResponse.json();
+            console.log('成功創建儲存庫:', createdRepoData);
             alert('成功創建儲存庫');
-            navigate('/team-overview'); // 重導向到首頁
+            navigate('/team-overview');
         } catch (error) {
             console.error('創建儲存庫時出錯:', error);
             alert('創建儲存庫時出錯');
@@ -119,53 +131,66 @@ const TeamRepo = () => {
     };
 
     return (
-        <div className="form-container">
-            <form id="createTeamForm" onSubmit={handleSubmit}>
-                <div className="form-group">
-                    <input
-                        type="text"
-                        name="repoName"
-                        value={inputData.repoName}
-                        onChange={handleInputChange}
-                        placeholder="儲存庫名稱"
-                    />
-                    {errors.repoName && <span className="error">{errors.repoName}</span>}
-                </div>
-                <div className="form-group">
-                    <input
-                        type="text"
-                        name="description"
-                        value={inputData.description}
-                        onChange={handleInputChange}
-                        placeholder="儲存庫描述"
-                    />
-                </div>
-                <div className="form-group">
-                    <input
-                        type="text"
-                        name="homepage"
-                        value={inputData.homepage}
-                        onChange={handleInputChange}
-                        placeholder="主頁URL"
-                    />
-                </div>
-                <div className="form-group">
-                    <label>
+        <div style={{ display: 'flex' }}>
+            <div className="form-container">
+                <form id="createTeamForm" onSubmit={handleSubmit}>
+                    <div className="form-group">
                         <input
-                            type="checkbox"
-                            name="auto_init"
-                            checked={inputData.auto_init}
-                            onChange={() => setInputData(prevState => ({
-                                ...prevState,
-                                auto_init: !prevState.auto_init
-                            }))}
+                            type="text"
+                            name="repoName"
+                            value={inputData.repoName}
+                            onChange={handleInputChange}
+                            placeholder="儲存庫名稱"
                         />
-                        自動初始化
-                    </label>
+                        {errors.repoName && <span className="error">{errors.repoName}</span>}
+                    </div>
+                    <div className="form-group">
+                        <input
+                            type="text"
+                            name="description"
+                            value={inputData.description}
+                            onChange={handleInputChange}
+                            placeholder="儲存庫描述"
+                        />
+                    </div>
+                    <div className="form-group">
+                        <input
+                            type="text"
+                            name="homepage"
+                            value={inputData.homepage}
+                            onChange={handleInputChange}
+                            placeholder="主頁URL"
+                        />
+                    </div>
+                    <div className="form-group">
+                        <label>
+                            <input
+                                type="checkbox"
+                                name="auto_init"
+                                checked={inputData.auto_init}
+                                onChange={() => setInputData(prevState => ({
+                                    ...prevState,
+                                    auto_init: !prevState.auto_init
+                                }))}
+                            />
+                            自動初始化
+                        </label>
+                    </div>
+                    <button type="submit" className="submit-button">創建儲存庫</button>
+                </form>
+            </div>
+            {repos.length > 0 && (
+                <div className="repo-list">
+                    <h2>儲存庫列表</h2>
+                    {repos.map(repo => (
+                        <div key={repo.id} className="repo">
+                            <Link to={`/team-overview/?repoId=${repo.id}`} > <p>儲存庫名稱: {repo.repoName}</p></Link>
+                        </div>
+                    ))}
                 </div>
-                <button type="submit" className="submit-button">創建儲存庫</button>
-            </form>
-        </div>
+            )
+            }
+        </div >
     );
 };
 
