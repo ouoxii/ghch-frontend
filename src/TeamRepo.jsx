@@ -123,7 +123,7 @@ const TeamRepo = () => {
             const createdRepoData = await repoResponse.json();
             console.log('成功創建儲存庫:', createdRepoData);
             alert('成功創建儲存庫');
-            navigate('/team-overview');
+
         } catch (error) {
             console.error('創建儲存庫時出錯:', error);
             alert('創建儲存庫時出錯');
@@ -184,7 +184,7 @@ const TeamRepo = () => {
                     <h2>儲存庫列表</h2>
                     {repos.map(repo => (
                         <div key={repo.id} className="repo">
-                            <Link to={`/team-overview/?repoId=${repo.id}`} > <p>儲存庫名稱: {repo.repoName}</p></Link>
+                            <Link to={`/team-overview/?repoId=${repo.id}&teamId=${teamId}`} > <p>儲存庫名稱: {repo.repoName}</p></Link>
                         </div>
                     ))}
                 </div>
