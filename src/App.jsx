@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-import './App.css';
+
 import Sidebar from './Sidebar';
 import CreateTeamBlock from './CreateTeamBlock';
 import OptionSection from './OptionSection';
@@ -48,8 +48,8 @@ function App() {
     return (
       <Router>
         {isSettingsOpen && (
-          <div className="overlay" onClick={toggleSettings}>
-            <div className='info-section'>
+          <div className="fixed top-0 left-0 w-screen h-screen z-40 flex justify-center items-center backdrop-blur-sm bg-gray-500 bg-opacity-50" onClick={toggleSettings}>
+            <div className='flex flex-col w-[55%] h-[80%] rounded-xl shadow-lg overflow-hidden bg-white'>
               <OptionSection
                 isVisible={isSettingsOpen}
                 onClose={() => setIsSettingsOpen(false)}
@@ -84,7 +84,7 @@ function App() {
       <div className="w-full flex flex-col items-center justify-center h-screen bg-gradient-to-b from-slate-200 to-white">
         <h1 className="text-6xl text-black z-30 font-bold mb-8 opacity-70 font-red-hat">GHCH</h1>
         <p className="text-base font-courier z-30 mb-10">new version control experiences with intuitive guidance and visualizations.</p>
-        <button onClick={handleLogin} className="relative px-6 py-3 z-20 bg-white text-gray-800 font-semibold rounded-lg shadow-lg bg-opacity-60
+        <button onClick={handleLogin} className="relative px-6 py-3 z-20 bg-white text-gray-800 font-semibold rounded-lg shadow-lg bg-opacity-30 backdrop-blur-sm
         hover:transform hover:-translate-y-0.5 hover:shadow-2xl transition duration-300">
           <span>Login with GitHub</span>
         </button>
