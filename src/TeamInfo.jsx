@@ -16,7 +16,8 @@ const TeamInfo = ({pullrequests, team }) => {
     return (
         <div className="block bg-white bg-opacity-60 rounded-xl p-0 mb-2 mx-1 shadow-sm border-gray-300 border">
             <div className='flex items-center p-1.5 rounded-xl hover:bg-indigo-200'>
-                <Link to={`/team-overview/?teamId=${team.teamId}`} className='flex-grow ml-2 font-red-hat'>
+                <Link to={`/teamRepo/?teamId=${team.teamId}`} className='flex-grow  mb-1 ml-2 font-red-hat'>
+
                     <div>{team.teamName}</div>
                 </Link>
                 {open ? (

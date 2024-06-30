@@ -7,8 +7,12 @@ const CreateTeamBlock = () => {
     const [inputData, setInputData] = useState({
         teamName: '',
         repoName: '',
-        member: ''
+        description: '',
+        homepage: '',
+        auto_init: true
     });
+
+    const [errors, setErrors] = useState({});
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -18,48 +22,52 @@ const CreateTeamBlock = () => {
         }));
     };
 
-    useEffect(() => {
-        const handleSubmit = (event) => {
-            event.preventDefault();
+    const validateForm = () => {
+        const newErrors = {};
+        if (!inputData.teamName) {
+            newErrors.teamName = '團隊名稱是必填項';
+        }
+        setErrors(newErrors);
+        return Object.keys(newErrors).length === 0;
+    };
 
-            const teamName = inputData.teamName;
-            const repoName = inputData.repoName;
-            const owner = Cookies.get('username');
-            const token = Cookies.get('token');
+    const handleSubmit = async (event) => {
+        event.preventDefault();
+        if (!validateForm()) {
+            return;
+        }
 
-            const requestData = {
-                teamName: teamName,
-                repoName: repoName,
-                owner: owner
-            };
+        const teamName = inputData.teamName;
+        const owner = Cookies.get('username');
+        const token = Cookies.get('token');
 
-            $.ajax({
+        const teamRequestData = {
+            teamName: teamName,
+            owner: owner
+        };
+
+
+
+        try {
+            // Create team
+            const teamResponse = await $.ajax({
                 url: `http://localhost:8081/teams?token=${token}`,
                 type: "POST",
                 contentType: "application/json",
-                data: JSON.stringify(requestData),
-                success: function (response) {
-                    console.log("成功：" + JSON.stringify(response));
-                    alert("創建成功");
-                    window.location.reload();
-                },
-                error: function (jqXHR, textStatus, errorThrown) {
-                    console.error("There was an error creating the team!", errorThrown);
-                }
+                data: JSON.stringify(teamRequestData)
             });
-        };
 
-        $("#createTeamForm").on("submit", handleSubmit);
-
-        // Cleanup event listener on component unmount
-        return () => {
-            $("#createTeamForm").off("submit", handleSubmit);
-        };
-    }, [inputData]);
+            console.log("成功創建團隊：" + JSON.stringify(teamResponse));
+            alert("成功創建團隊");
+        } catch (error) {
+            console.error('創建團隊時出錯:', error);
+            alert('創建團隊時出錯');
+        }
+    };
 
     return (
         <div className="form-container">
-            <form id="createTeamForm">
+            <form id="createTeamForm" onSubmit={handleSubmit}>
                 <div className="form-group">
                     <input
                         type="text"
@@ -68,25 +76,9 @@ const CreateTeamBlock = () => {
                         onChange={handleInputChange}
                         placeholder="團隊名稱"
                     />
+                    {errors.teamName && <span className="error">{errors.teamName}</span>}
                 </div>
-                <div className="form-group">
-                    <input
-                        type="text"
-                        name="repoName"
-                        value={inputData.repoName}
-                        onChange={handleInputChange}
-                        placeholder="儲存庫名稱"
-                    />
-                </div>
-                <div className="form-group">
-                    <input
-                        type="text"
-                        name="member"
-                        value={inputData.member}
-                        onChange={handleInputChange}
-                        placeholder="選擇要邀請的成員 (用逗號分隔)"
-                    />
-                </div>
+
                 <button type="submit" className="submit-button">創建團隊</button>
             </form>
         </div>

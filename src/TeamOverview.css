@@ -1,10 +1,113 @@
+/* TeamOverview.css */
+
 .team-overview {
     width: 100%;
     background: #FFFFFF;
     padding: 50px;
     border-radius: 10px;
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    /*position*/
     display: flex;
     justify-content: center;
+}
+
+.feat-button {
+    background-color: #4472c4;
+    color: #FFFFFF;
+    width: 200px;
+    height: 45px;
+    border: none;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    padding: 20px;
+    font-size: 15px;
+    text-align: center;
+    overflow: hidden;
+}
+
+.feat-button a {
+    text-decoration: none;
+    color: inherit;
+}
+
+.feat-button:hover {
+    background-color: #365f9b;
+}
+
+/* 彈出框容器 */
+.modal {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    overflow: auto;
+    /* 確保內容超出時可以滾動 */
+}
+
+/* 彈出框內容 */
+.modal-content {
+    background-color: #fff;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    border-radius: 8px;
+    width: 400px;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    position: relative;
+    max-height: 90%;
+    /* 確保內容不會超出視口 */
+    overflow-y: auto;
+    /* 當內容超出時顯示滾動條 */
+}
+
+/* 關閉按鈕 */
+.close-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+/* 表單樣式 */
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+.form-group input[type="text"] {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+.form-group input[type="checkbox"] {
+    margin-right: 10px;
+}
+
+/* 錯誤信息樣式 */
+.error {
+    color: red;
+    font-size: 12px;
+    margin-top: 5px;
+}
+
+.feat-button {
+    margin-top: 20px;
 }
