@@ -133,22 +133,50 @@ const TeamRepo = () => {
 
     const deleteTeam = async () => {
         try {
-            const deleteRepoResponse = await fetch(`http://localhost:8081/teams/${teamId}?token=${token}`, {
+            // Fetch all team repos
+            const repoResponse = await fetch(`http://localhost:8081/team-repos/${teamData.teamName}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (!repoResponse.ok) {
+                throw new Error('獲取儲存庫時出錯');
+            }
+
+            const repos = await repoResponse.json();
+
+            // Delete all repos
+            for (const repo of repos) {
+                const deleteRepoResponse = await fetch(`http://localhost:8081/team-repos/${repo.id}?token=${token}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!deleteRepoResponse.ok) {
+                    throw new Error('刪除儲存庫時出錯');
+                }
+            }
+
+            // Delete team
+            const deleteTeamResponse = await fetch(`http://localhost:8081/teams/${teamId}?token=${token}`, {
                 method: 'DELETE',
                 headers: {
                     'Content-Type': 'application/json'
                 }
             });
 
-            if (!deleteRepoResponse.ok) {
+            if (!deleteTeamResponse.ok) {
                 throw new Error('刪除團隊時出錯');
             }
 
-            alert('成功刪除團隊');
-            navigate('/'); // 重導向到首頁
+            alert('成功刪除團隊及其所有儲存庫');
+            navigate('/'); // Redirect to home page
         } catch (error) {
-            console.error('刪除團隊時出錯:', error);
-            alert('刪除團隊時出錯');
+            console.error('刪除過程中出錯:', error);
+            alert('刪除過程中出錯');
         }
     };
 
@@ -213,9 +241,8 @@ const TeamRepo = () => {
                     </div>
                     <button type="submit" className="submit-button">創建儲存庫</button>
                 </form>
-
+                <button onClick={handleDeleteClick} className="delete-button">刪除團隊</button>
             </div>
-            <div><button onClick={handleDeleteClick} className="delete-button">刪除團隊</button></div>
             {repos.length > 0 && (
                 <div className="repo-list">
                     <h2>儲存庫列表</h2>
