@@ -19,6 +19,7 @@ const TeamRepo = () => {
 
     const [errors, setErrors] = useState({});
     const [repos, setRepos] = useState([]);
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
     useEffect(() => {
         const fetchTeamData = async () => {
@@ -130,6 +131,40 @@ const TeamRepo = () => {
         }
     };
 
+    const deleteTeam = async () => {
+        try {
+            const deleteRepoResponse = await fetch(`http://localhost:8081/teams/${teamId}?token=${token}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!deleteRepoResponse.ok) {
+                throw new Error('刪除團隊時出錯');
+            }
+
+            alert('成功刪除團隊');
+            navigate('/'); // 重導向到首頁
+        } catch (error) {
+            console.error('刪除團隊時出錯:', error);
+            alert('刪除團隊時出錯');
+        }
+    };
+
+    const handleDeleteClick = () => {
+        setIsModalOpen(true);
+    };
+
+    const handleCloseModal = () => {
+        setIsModalOpen(false);
+    };
+
+    const handleConfirmDelete = () => {
+        deleteTeam();
+        setIsModalOpen(false);
+    };
+
     return (
         <div style={{ display: 'flex' }}>
             <div className="form-container">
@@ -178,7 +213,9 @@ const TeamRepo = () => {
                     </div>
                     <button type="submit" className="submit-button">創建儲存庫</button>
                 </form>
+
             </div>
+            <div><button onClick={handleDeleteClick} className="delete-button">刪除團隊</button></div>
             {repos.length > 0 && (
                 <div className="repo-list">
                     <h2>儲存庫列表</h2>
@@ -188,8 +225,18 @@ const TeamRepo = () => {
                         </div>
                     ))}
                 </div>
-            )
-            }
+            )}
+            {isModalOpen && (
+                <div className="modal">
+                    <div className="modal-content">
+                        <span className="close-button" onClick={handleCloseModal}>&times;</span>
+                        <h2>確認刪除</h2>
+                        <p>確定要刪除這個團隊嗎？</p>
+                        <button onClick={handleConfirmDelete} className="confirm-button">確認</button>
+                        <button onClick={handleCloseModal} className="cancel-button">取消</button>
+                    </div>
+                </div>
+            )}
         </div >
     );
 };
