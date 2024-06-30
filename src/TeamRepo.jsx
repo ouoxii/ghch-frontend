@@ -140,24 +140,37 @@ const TeamRepo = () => {
                 }
             });
 
-            if (!repoResponse.ok) {
-                throw new Error('獲取儲存庫時出錯');
+            let repos = [];
+            if (repoResponse.ok) {
+                repos = await repoResponse.json();
             }
 
-            const repos = await repoResponse.json();
+            // Delete all repos if any
+            if (repos.length > 0) {
+                for (const repo of repos) {
+                    const deleteRepoResponse = await fetch(`http://localhost:8081/team-repos/${repo.id}?token=${token}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        }
+                    });
 
-            // Delete all repos
-            for (const repo of repos) {
-                const deleteRepoResponse = await fetch(`http://localhost:8081/team-repos/${repo.id}?token=${token}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'Content-Type': 'application/json'
+                    if (!deleteRepoResponse.ok) {
+                        throw new Error('刪除儲存庫時出錯');
                     }
-                });
-
-                if (!deleteRepoResponse.ok) {
-                    throw new Error('刪除儲存庫時出錯');
                 }
+            }
+
+            // Delete team members
+            const deleteTeamMembersResponse = await fetch(`http://localhost:8081/team-members?token=${token}&teamId=${teamId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!deleteTeamMembersResponse.ok) {
+                throw new Error('刪除team-members時出錯');
             }
 
             // Delete team
