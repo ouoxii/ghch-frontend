@@ -12,11 +12,11 @@ const pullrequests = [
 
 const teamname = 'ghch';
 
-const Sidebar = ({ toggleSettings, isSidebarOpen, toggleSidebar}) => {
+const Sidebar = ({ toggleSettings, isSidebarOpen, toggleSidebar }) => {
     const [teams, setTeam] = useState([]);
     const [error, setError] = useState(null);
 
-   
+
 
     const username = Cookies.get('username');
 
@@ -49,9 +49,12 @@ const Sidebar = ({ toggleSettings, isSidebarOpen, toggleSidebar}) => {
                     <div className="w-14 h-14 rounded-full border-2 mb-3 border-black"></div>
                     <div className="text-black">我的團隊</div>
                 </div>
-                {teams.map(team => (
-                    <TeamInfo teamName={teamname} pullrequests={pullrequests} team={team}/>
-                ))}
+                <div className='h-[75%] overflow-auto'>
+                    {teams.map(team => (
+                        <TeamInfo pullrequests={pullrequests} team={team} />
+                    ))}
+                </div>
+
                 {/* <Link to="/team-overview" className="menu-item">
                     <div className="menu-title" onClick={() => toggleItem(1)}>
                         專案1
@@ -70,8 +73,8 @@ const Sidebar = ({ toggleSettings, isSidebarOpen, toggleSidebar}) => {
                     )}
                 </Link> */}
                 <div className="w-[250px] absolute bottom-3 flex ">
-                    <Link to="/"> <button className="w-40 h-11 rounded-2xl bg-blue-800  text-white bg-opacity-70 shadow-lg ml-3 hover:bg-opacity-100">建立新團隊</button></Link>
-                    <img className="w-10 h-10 ml-auto mr-4 mt-2 hover:cursor-pointer"  src={settingImg} onClick={toggleSettings}></img>
+                    <Link to="/"> <button className="w-40 h-11 rounded-2xl bg-white bg-opacity-30 backdrop-blur-sm border-2 border-gray-400 shadow-lg ml-3 hover:bg-indigo-300 transition duration-500">建立新團隊</button></Link>
+                    <img className="w-10 h-10 ml-auto mr-4 mt-2 hover:cursor-pointer" src={settingImg} onClick={toggleSettings}></img>
                 </div>
             </div>
         </div>
