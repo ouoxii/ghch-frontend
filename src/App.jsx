@@ -6,6 +6,7 @@ import CreateTeamBlock from './CreateTeamBlock';
 import OptionSection from './OptionSection';
 import TeamOverview from './TeamOverview';
 import PRDiscussion from './PRDiscussion';
+import TeamRepo from './TeamRepo';
 import BranchChart from './BranchChart';
 import Cookies from 'js-cookie';
 
@@ -72,6 +73,7 @@ function App() {
                 <Route path="/branchchart" element={<BranchChart />} />
                 <Route path="/team-overview" element={<TeamOverview />} />
                 <Route path="/PRDiscussion" element={<PRDiscussion />} />
+                <Route path="/teamRepo" element={<TeamRepo />} />
               </Routes>
             </div>
 
