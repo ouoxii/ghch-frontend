@@ -8,6 +8,7 @@ const TeamRepo = () => {
     const queryParams = new URLSearchParams(location.search);
     const teamId = queryParams.get('teamId');
     const token = Cookies.get('token');
+    const username = Cookies.get('username');
 
     const [teamData, setTeamData] = useState({ owner: '', teamName: '', repoName: '' });
     const [inputData, setInputData] = useState({
@@ -16,9 +17,12 @@ const TeamRepo = () => {
         homepage: '',
         auto_init: true
     });
-
+    const [inviteData, setInviteData] = useState({
+        invitee: ''
+    });
     const [errors, setErrors] = useState({});
     const [repos, setRepos] = useState([]);
+    const [invitations, setInvitations] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
 
     useEffect(() => {
@@ -49,6 +53,19 @@ const TeamRepo = () => {
                 } else {
                     setRepos([]);
                 }
+
+                const inviteResponse = await fetch(`http://localhost:8081/invitations/${username}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (inviteResponse.ok) {
+                    const inviteData = await inviteResponse.json();
+                    setInvitations(inviteData);
+                } else {
+                    setInvitations([]);
+                }
             } catch (error) {
                 console.error('獲取資料時出錯:', error);
                 alert('獲取資料時出錯');
@@ -56,11 +73,19 @@ const TeamRepo = () => {
         };
 
         fetchTeamData();
-    }, [teamId, token]);
+    }, [teamId, token, username]);
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
         setInputData(prevState => ({
+            ...prevState,
+            [name]: value
+        }));
+    };
+
+    const handleInviteChange = (e) => {
+        const { name, value } = e.target;
+        setInviteData(prevState => ({
             ...prevState,
             [name]: value
         }));
@@ -128,6 +153,72 @@ const TeamRepo = () => {
         } catch (error) {
             console.error('創建儲存庫時出錯:', error);
             alert('創建儲存庫時出錯');
+        }
+    };
+
+    const handleInviteSubmit = async (event) => {
+        event.preventDefault();
+
+        const inviteRequestData = {
+            teamId: teamId,
+            username: inviteData.invitee,
+            teamName: teamData.teamName
+        };
+
+        try {
+            const inviteResponse = await fetch(`http://localhost:8081/invitations?token=${token}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(inviteRequestData)
+            });
+
+            if (!inviteResponse.ok) {
+                throw new Error('邀請失敗');
+            }
+
+            alert('邀請成功');
+            setInviteData({ invitee: '' });
+
+            // Refresh invitations list
+            const inviteRefreshResponse = await fetch(`http://localhost:8081/invitations/${username}`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+
+            if (inviteRefreshResponse.ok) {
+                const inviteRefreshData = await inviteRefreshResponse.json();
+                setInvitations(inviteRefreshData);
+            } else {
+                setInvitations([]);
+            }
+
+        } catch (error) {
+            console.error('邀請時出錯:', error);
+            alert('邀請時出錯');
+        }
+    };
+
+    const deleteInvitation = async (id) => {
+        try {
+            const response = await fetch(`http://localhost:8081/invitations/${id}?token=${token}`, {
+                method: 'DELETE',
+                headers: {
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('刪除邀請時出錯');
+            }
+
+            alert('成功刪除邀請');
+            setInvitations(invitations.filter(invitation => invitation.id !== id));
+        } catch (error) {
+            console.error('刪除邀請時出錯:', error);
+            alert('刪除邀請時出錯');
         }
     };
 
@@ -254,6 +345,18 @@ const TeamRepo = () => {
                     </div>
                     <button type="submit" className="submit-button">創建儲存庫</button>
                 </form>
+                <form id="inviteForm" onSubmit={handleInviteSubmit}>
+                    <div className="form-group">
+                        <input
+                            type="text"
+                            name="invitee"
+                            value={inviteData.invitee}
+                            onChange={handleInviteChange}
+                            placeholder="邀請成員"
+                        />
+                    </div>
+                    <button type="submit" className="submit-button">發送邀請</button>
+                </form>
                 <button onClick={handleDeleteClick} className="delete-button">刪除團隊</button>
             </div>
             {repos.length > 0 && (
@@ -262,6 +365,17 @@ const TeamRepo = () => {
                     {repos.map(repo => (
                         <div key={repo.id} className="repo">
                             <Link to={`/team-overview/?repoId=${repo.id}&teamId=${teamId}`} > <p>儲存庫名稱: {repo.repoName}</p></Link>
+                        </div>
+                    ))}
+                </div>
+            )}
+            {invitations.length > 0 && (
+                <div className="invite-list">
+                    <h2>邀請列表</h2>
+                    {invitations.map(invite => (
+                        <div key={invite.id} className="invite">
+                            <p>邀請成員: {invite.username}</p>
+                            <button onClick={() => deleteInvitation(invite.id)} className="delete-button">刪除邀請</button>
                         </div>
                     ))}
                 </div>
