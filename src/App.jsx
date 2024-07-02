@@ -49,14 +49,11 @@ function App() {
     return (
       <Router>
         {isSettingsOpen && (
-          <div className="fixed top-0 left-0 w-screen h-screen z-40 flex justify-center items-center backdrop-blur-sm bg-gray-500 bg-opacity-50" onClick={toggleSettings}>
-            <div className='flex flex-col w-[55%] h-[80%] rounded-xl shadow-lg overflow-hidden bg-white'>
-              <OptionSection
-                isVisible={isSettingsOpen}
-                onClose={() => setIsSettingsOpen(false)}
-              />
-            </div>
-          </div>
+          <OptionSection
+            isVisible={isSettingsOpen}
+            onClose={() => setIsSettingsOpen(false)}
+            toggleSettings={toggleSettings}
+          />
         )}
         <div className='flex h-screen overflow-hidden'>
 

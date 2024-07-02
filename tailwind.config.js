@@ -9,9 +9,9 @@ module.exports = {
     extend: {
       colors: {
         buttonBlue: {
-          light: '#4d6cbb',
-          DEFAULT: '#3352a1',
-          dark: '#2d488e',
+          light: '#6b8fd0',
+          DEFAULT: '#4472c4',
+          dark: '#2c4d7d',
         }
       },
       fontFamily: {
