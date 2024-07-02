@@ -4,18 +4,38 @@ import downChevron from './img/down-chevron.png';
 import rightChevron from './img/right-chevron.png';
 
 
-const TeamInfo = ({pullrequests, team }) => {
+const TeamInfo = ({team}) => {
     const [open, setOpen] = useState(false);
+    const [repos, setRepos] = useState([]);
+    const [error, setError] = useState(null);
+
+    useEffect(() => {
+        const fetchTeamMembers = async () => {
+            try {
+                console.log(team)
+                const response = await fetch(`http://localhost:8081/team-repos/${team.teamName}`);
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                const data = await response.json();
+                setRepos(data);
+                console.log(repos)
+            } catch (error) {
+                setError(error);
+            }
+        };
+
+        fetchTeamMembers();
+    }, [team]);
 
     const toggleItem = () => {
         setOpen(preState => !preState);
     };
-    console.log(team)
 
 
     return (
-        <div className="block bg-white bg-opacity-60 rounded-xl p-0 mb-2 mx-1 shadow-sm border-gray-300 border">
-            <div className='flex items-center p-1.5 rounded-xl hover:bg-indigo-200'>
+        <div className="block bg-slate-100 rounded-xl p-0 mb-2 mx-1 shadow-sm border">
+            <div className='flex items-center p-1.5 rounded-xl hover:bg-zinc-300'>
                 <Link to={`/teamRepo/?teamId=${team.teamId}`} className='flex-grow  mb-1 ml-2 font-red-hat'>
 
                     <div>{team.teamName}</div>
@@ -28,8 +48,8 @@ const TeamInfo = ({pullrequests, team }) => {
             </div>
             {open && (
                 <ul >
-                    {pullrequests.map(pr => (
-                        <li key={pr.id}><Link to={`/PRDiscussion?prId=id`} className=' hover:bg-indigo-200 py-1 pl-4 pr-2 block rounded-xl'>{pr.name}</Link></li>
+                    {repos.map(repo => (
+                        <li key={repo.id}><Link to={`/team-overview/?repoId=${repo.id}&teamId=${team.id}`} className=' hover:bg-zinc-300 py-1 px-4 mb-1 mx-1 block rounded-xl font-red-hat'>{repo.repoName}</Link></li>
                     ))}
                     {/* <div><Link to="/PRDiscussion">Pull request #1 討論區</Link></div>
                     <div><Link to="/PRDiscussion">Pull request #2 討論區</Link></div> */}
