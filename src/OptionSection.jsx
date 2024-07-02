@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import Cookies from 'js-cookie';
-import './OptionSection.css';
 import { useNavigate } from 'react-router-dom';
-import avatar from './img/avatar.jpg';
 
-const OptionSection = ({ isVisible, onClose }) => {
+const OptionSection = ({ isVisible, onClose, toggleSettings }) => {
     const [activeSection, setActiveSection] = useState('account');
     const [inputData, setInputData] = useState({
         Name: '',
@@ -55,87 +53,87 @@ const OptionSection = ({ isVisible, onClose }) => {
 
     if (!isVisible) return null;
 
+    const avatar = `https://avatars.githubusercontent.com/${userData.username}`;
+
     return (
-        <div className="overlay" onClick={onClose}>
-            <div className="info-section" onClick={(e) => e.stopPropagation()}>
-                <div className="info-header">
-                    <h2>Options</h2>
-                </div>
-                <div className="info-content">
-                    <div className="info-hamburgar">
-                        <div className={`info-option ${activeSection === 'account' ? 'active' : ''}`} onClick={() => toggleSection('account')}>
-                            Account
-                        </div>
-                        <div className={`info-option ${activeSection === 'git' ? 'active' : ''}`} onClick={() => toggleSection('git')}>
-                            Git
-                        </div>
+        <div className="fixed top-0 left-0 w-screen h-screen z-40 flex justify-center items-center backdrop-blur-sm bg-gray-500 bg-opacity-50" onClick={toggleSettings}>
+            <div className='flex flex-col w-[55%] h-[80%] rounded-xl shadow-lg overflow-hidden bg-white'>
+                {/* <div className="overlay" onClick={onClose}></div> */}
+                <div className="flex flex-col h-full relative" onClick={(e) => e.stopPropagation()}>
+                    <div className="m-3 flex">
+                        <h2>Options</h2>
+                        <button className='ml-auto' onClick={onClose}>✕</button>
                     </div>
-                    <div className="info-item">
-                        {activeSection === 'account' && (
-                            <div className='info-account-content'>
-                                GitHub.com
-                                {!userData.username ? (
-                                    <div className='NotLoggedIn'>
-                                        <div>Sign in to your GitHub account to access your repositories.</div>
-                                        <button className='button-class'>Sign into GitHub.com</button>
-                                    </div>
-                                ) : (
-                                    <div className='HadLoggedIn'>
-                                        <div className='avatar'><img src={avatar} alt="頭像" /></div>
-                                        <div className='user-info'>
-                                            <div className='username'>{userData.username}</div>
+                    <div className="flex ">
+                        <div className="flex-col w-[33%]">
+                            <div className={`p-3 cursor-pointer ${activeSection === 'account' ? 'bg-[#365f9b] text-white' : ''}`} onClick={() => toggleSection('account')}>
+                                Account
+                            </div>
+                            <div className={`p-3 cursor-pointer ${activeSection === 'git' ? 'bg-[#365f9b] text-white' : ''}`} onClick={() => toggleSection('git')}>
+                                Git
+                            </div>
+                        </div>
+                        <div className="flex mx-4 w-[66%]">
+                            {activeSection === 'account' && (
+                                <div className='w-full'>
+                                    GitHub.com
+                                    <div className='flex mt-3 w-full'>
+                                        <div className='w-14 h-14 rounded-full overflow-hidden'><img src={avatar} alt="頭像" /></div>
+                                        <div className='flex-col ml-3 w-[50%]'>
+                                            <div>{userData.username}</div>
                                             <div>ID: {userData.id}</div>
                                         </div>
-                                        <div>
-                                            <button className='button-class' onClick={handleLogout}>Sign out of GitHub.com</button>
-                                        </div>
+                                        <button className='bg-slate-300 text-black py-1 px-3 rounded-xl h-9 cursor-pointer mt-1 ml-auto
+                                         hover:bg-buttonBlue-dark hover:text-white transition duration-200' onClick={handleLogout}>Sign out of GitHub.com</button>   
                                     </div>
-                                )}
-                            </div>
-                        )}
-                        {activeSection === 'git' && (
-                            <div className='info-git-content'>
-                                <div className='formContainer'>
-                                    <form onSubmit={handleSubmit}>
-                                        <div>Name</div>
-                                        <div className="form-group">
-                                            <input
-                                                type="text"
-                                                name="Name"
-                                                value={inputData.Name}
-                                                onChange={handleInputChange}
-                                                placeholder=""
-                                            />
-                                        </div>
-                                        <div>Email</div>
-                                        <div className="form-group">
-                                            <input
-                                                type="text"
-                                                name="Email"
-                                                value={inputData.Email}
-                                                onChange={handleInputChange}
-                                                placeholder=""
-                                            />
-                                        </div>
-                                        <div>Default branch name for new repositories</div>
-                                        <div className="form-group">
-                                            <input
-                                                type="text"
-                                                name="dfBranch"
-                                                value={inputData.dfBranch}
-                                                onChange={handleInputChange}
-                                                placeholder=""
-                                            />
-                                        </div>
-                                    </form>
                                 </div>
-                            </div>
-                        )}
+                            )}
+                            {activeSection === 'git' && (
+                                <div className='flex-col w-full'>
+                                    <div>
+                                        <form onSubmit={handleSubmit}>
+                                            <div>Name</div>
+                                            <div className="mb-3 mt-1">
+                                                <input
+                                                    type="text"
+                                                    name="Name"
+                                                    value={inputData.Name}
+                                                    onChange={handleInputChange}
+                                                    placeholder=""
+                                                />
+                                            </div>
+                                            <div>Email</div>
+                                            <div className="mb-3 mt-1">
+                                                <input
+                                                    type="text"
+                                                    name="Email"
+                                                    value={inputData.Email}
+                                                    onChange={handleInputChange}
+                                                    placeholder=""
+                                                />
+                                            </div>
+                                            <div>Default branch name for new repositories</div>
+                                            <div className="mb-3 mt-1">
+                                                <input
+                                                    type="text"
+                                                    name="dfBranch"
+                                                    value={inputData.dfBranch}
+                                                    onChange={handleInputChange}
+                                                    placeholder=""
+                                                />
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            )}
+                        </div>
                     </div>
-                </div>
-                <div className="info-footer">
-                    <button className="button-class2" onClick={onClose}>Save</button>
-                    <button className="button-class2" onClick={onClose}>Cancel</button>
+                    <div className="flex justify-end absolute bottom-3 w-full">
+                        <button className="bg-white border border-gray-300 rounded-md h-9 w-36 mr-3 mt-1
+                        hover:bg-blue-200 transition duration-300" onClick={onClose}>Save</button>
+                        <button className="bg-white border border-gray-300 rounded-md h-9 w-36 mr-3 mt-1
+                        hover:bg-red-300 transition duration-300" onClick={onClose}>Cancel</button>
+                    </div>
                 </div>
             </div>
         </div>

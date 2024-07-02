@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import './Sidebar.css';
+// import './Sidebar.css';
 import TeamInfo from './TeamInfo';
 import Cookies from 'js-cookie';
 import settingImg from './img/gear.png';
@@ -33,7 +33,7 @@ const Sidebar = ({ toggleSettings, isSidebarOpen, toggleSidebar }) => {
 
 
     return (
-        <div className={`h-screen z-10 bg-slate-700 flex flex-col items-start transition-transform transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+        <div className={`h-screen z-10 bg-slate-600 flex flex-col items-start transition-transform transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
             <button className="h-10 w-10 text-white" onClick={toggleSidebar}>
                 ☰
             </button>

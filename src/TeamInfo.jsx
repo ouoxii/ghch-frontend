@@ -34,7 +34,7 @@ const TeamInfo = ({team}) => {
 
 
     return (
-        <div className="block bg-slate-100 rounded-xl p-0 mb-2 mx-1 shadow-sm border">
+        <div className="flex-col bg-slate-100 rounded-xl p-0 mb-2 mx-1 shadow-sm border">
             <div className='flex items-center p-1.5 rounded-xl hover:bg-zinc-300'>
                 <Link to={`/teamRepo/?teamId=${team.teamId}`} className='flex-grow  mb-1 ml-2 font-red-hat'>
 
@@ -47,7 +47,7 @@ const TeamInfo = ({team}) => {
                 )}
             </div>
             {open && (
-                <ul >
+                <ul>
                     {repos.map(repo => (
                         <li key={repo.id}><Link to={`/team-overview/?repoId=${repo.id}&teamId=${team.id}`} className=' hover:bg-zinc-300 py-1 px-4 mb-1 mx-1 block rounded-xl font-red-hat'>{repo.repoName}</Link></li>
                     ))}
