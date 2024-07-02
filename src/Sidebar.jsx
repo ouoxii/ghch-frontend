@@ -5,12 +5,6 @@ import TeamInfo from './TeamInfo';
 import Cookies from 'js-cookie';
 import settingImg from './img/gear.png';
 
-const pullrequests = [
-    { id: 1, name: 'fix: homepage loading #4' },
-    { id: 2, name: 'feature: add homepage #3' }
-];
-
-const teamname = 'ghch';
 
 const Sidebar = ({ toggleSettings, isSidebarOpen, toggleSidebar }) => {
     const [teams, setTeam] = useState([]);
@@ -29,7 +23,6 @@ const Sidebar = ({ toggleSettings, isSidebarOpen, toggleSidebar }) => {
                 }
                 const data = await response.json();
                 setTeam(data);
-                console.log(teams)
             } catch (error) {
                 setError(error);
             }
@@ -40,41 +33,26 @@ const Sidebar = ({ toggleSettings, isSidebarOpen, toggleSidebar }) => {
 
 
     return (
-        <div className={`h-screen z-10 bg-gradient-to-b from-slate-200 to-indigo-100 flex flex-col items-start transition-transform transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-            <button className="h-10 w-10 " onClick={toggleSidebar}>
+        <div className={`h-screen z-10 bg-slate-700 flex flex-col items-start transition-transform transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+            <button className="h-10 w-10 text-white" onClick={toggleSidebar}>
                 ☰
             </button>
             <div className={`w-[250px] p-1 h-full`}>
                 <div className="flex flex-col text-center items-center mb-3">
-                    <div className="w-14 h-14 rounded-full border-2 mb-3 border-black"></div>
-                    <div className="text-black">我的團隊</div>
+
+                    <div className="text-white">{username}</div>
                 </div>
-                <div className='h-[75%] overflow-auto'>
+                <div className='h-[85%] overflow-auto'>
                     {teams.map(team => (
-                        <TeamInfo pullrequests={pullrequests} team={team} />
+                        <TeamInfo team={team} />
                     ))}
                 </div>
-
-                {/* <Link to="/team-overview" className="menu-item">
-                    <div className="menu-title" onClick={() => toggleItem(1)}>
-                        專案1
-                        {openIndexes.includes(1) ? (
-                            <img className="menu-right" src="down-chevron.png" alt="向下" />
-                        ) : (
-                            <img className="menu-right" src="right-chevron.png" alt="向右" />
-                        )}
+                <div className="w-[250px] absolute bottom-2 flex items-center ">
+                    <div className="w-12 h-12 rounded-full border-2 ml-1 border-white overflow-hidden">
+                        <img src={`https://avatars.githubusercontent.com/${username}`} alt="" />
                     </div>
-                    {openIndexes.includes(1) && (
-                        <div className="submenu">
-                            <div><Link to="/PRDiscussion">Pull request #1 討論區</Link></div>
-                            <div><Link to="/PRDiscussion">Pull request #2 討論區</Link></div>
-
-                        </div>
-                    )}
-                </Link> */}
-                <div className="w-[250px] absolute bottom-3 flex ">
-                    <Link to="/"> <button className="w-40 h-11 rounded-2xl bg-white bg-opacity-30 backdrop-blur-sm border-2 border-gray-400 shadow-lg ml-3 hover:bg-indigo-300 transition duration-500">建立新團隊</button></Link>
-                    <img className="w-10 h-10 ml-auto mr-4 mt-2 hover:cursor-pointer" src={settingImg} onClick={toggleSettings}></img>
+                    <Link to="/"> <button className="w-32 h-11 rounded-2xl bg-buttonBlue text-white shadow-lg ml-2 hover:bg-buttonBlue-light transition">建立新團隊</button></Link>
+                    <img className="w-9 h-9 ml-auto mr-4 hover:cursor-pointer" src={settingImg} onClick={toggleSettings}></img>
                 </div>
             </div>
         </div>

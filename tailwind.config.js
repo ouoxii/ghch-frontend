@@ -8,7 +8,11 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        
+        buttonBlue: {
+          light: '#4d6cbb',
+          DEFAULT: '#3352a1',
+          dark: '#2d488e',
+        }
       },
       fontFamily: {
         'courier': ['Courier New', 'monospace'],
