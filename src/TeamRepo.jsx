@@ -214,7 +214,7 @@ const TeamRepo = ({ onClose }) => {
                     <div className="mb-4">
                         {repos.map(repo => (
                             <div key={repo.id} className="p-4 bg-blue-50 rounded-lg shadow-md mb-4 h-24">
-                                <Link to={`/team-overview/?repoId=${repo.id}&teamId=${teamId}`}>
+                                <Link to={`/team-overview/?repoId=${repo.id}&teamId=${teamId}&teamName=${teamData.teamName}`}>
                                     <p className="text-xl font-semibold">{repo.repoName}</p>
                                 </Link>
                             </div>
