@@ -64,7 +64,7 @@ function App() {
                 ☰
               </button>
             </div>
-            <div className='flex overflow-hidden'>
+            <div className='flex overflow-hidden w-full'>
               <Routes>
                 <Route path="/" element={<CreateTeamBlock />} />
                 <Route path="/branchchart" element={<BranchChart />} />

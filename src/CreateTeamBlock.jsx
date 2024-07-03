@@ -59,6 +59,7 @@ const CreateTeamBlock = () => {
 
             console.log("成功創建團隊：" + JSON.stringify(teamResponse));
             alert("成功創建團隊");
+            window.location.reload();
         } catch (error) {
             console.error('創建團隊時出錯:', error);
             alert('創建團隊時出錯');
@@ -66,10 +67,11 @@ const CreateTeamBlock = () => {
     };
 
     return (
-        <div className="form-container">
-            <form id="createTeamForm" onSubmit={handleSubmit}>
-                <div className="form-group">
+        <div className="w-full flex justify-center items-center">
+            <form id="createTeamForm" onSubmit={handleSubmit} className='bg-indigo-50 shadow-xl p-2 rounded-2xl w-[400px] h-[250px] flex flex-col items-center justify-center'>
+                <div className="w-[300px] mb-7">
                     <input
+                        className=' p-2 border border-slate-50 rounded-md h-12 text-xl'
                         type="text"
                         name="teamName"
                         value={inputData.teamName}
@@ -78,8 +80,7 @@ const CreateTeamBlock = () => {
                     />
                     {errors.teamName && <span className="error">{errors.teamName}</span>}
                 </div>
-
-                <button type="submit" className="submit-button">創建團隊</button>
+                <button type="submit" className="bg-buttonBlue text-white w-44 h-12 rounded-full text-2xl mt-4 hover:bg-buttonBlue-dark">創建團隊</button>
             </form>
         </div>
     );

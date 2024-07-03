@@ -298,67 +298,65 @@ const TeamRepo = () => {
     };
 
     return (
-        <div style={{ display: 'flex' }}>
-            <div className="form-container">
-                <form id="createTeamForm" onSubmit={handleSubmit}>
-                    <div className="form-group">
+        <div className='flex w-full'>
+            <form id="" onSubmit={handleSubmit}>
+                <div className="form-group">
+                    <input
+                        type="text"
+                        name="repoName"
+                        value={inputData.repoName}
+                        onChange={handleInputChange}
+                        placeholder="儲存庫名稱"
+                    />
+                    {errors.repoName && <span className="error">{errors.repoName}</span>}
+                </div>
+                <div className="form-group">
+                    <input
+                        type="text"
+                        name="description"
+                        value={inputData.description}
+                        onChange={handleInputChange}
+                        placeholder="儲存庫描述"
+                    />
+                </div>
+                <div className="form-group">
+                    <input
+                        type="text"
+                        name="homepage"
+                        value={inputData.homepage}
+                        onChange={handleInputChange}
+                        placeholder="主頁URL"
+                    />
+                </div>
+                <div className="form-group">
+                    <label>
                         <input
-                            type="text"
-                            name="repoName"
-                            value={inputData.repoName}
-                            onChange={handleInputChange}
-                            placeholder="儲存庫名稱"
+                            type="checkbox"
+                            name="auto_init"
+                            checked={inputData.auto_init}
+                            onChange={() => setInputData(prevState => ({
+                                ...prevState,
+                                auto_init: !prevState.auto_init
+                            }))}
                         />
-                        {errors.repoName && <span className="error">{errors.repoName}</span>}
-                    </div>
-                    <div className="form-group">
-                        <input
-                            type="text"
-                            name="description"
-                            value={inputData.description}
-                            onChange={handleInputChange}
-                            placeholder="儲存庫描述"
-                        />
-                    </div>
-                    <div className="form-group">
-                        <input
-                            type="text"
-                            name="homepage"
-                            value={inputData.homepage}
-                            onChange={handleInputChange}
-                            placeholder="主頁URL"
-                        />
-                    </div>
-                    <div className="form-group">
-                        <label>
-                            <input
-                                type="checkbox"
-                                name="auto_init"
-                                checked={inputData.auto_init}
-                                onChange={() => setInputData(prevState => ({
-                                    ...prevState,
-                                    auto_init: !prevState.auto_init
-                                }))}
-                            />
-                            自動初始化
-                        </label>
-                    </div>
-                    <button type="submit" className="submit-button">創建儲存庫</button>
-                </form>
-                <form id="inviteForm" onSubmit={handleInviteSubmit}>
-                    <div className="form-group">
-                        <input
-                            type="text"
-                            name="invitee"
-                            value={inviteData.invitee}
-                            onChange={handleInviteChange}
-                            placeholder="邀請成員"
-                        />
-                    </div>
-                    <button type="submit" className="submit-button">發送邀請</button>
-                </form>
-                <button onClick={handleDeleteClick} className="delete-button">刪除團隊</button>
-            </div>
+                        自動初始化
+                    </label>
+                </div>
+                <button type="submit" className="submit-button">創建儲存庫</button>
+            </form>
+            <form id="inviteForm" onSubmit={handleInviteSubmit}>
+                <div className="form-group">
+                    <input
+                        type="text"
+                        name="invitee"
+                        value={inviteData.invitee}
+                        onChange={handleInviteChange}
+                        placeholder="邀請成員"
+                    />
+                </div>
+                <button type="submit" className="submit-button">發送邀請</button>
+            </form>
+            <button onClick={handleDeleteClick} className="delete-button">刪除團隊</button>
             {repos.length > 0 && (
                 <div className="repo-list">
                     <h2>儲存庫列表</h2>
