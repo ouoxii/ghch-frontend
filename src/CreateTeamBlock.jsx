@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import $ from 'jquery';
 import Cookies from 'js-cookie';
-import './CreateTeamBlock.css';
 
 const CreateTeamBlock = () => {
     const [inputData, setInputData] = useState({
