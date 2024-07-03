@@ -65,7 +65,8 @@ const TeamRepo = ({ onClose }) => {
 
     const handleSettingsClick = () => setIsSettingsOpen(!isSettingsOpen);
     const handleCreateClick = () => setIsCreateOpen(!isCreateOpen);
-    const handleCloseSettings = () => setIsCreateOpen(false);
+    const handleCreateSettings = () => setIsCreateOpen(false);
+    const handleCloseSettings = () => setIsSettingsOpen(false);
 
     const validateForm = () => {
         const newErrors = {};
@@ -201,6 +202,7 @@ const TeamRepo = ({ onClose }) => {
         deleteTeam();
         setIsModalOpen(false);
     };
+
     return (
         <div className="container mx-auto p-4">
             <div className="flex justify-between items-center p-4 border-b border-gray-300">
@@ -216,13 +218,11 @@ const TeamRepo = ({ onClose }) => {
                                     <p className="text-xl font-semibold">{repo.repoName}</p>
                                 </Link>
                             </div>
-
                         ))}
                     </div>
                     <button onClick={handleCreateClick} className="p-3 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded w-full">
                         建立新儲存庫
                     </button>
-
                 </div>
                 <div className="w-1/4 p-4">
                     <h2 className="text-xl font-bold mb-4">成員列表</h2>
@@ -248,6 +248,7 @@ const TeamRepo = ({ onClose }) => {
                             發送邀請
                         </button>
                     </form>
+
                 </div>
             </div>
             {isModalOpen && (
@@ -257,17 +258,34 @@ const TeamRepo = ({ onClose }) => {
                         <h2 className="text-2xl font-bold mb-4">確認刪除</h2>
                         <p className="mb-4">確定要刪除這個團隊嗎？</p>
                         <button onClick={handleConfirmDelete} className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded mr-2">確認</button>
-                        <button onClick={handleCloseModal} className="bg-gray-300 hover:bg-gray-400 text-black font-bold py-2 px-4 rounded">取消</button>
+                        <button onClick={handleCloseModal} className="bg-gray-300 hover:bg-gray-400 text-black font-bold py-2 px-4 rounded mr-2">取消</button>
+                    </div>
+                </div>
+            )}
+            {isSettingsOpen && (
+                <div className="fixed fixed inset-0 flex items-center justify-center bg-gray-500 bg-opacity-50">
+                    <div className="flex flex-col w-[35%] h-[80%] rounded-xl shadow-lg overflow-hidden bg-white">
+                        <div className='flex flex-col h-full relative'>
+                            <div className="p-3 m-3 flex border-b">
+                                <h2>團隊設定</h2>
+                                <button className='ml-auto' onClick={handleCloseSettings}>✕</button>
+                            </div>
+                            <div className='p-5'>
+                                <button onClick={handleDeleteClick} className="w-full bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
+                                    刪除團隊
+                                </button></div>
+
+                        </div>
                     </div>
                 </div>
             )}
             {isCreateOpen && (
-                <div className="fixed top-0 left-0 w-screen h-screen z-40 flex justify-center items-center backdrop-blur-sm bg-gray-500 bg-opacity-50">
+                <div className="fixed inset-0 flex items-center justify-center bg-gray-500 bg-opacity-50">
                     <div className="flex flex-col w-[35%] h-[80%] rounded-xl shadow-lg overflow-hidden bg-white">
                         <div className='flex flex-col h-full relative'>
-                            <div className="m-3 flex">
+                            <div className="p-3 m-3 flex border-b">
                                 <h2>創建儲存庫</h2>
-                                <button className='ml-auto' onClick={handleCloseSettings}>✕</button>
+                                <button className='ml-auto' onClick={handleCreateSettings}>✕</button>
                             </div>
                             <form id="createTeamForm" onSubmit={handleSubmit}>
                                 <div className="p-3 form-group mb-2">
@@ -321,7 +339,6 @@ const TeamRepo = ({ onClose }) => {
                                         創建儲存庫
                                     </button>
                                 </div>
-
                             </form>
                         </div>
                     </div>
