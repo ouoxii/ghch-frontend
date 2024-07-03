@@ -125,7 +125,7 @@ const TeamOverview = () => {
             </div>
             <div className="flex flex-col h-full">
                 <div className="flex-grow">
-                    <div id="example7.1" style={{ height: '300px' }}></div>
+                    <div id="example7.1" style={{ height: '300px' }} className='p-3'></div>
                 </div>
                 <div className="h-1/4 flex justify-between items-center">
                     <Link to="/branchchart" className="max-w-xs p-3 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
