@@ -252,9 +252,9 @@ const TeamRepo = ({ onClose }) => {
                 </div>
             </div>
             {isModalOpen && (
-                <div className="modal fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-                    <div className="modal-content bg-white p-8 rounded">
-                        <span className="close-button cursor-pointer" onClick={handleCloseModal}>&times;</span>
+                <div className="modal fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-40">
+                    <div className=" modal-content bg-white p-8 rounded">
+                        <span className="close-button cursor-pointer absolute top-2 right-2" onClick={handleCloseModal}>&times;</span>
                         <h2 className="text-2xl font-bold mb-4">確認刪除</h2>
                         <p className="mb-4">確定要刪除這個團隊嗎？</p>
                         <button onClick={handleConfirmDelete} className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded mr-2">確認</button>

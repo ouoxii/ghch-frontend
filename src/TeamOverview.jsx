@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
-import './TeamOverview.css';
 import timelineData from './data/timelineData.json';
 
 const TeamOverview = () => {
@@ -138,15 +137,16 @@ const TeamOverview = () => {
 
 
             {isModalOpen && (
-                <div className="modal fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-                    <div className="modal-content bg-white p-8 rounded">
-                        <span className="close-button cursor-pointer" onClick={handleCloseModal}>&times;</span>
+                <div className="modal fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-40">
+                    <div className="modal-content bg-white p-8 rounded relative">
+                        <span className="close-button cursor-pointer absolute top-2 right-2" onClick={handleCloseModal}>&times;</span>
                         <h2 className="text-2xl font-bold mb-4">確認刪除</h2>
                         <p className="mb-4">確定要刪除儲存庫嗎？</p>
                         <button onClick={handleConfirmDelete} className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded mr-2">確認</button>
                         <button onClick={handleCloseModal} className="bg-gray-300 hover:bg-gray-400 text-black font-bold py-2 px-4 rounded mr-2">取消</button>
                     </div>
                 </div>
+
             )}
             {isSettingsOpen && (
                 <div className="fixed inset-0 flex items-center justify-center bg-gray-500 bg-opacity-50">
