@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
 
-const TeamRepo = () => {
+const TeamRepo = ({ onClose }) => {
     const location = useLocation();
     const navigate = useNavigate();
     const queryParams = new URLSearchParams(location.search);
@@ -17,55 +17,33 @@ const TeamRepo = () => {
         homepage: '',
         auto_init: true
     });
-    const [inviteData, setInviteData] = useState({
-        invitee: ''
-    });
+    const [inviteData, setInviteData] = useState({ invitee: '' });
     const [errors, setErrors] = useState({});
     const [repos, setRepos] = useState([]);
     const [invitations, setInvitations] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+    const [isCreateOpen, setIsCreateOpen] = useState(false);
 
     useEffect(() => {
         const fetchTeamData = async () => {
             try {
                 const teamResponse = await fetch(`http://localhost:8081/teams/${teamId}`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
+                    headers: { 'Authorization': `Bearer ${token}` }
                 });
-
-                if (!teamResponse.ok) {
-                    throw new Error('無法獲取團隊資料');
-                }
-
+                if (!teamResponse.ok) throw new Error('無法獲取團隊資料');
                 const teamData = await teamResponse.json();
                 setTeamData(teamData);
 
                 const repoResponse = await fetch(`http://localhost:8081/team-repos/${teamData.teamName}`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
+                    headers: { 'Authorization': `Bearer ${token}` }
                 });
-
-                if (repoResponse.ok) {
-                    const repoData = await repoResponse.json();
-                    setRepos(repoData);
-                } else {
-                    setRepos([]);
-                }
+                setRepos(repoResponse.ok ? await repoResponse.json() : []);
 
                 const inviteResponse = await fetch(`http://localhost:8081/invitations/${username}`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
+                    headers: { 'Authorization': `Bearer ${token}` }
                 });
-
-                if (inviteResponse.ok) {
-                    const inviteData = await inviteResponse.json();
-                    setInvitations(inviteData);
-                } else {
-                    setInvitations([]);
-                }
+                setInvitations(inviteResponse.ok ? await inviteResponse.json() : []);
             } catch (error) {
                 console.error('獲取資料時出錯:', error);
                 alert('獲取資料時出錯');
@@ -77,34 +55,28 @@ const TeamRepo = () => {
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
-        setInputData(prevState => ({
-            ...prevState,
-            [name]: value
-        }));
+        setInputData(prevState => ({ ...prevState, [name]: value }));
     };
 
     const handleInviteChange = (e) => {
         const { name, value } = e.target;
-        setInviteData(prevState => ({
-            ...prevState,
-            [name]: value
-        }));
+        setInviteData(prevState => ({ ...prevState, [name]: value }));
     };
+
+    const handleSettingsClick = () => setIsSettingsOpen(!isSettingsOpen);
+    const handleCreateClick = () => setIsCreateOpen(!isCreateOpen);
+    const handleCloseSettings = () => setIsCreateOpen(false);
 
     const validateForm = () => {
         const newErrors = {};
-        if (!inputData.repoName) {
-            newErrors.repoName = '儲存庫名稱是必填項';
-        }
+        if (!inputData.repoName) newErrors.repoName = '儲存庫名稱是必填項';
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
 
     const handleSubmit = async (event) => {
         event.preventDefault();
-        if (!validateForm()) {
-            return;
-        }
+        if (!validateForm()) return;
 
         const repoRequestData = {
             name: inputData.repoName,
@@ -120,36 +92,21 @@ const TeamRepo = () => {
         };
 
         try {
-            // Create GitHub repository
             const repoResponse = await fetch(`http://localhost:3001/repo/create?token=${token}`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(repoRequestData)
             });
+            if (!repoResponse.ok) throw new Error('創建GitHub儲存庫失敗');
 
-            if (!repoResponse.ok) {
-                throw new Error('Network response was not ok');
-            }
-
-            // Create Cloud team repository
             const teamRepoResponse = await fetch(`http://localhost:8081/team-repos?token=${token}`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(teamRepoRequestData)
             });
+            if (!teamRepoResponse.ok) throw new Error('創建團隊儲存庫失敗');
 
-            if (!teamRepoResponse.ok) {
-                throw new Error('Network response was not ok');
-            }
-
-            const createdRepoData = await repoResponse.json();
-            console.log('成功創建儲存庫:', createdRepoData);
             alert('成功創建儲存庫');
-
         } catch (error) {
             console.error('創建儲存庫時出錯:', error);
             alert('創建儲存庫時出錯');
@@ -168,33 +125,18 @@ const TeamRepo = () => {
         try {
             const inviteResponse = await fetch(`http://localhost:8081/invitations?token=${token}`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(inviteRequestData)
             });
-
-            if (!inviteResponse.ok) {
-                throw new Error('邀請失敗');
-            }
+            if (!inviteResponse.ok) throw new Error('邀請失敗');
 
             alert('邀請成功');
             setInviteData({ invitee: '' });
 
-            // Refresh invitations list
             const inviteRefreshResponse = await fetch(`http://localhost:8081/invitations/${username}`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
+                headers: { 'Authorization': `Bearer ${token}` }
             });
-
-            if (inviteRefreshResponse.ok) {
-                const inviteRefreshData = await inviteRefreshResponse.json();
-                setInvitations(inviteRefreshData);
-            } else {
-                setInvitations([]);
-            }
-
+            setInvitations(inviteRefreshResponse.ok ? await inviteRefreshResponse.json() : []);
         } catch (error) {
             console.error('邀請時出錯:', error);
             alert('邀請時出錯');
@@ -205,14 +147,9 @@ const TeamRepo = () => {
         try {
             const response = await fetch(`http://localhost:8081/invitations/${id}?token=${token}`, {
                 method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
+                headers: { 'Content-Type': 'application/json' }
             });
-
-            if (!response.ok) {
-                throw new Error('刪除邀請時出錯');
-            }
+            if (!response.ok) throw new Error('刪除邀請時出錯');
 
             alert('成功刪除邀請');
             setInvitations(invitations.filter(invitation => invitation.id !== id));
@@ -224,173 +161,174 @@ const TeamRepo = () => {
 
     const deleteTeam = async () => {
         try {
-            // Fetch all team repos
             const repoResponse = await fetch(`http://localhost:8081/team-repos/${teamData.teamName}`, {
-                headers: {
-                    'Authorization': `Bearer ${token}`
-                }
+                headers: { 'Authorization': `Bearer ${token}` }
             });
 
-            let repos = [];
-            if (repoResponse.ok) {
-                repos = await repoResponse.json();
+            const repos = repoResponse.ok ? await repoResponse.json() : [];
+
+            for (const repo of repos) {
+                const deleteRepoResponse = await fetch(`http://localhost:8081/team-repos/${repo.id}?token=${token}`, {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                if (!deleteRepoResponse.ok) throw new Error('刪除儲存庫時出錯');
             }
 
-            // Delete all repos if any
-            if (repos.length > 0) {
-                for (const repo of repos) {
-                    const deleteRepoResponse = await fetch(`http://localhost:8081/team-repos/${repo.id}?token=${token}`, {
-                        method: 'DELETE',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        }
-                    });
-
-                    if (!deleteRepoResponse.ok) {
-                        throw new Error('刪除儲存庫時出錯');
-                    }
-                }
-            }
-
-            // Delete team members
             const deleteTeamMembersResponse = await fetch(`http://localhost:8081/team-members?token=${token}&teamId=${teamId}`, {
                 method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
+                headers: { 'Content-Type': 'application/json' }
             });
+            if (!deleteTeamMembersResponse.ok) throw new Error('刪除team-members時出錯');
 
-            if (!deleteTeamMembersResponse.ok) {
-                throw new Error('刪除team-members時出錯');
-            }
-
-            // Delete team
             const deleteTeamResponse = await fetch(`http://localhost:8081/teams/${teamId}?token=${token}`, {
                 method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
+                headers: { 'Content-Type': 'application/json' }
             });
-
-            if (!deleteTeamResponse.ok) {
-                throw new Error('刪除團隊時出錯');
-            }
+            if (!deleteTeamResponse.ok) throw new Error('刪除團隊時出錯');
 
             alert('成功刪除團隊及其所有儲存庫');
-            navigate('/'); // Redirect to home page
+            navigate('/');
         } catch (error) {
             console.error('刪除過程中出錯:', error);
             alert('刪除過程中出錯');
         }
     };
 
-    const handleDeleteClick = () => {
-        setIsModalOpen(true);
-    };
-
-    const handleCloseModal = () => {
-        setIsModalOpen(false);
-    };
-
+    const handleDeleteClick = () => setIsModalOpen(true);
+    const handleCloseModal = () => setIsModalOpen(false);
     const handleConfirmDelete = () => {
         deleteTeam();
         setIsModalOpen(false);
     };
-
     return (
-        <div className='flex w-full'>
-            <form id="" onSubmit={handleSubmit}>
-                <div className="form-group">
-                    <input
-                        type="text"
-                        name="repoName"
-                        value={inputData.repoName}
-                        onChange={handleInputChange}
-                        placeholder="儲存庫名稱"
-                    />
-                    {errors.repoName && <span className="error">{errors.repoName}</span>}
+        <div className="container mx-auto p-4">
+            <div className="flex justify-between items-center p-4 border-b border-gray-300">
+                <h1 className="text-xl font-bold">{teamData.teamName}</h1>
+                <button onClick={handleSettingsClick} className="text-blue-500">團隊設定</button>
+            </div>
+            <div className="flex h-full">
+                <div className="w-3/4 p-4 border-r border-gray-300">
+                    <div className="mb-4">
+                        {repos.map(repo => (
+                            <div key={repo.id} className="p-4 bg-blue-50 rounded-lg shadow-md mb-4 h-24">
+                                <Link to={`/team-overview/?repoId=${repo.id}&teamId=${teamId}`}>
+                                    <p className="text-xl font-semibold">{repo.repoName}</p>
+                                </Link>
+                            </div>
+
+                        ))}
+                    </div>
+                    <button onClick={handleCreateClick} className="p-3 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded w-full">
+                        建立新儲存庫
+                    </button>
+
                 </div>
-                <div className="form-group">
-                    <input
-                        type="text"
-                        name="description"
-                        value={inputData.description}
-                        onChange={handleInputChange}
-                        placeholder="儲存庫描述"
-                    />
-                </div>
-                <div className="form-group">
-                    <input
-                        type="text"
-                        name="homepage"
-                        value={inputData.homepage}
-                        onChange={handleInputChange}
-                        placeholder="主頁URL"
-                    />
-                </div>
-                <div className="form-group">
-                    <label>
+                <div className="w-1/4 p-4">
+                    <h2 className="text-xl font-bold mb-4">成員列表</h2>
+                    <ul className="mb-4">
+                        {invitations.map(invite => (
+                            <li key={invite.id} className="flex items-center mb-2">
+                                <span className="bg-gray-400 h-8 w-8 rounded-full inline-block"></span>
+                                <span className="p-3 ml-2">{invite.username}</span>
+                                <button onClick={() => deleteInvitation(invite.id)} className="ml-auto bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded">刪除邀請</button>
+                            </li>
+                        ))}
+                    </ul>
+                    <form id="inviteForm" onSubmit={handleInviteSubmit} className="mb-4 flex">
                         <input
-                            type="checkbox"
-                            name="auto_init"
-                            checked={inputData.auto_init}
-                            onChange={() => setInputData(prevState => ({
-                                ...prevState,
-                                auto_init: !prevState.auto_init
-                            }))}
+                            type="text"
+                            name="invitee"
+                            value={inviteData.invitee}
+                            onChange={handleInviteChange}
+                            placeholder="邀請成員"
+                            className="flex-grow p-2 border rounded mr-2"
                         />
-                        自動初始化
-                    </label>
+                        <button type="submit" className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                            發送邀請
+                        </button>
+                    </form>
                 </div>
-                <button type="submit" className="submit-button">創建儲存庫</button>
-            </form>
-            <form id="inviteForm" onSubmit={handleInviteSubmit}>
-                <div className="form-group">
-                    <input
-                        type="text"
-                        name="invitee"
-                        value={inviteData.invitee}
-                        onChange={handleInviteChange}
-                        placeholder="邀請成員"
-                    />
-                </div>
-                <button type="submit" className="submit-button">發送邀請</button>
-            </form>
-            <button onClick={handleDeleteClick} className="delete-button">刪除團隊</button>
-            {repos.length > 0 && (
-                <div className="repo-list">
-                    <h2>儲存庫列表</h2>
-                    {repos.map(repo => (
-                        <div key={repo.id} className="repo">
-                            <Link to={`/team-overview/?repoId=${repo.id}&teamId=${teamId}`} > <p>儲存庫名稱: {repo.repoName}</p></Link>
-                        </div>
-                    ))}
-                </div>
-            )}
-            {invitations.length > 0 && (
-                <div className="invite-list">
-                    <h2>邀請列表</h2>
-                    {invitations.map(invite => (
-                        <div key={invite.id} className="invite">
-                            <p>邀請成員: {invite.username}</p>
-                            <button onClick={() => deleteInvitation(invite.id)} className="delete-button">刪除邀請</button>
-                        </div>
-                    ))}
-                </div>
-            )}
+            </div>
             {isModalOpen && (
-                <div className="modal">
-                    <div className="modal-content">
-                        <span className="close-button" onClick={handleCloseModal}>&times;</span>
-                        <h2>確認刪除</h2>
-                        <p>確定要刪除這個團隊嗎？</p>
-                        <button onClick={handleConfirmDelete} className="confirm-button">確認</button>
-                        <button onClick={handleCloseModal} className="cancel-button">取消</button>
+                <div className="modal fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+                    <div className="modal-content bg-white p-8 rounded">
+                        <span className="close-button cursor-pointer" onClick={handleCloseModal}>&times;</span>
+                        <h2 className="text-2xl font-bold mb-4">確認刪除</h2>
+                        <p className="mb-4">確定要刪除這個團隊嗎？</p>
+                        <button onClick={handleConfirmDelete} className="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded mr-2">確認</button>
+                        <button onClick={handleCloseModal} className="bg-gray-300 hover:bg-gray-400 text-black font-bold py-2 px-4 rounded">取消</button>
                     </div>
                 </div>
             )}
-        </div >
+            {isCreateOpen && (
+                <div className="fixed top-0 left-0 w-screen h-screen z-40 flex justify-center items-center backdrop-blur-sm bg-gray-500 bg-opacity-50">
+                    <div className="flex flex-col w-[35%] h-[80%] rounded-xl shadow-lg overflow-hidden bg-white">
+                        <div className='flex flex-col h-full relative'>
+                            <div className="m-3 flex">
+                                <h2>創建儲存庫</h2>
+                                <button className='ml-auto' onClick={handleCloseSettings}>✕</button>
+                            </div>
+                            <form id="createTeamForm" onSubmit={handleSubmit}>
+                                <div className="p-3 form-group mb-2">
+                                    <input
+                                        type="text"
+                                        name="repoName"
+                                        value={inputData.repoName}
+                                        onChange={handleInputChange}
+                                        placeholder="儲存庫名稱"
+                                        className="w-full p-2 border rounded"
+                                    />
+                                    {errors.repoName && <span className="error text-red-500">{errors.repoName}</span>}
+                                </div>
+                                <div className="p-3 form-group mb-2">
+                                    <input
+                                        type="text"
+                                        name="description"
+                                        value={inputData.description}
+                                        onChange={handleInputChange}
+                                        placeholder="儲存庫描述"
+                                        className="w-full p-2 border rounded"
+                                    />
+                                </div>
+                                <div className="p-3 form-group mb-2">
+                                    <input
+                                        type="text"
+                                        name="homepage"
+                                        value={inputData.homepage}
+                                        onChange={handleInputChange}
+                                        placeholder="主頁URL"
+                                        className="w-full p-2 border rounded"
+                                    />
+                                </div>
+                                <div className="p-3 form-group mb-2">
+                                    <label className="inline-flex items-center">
+                                        <input
+                                            type="checkbox"
+                                            name="auto_init"
+                                            checked={inputData.auto_init}
+                                            onChange={() => setInputData(prevState => ({
+                                                ...prevState,
+                                                auto_init: !prevState.auto_init
+                                            }))}
+                                            className="form-checkbox"
+                                        />
+                                        <span className="p-3 ml-2">自動初始化</span>
+                                    </label>
+                                </div>
+                                <div className="p-3 form-group mb-2">
+                                    <button type="submit" className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded w-full">
+                                        創建儲存庫
+                                    </button>
+                                </div>
+
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            )}
+        </div>
     );
-};
+}
 
 export default TeamRepo;
