@@ -7,7 +7,7 @@ const TeamOverview = () => {
     const location = useLocation();
     const navigate = useNavigate();
     const queryParams = new URLSearchParams(location.search);
-    const teamId = queryParams.get('teamId');
+    const repoName = queryParams.get('repoName');
     const teamRepoId = queryParams.get('repoId');
     const teamName = queryParams.get('teamName');
 
@@ -120,7 +120,7 @@ const TeamOverview = () => {
     return (
         <div className="container mx-auto p-4 w-full h-screen">
             <div className="flex justify-between items-center p-4 border-b border-gray-300">
-                <h1 className="text-xl font-bold">{teamName} / {teamData.repoName}</h1>
+                <h1 className="text-xl font-bold">{teamName} / {repoName}</h1>
                 <button className="text-blue-500" onClick={handleSettingsClick}>儲存庫設定</button>
             </div>
             <div className="flex flex-col h-full">
