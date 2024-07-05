@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
+import { DataContext } from './DataContext';
 
 const TeamRepo = ({ onClose }) => {
     const location = useLocation();
@@ -24,6 +25,8 @@ const TeamRepo = ({ onClose }) => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const [isCreateOpen, setIsCreateOpen] = useState(false);
+
+    const { teams, addTeamdata, deleteTeamData } = useContext(DataContext);
 
     useEffect(() => {
         const fetchTeamData = async () => {
@@ -182,11 +185,12 @@ const TeamRepo = ({ onClose }) => {
             });
             if (!deleteTeamMembersResponse.ok) throw new Error('刪除team-members時出錯');
 
-            const deleteTeamResponse = await fetch(`http://localhost:8081/teams/${teamId}?token=${token}`, {
-                method: 'DELETE',
-                headers: { 'Content-Type': 'application/json' }
-            });
-            if (!deleteTeamResponse.ok) throw new Error('刪除團隊時出錯');
+            deleteTeamData(teamId, token);
+            // const deleteTeamResponse = await fetch(`http://localhost:8081/teams/${teamId}?token=${token}`, {
+            //     method: 'DELETE',
+            //     headers: { 'Content-Type': 'application/json' }
+            // });
+            // if (!deleteTeamResponse.ok) throw new Error('刪除團隊時出錯');
 
             alert('成功刪除團隊及其所有儲存庫');
             navigate('/');
