@@ -4,7 +4,7 @@ import downChevron from './img/down-chevron.png';
 import rightChevron from './img/right-chevron.png';
 
 
-const TeamInfo = ({ team }) => {
+const SidebarTeamInfo = ({ team }) => {
     const [open, setOpen] = useState(false);
     const [repos, setRepos] = useState([]);
 
@@ -58,4 +58,4 @@ const TeamInfo = ({ team }) => {
     );
 };
 
-export default TeamInfo;
+export default SidebarTeamInfo;
