@@ -1,13 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import $ from 'jquery';
+import React, { useState, useEffect, useContext } from 'react';
 import Cookies from 'js-cookie';
+import { DataContext } from './DataContext';
 
 const CreateTeamBlock = () => {
+
+    const { teams, addTeamData, deleteTeamData } = useContext(DataContext);
     const [inputData, setInputData] = useState({
         teamName: '',
-        repoName: '',
-        description: '',
-        homepage: '',
         auto_init: true
     });
 
@@ -40,29 +39,11 @@ const CreateTeamBlock = () => {
         const owner = Cookies.get('username');
         const token = Cookies.get('token');
 
-        const teamRequestData = {
-            teamName: teamName,
-            owner: owner
-        };
-
-
-
-        try {
-            // Create team
-            const teamResponse = await $.ajax({
-                url: `http://localhost:8081/teams?token=${token}`,
-                type: "POST",
-                contentType: "application/json",
-                data: JSON.stringify(teamRequestData)
-            });
-
-            console.log("成功創建團隊：" + JSON.stringify(teamResponse));
-            alert("成功創建團隊");
-            window.location.reload();
-        } catch (error) {
-            console.error('創建團隊時出錯:', error);
-            alert('創建團隊時出錯');
-        }
+        addTeamData(teamName, owner, token);
+        setInputData({
+            teamName: '',
+            auto_init: true
+          });
     };
 
     return (

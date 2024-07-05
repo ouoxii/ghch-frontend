@@ -7,12 +7,11 @@ import rightChevron from './img/right-chevron.png';
 const TeamInfo = ({ team }) => {
     const [open, setOpen] = useState(false);
     const [repos, setRepos] = useState([]);
-    const [error, setError] = useState(null);
 
     useEffect(() => {
         const fetchTeamMembers = async () => {
             try {
-                console.log(team)
+                // console.log(team)
                 const response = await fetch(`http://localhost:8081/team-repos/${team.teamName}`);
                 if (!response.ok) {
                     throw new Error('Network response was not ok');
@@ -21,7 +20,7 @@ const TeamInfo = ({ team }) => {
                 setRepos(data);
                 console.log(repos)
             } catch (error) {
-                setError(error);
+                console.log(error);
             }
         };
 

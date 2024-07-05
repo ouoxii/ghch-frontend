@@ -9,6 +9,7 @@ import PRDiscussion from './PRDiscussion';
 import TeamRepo from './TeamRepo';
 import BranchChart from './BranchChart';
 import Cookies from 'js-cookie';
+import { DataProvider } from './DataContext';
 
 
 function App() {
@@ -47,36 +48,40 @@ function App() {
 
   if (id && username && token) {
     return (
+
       <Router>
-        {isSettingsOpen && (
-          <OptionSection
-            isVisible={isSettingsOpen}
-            onClose={() => setIsSettingsOpen(false)}
-            toggleSettings={toggleSettings}
-          />
-        )}
-        <div className='flex h-screen overflow-hidden'>
+        <DataProvider>
+          {isSettingsOpen && (
+            <OptionSection
+              isVisible={isSettingsOpen}
+              onClose={() => setIsSettingsOpen(false)}
+              toggleSettings={toggleSettings}
+            />
+          )}
+          <div className='flex h-screen overflow-hidden'>
 
-          <Sidebar toggleSettings={toggleSettings} isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
-          <main className={`absolute flex overflow-hidden h-screen top-0 left-[220px] z-0 transition-transform transform ${isSidebarOpen ? 'translate-x-0 w-[calc(100%-220px)]' : '-translate-x-[220px] w-[calc(100%-1px)]'}`}>
-            <div className='flex'>
-              <button className="h-10 w-10 " onClick={toggleSidebar}>
-                ☰
-              </button>
-            </div>
-            <div className='flex overflow-hidden w-full'>
-              <Routes>
-                <Route path="/" element={<CreateTeamBlock />} />
-                <Route path="/branchchart" element={<BranchChart />} />
-                <Route path="/team-overview" element={<TeamOverview />} />
-                <Route path="/PRDiscussion" element={<PRDiscussion />} />
-                <Route path="/teamRepo" element={<TeamRepo />} />
-              </Routes>
-            </div>
+            <Sidebar toggleSettings={toggleSettings} isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
+            <main className={`absolute flex overflow-hidden h-screen top-0 left-[220px] z-0 transition-transform transform ${isSidebarOpen ? 'translate-x-0 w-[calc(100%-220px)]' : '-translate-x-[220px] w-[calc(100%-1px)]'}`}>
+              <div className='flex'>
+                <button className="h-10 w-10 " onClick={toggleSidebar}>
+                  ☰
+                </button>
+              </div>
+              <div className='flex overflow-hidden w-full'>
+                <Routes>
+                  <Route path="/" element={<CreateTeamBlock />} />
+                  <Route path="/branchchart" element={<BranchChart />} />
+                  <Route path="/team-overview" element={<TeamOverview />} />
+                  <Route path="/PRDiscussion" element={<PRDiscussion />} />
+                  <Route path="/teamRepo" element={<TeamRepo />} />
+                </Routes>
+              </div>
 
-          </main>
-        </div>
+            </main>
+          </div>
+        </DataProvider>
       </Router>
+
     );
   } else {
     return (
