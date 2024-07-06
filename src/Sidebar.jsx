@@ -4,6 +4,8 @@ import TeamInfo from './TeamInfo';
 import Cookies from 'js-cookie';
 import settingImg from './img/gear.png';
 import notificationBellImg from './img/notification.png';
+import check from './img/check.png';
+import close from './img/close.png';
 import { DataContext } from './DataContext';
 
 const Sidebar = ({ toggleSettings, isSidebarOpen, toggleSidebar }) => {
