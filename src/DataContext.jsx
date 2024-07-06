@@ -1,12 +1,13 @@
 import React, { createContext, useState, useEffect } from 'react';
 import Cookies from 'js-cookie';
 
-// 創建一個 Context
 export const DataContext = createContext();
 
 export const DataProvider = ({ children }) => {
-    const [teams, setTeam] = useState([]);
+    const [teams, setTeams] = useState([]);
+    const [notifications, setNotifications] = useState([]);
     const username = Cookies.get('username');
+    const token = Cookies.get('token');
 
     const fetchData = async () => {
         try {
@@ -15,15 +16,26 @@ export const DataProvider = ({ children }) => {
                 throw new Error('Network response was not ok');
             }
             const data = await response.json();
-            setTeam(data);
+            setTeams(data);
         } catch (error) {
             console.error('Error fetching data:', error);
         }
     };
 
-    //新增團隊
-    const addTeamData = async (teamName, owner, token) => {
+    const fetchNotifications = async (token) => {
+        try {
+            const response = await fetch(`http://localhost:8081/invitations/${username}?`);
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            const data = await response.json();
+            setNotifications(data);
+        } catch (error) {
+            console.error('Error fetching notifications:', error);
+        }
+    };
 
+    const addTeamData = async (teamName, owner, token) => {
         const teamRequestData = {
             teamName: teamName,
             owner: owner
@@ -47,10 +59,8 @@ export const DataProvider = ({ children }) => {
             console.error('創建團隊時出錯:', error);
             alert('創建團隊時出錯');
         }
-
     };
 
-    //刪除團隊
     const deleteTeamData = async (teamId, token) => {
         try {
             const response = await fetch(`http://localhost:8081/teams/${teamId}?token=${token}`, {
@@ -61,12 +71,8 @@ export const DataProvider = ({ children }) => {
             if (!response.ok) {
                 throw new Error('刪除團隊時出錯');
             }
-            // Update the state to remove the deleted team
-            console.log(teams)
-            console.log(teamId)
-            setTeam(prevTeams => prevTeams.filter(team => team.teamId !== teamId));
-            console.log(teams);
 
+            setTeams(prevTeams => prevTeams.filter(team => team.teamId !== teamId));
         } catch (error) {
             console.error(error.message);
         }
@@ -74,10 +80,11 @@ export const DataProvider = ({ children }) => {
 
     useEffect(() => {
         fetchData();
+        fetchNotifications(token);
     }, [username]);
 
     return (
-        <DataContext.Provider value={{ teams, addTeamData, deleteTeamData }}>
+        <DataContext.Provider value={{ teams, notifications, addTeamData, deleteTeamData, fetchNotifications }}>
             {children}
         </DataContext.Provider>
     );
