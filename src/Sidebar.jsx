@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { Link } from 'react-router-dom';
 // import './Sidebar.css';
-import TeamInfo from './TeamInfo';
+import SidebarTeamInfo from './SidebarTeamInfo';
 import Cookies from 'js-cookie';
 import settingImg from './img/gear.png';
 
@@ -10,7 +10,7 @@ import { DataContext } from './DataContext';
 
 const Sidebar = ({ toggleSettings, isSidebarOpen, toggleSidebar }) => {
 
-    const {teams, addTeamdata, deleteTeamData} = useContext(DataContext);
+    const { teams, fetcTeamhData, addTeamdata, deleteTeamData } = useContext(DataContext);
     const username = Cookies.get('username');
 
     return (
@@ -25,7 +25,7 @@ const Sidebar = ({ toggleSettings, isSidebarOpen, toggleSidebar }) => {
                 </div>
                 <div className='h-[85%] overflow-auto'>
                     {teams.map(team => (
-                        <TeamInfo team={team} />
+                        <SidebarTeamInfo team={team} />
                     ))}
                 </div>
                 <div className="w-[250px] absolute bottom-2 flex items-center ">

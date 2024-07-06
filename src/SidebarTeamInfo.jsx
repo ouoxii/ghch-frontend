@@ -4,9 +4,10 @@ import downChevron from './img/down-chevron.png';
 import rightChevron from './img/right-chevron.png';
 
 
-const TeamInfo = ({ team }) => {
+const SidebarTeamInfo = ({ team }) => {
     const [open, setOpen] = useState(false);
     const [repos, setRepos] = useState([]);
+    // console.log(repos)
 
     useEffect(() => {
         const fetchTeamMembers = async () => {
@@ -18,7 +19,7 @@ const TeamInfo = ({ team }) => {
                 }
                 const data = await response.json();
                 setRepos(data);
-                console.log(repos)
+                
             } catch (error) {
                 console.log(error);
             }
@@ -58,4 +59,4 @@ const TeamInfo = ({ team }) => {
     );
 };
 
-export default TeamInfo;
+export default SidebarTeamInfo;
