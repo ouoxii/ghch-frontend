@@ -10,7 +10,7 @@ import { DataContext } from './DataContext';
 
 const Sidebar = ({ toggleSettings, isSidebarOpen, toggleSidebar }) => {
 
-    const {teams, addTeamdata, deleteTeamData} = useContext(DataContext);
+    const {teams, addTeamData, deleteTeamData} = useContext(DataContext);
     const username = Cookies.get('username');
 
     return (

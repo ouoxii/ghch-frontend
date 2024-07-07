@@ -14,11 +14,15 @@ const SidebarTeamInfo = ({ team }) => {
                 // console.log(team)
                 const response = await fetch(`http://localhost:8081/team-repos/${team.teamName}`);
                 if (!response.ok) {
-                    throw new Error('Network response was not ok');
+                    if (response.status === 404) {
+                        setRepos([]); // 清空 repos
+                        throw new Error('Team repos not found');
+                    } else {
+                        throw new Error('Network response was not ok');
+                    }
                 }
                 const data = await response.json();
                 setRepos(data);
-                console.log(repos)
             } catch (error) {
                 console.log(error);
             }
