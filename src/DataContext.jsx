@@ -22,9 +22,9 @@ export const DataProvider = ({ children }) => {
         }
     };
 
-    const fetchNotifications = async (token) => {
+    const fetchNotifications = async () => {
         try {
-            const response = await fetch(`http://localhost:8081/invitations/${username}?`);
+            const response = await fetch(`http://localhost:8081/invitations/${username}`);
             if (!response.ok) {
                 throw new Error('Network response was not ok');
             }
@@ -32,6 +32,66 @@ export const DataProvider = ({ children }) => {
             setNotifications(data);
         } catch (error) {
             console.error('Error fetching notifications:', error);
+        }
+    };
+
+    const acceptInvitation = async (notification,invitationId) => {
+        const requestData = {
+            username: username,
+            teamId: notification.teamId,
+            teamName: notification.teamName,
+        };
+
+        try {
+            const response = await fetch(`http://localhost:8081/team-members`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(requestData)
+            });
+
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            alert('成功加入團隊');
+            fetchData();
+            fetchNotifications();
+        } catch (error) {
+            console.error('接受邀請時出錯:', error);
+            alert('接受邀請時出錯');
+        }
+
+        try {
+            const response = await fetch(`http://localhost:8081/invitations/${invitationId}`, {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' }
+            });
+
+            if (!response.ok) {
+                throw new Error('刪除邀請時出錯');
+            }
+            setNotifications(notifications.filter(notification => notification.id !== invitationId));
+        } catch (error) {
+            console.error('拒絕邀請時出錯:', error)
+        }
+    };
+
+    const rejectInvitation = async (invitationId) => {
+        try {
+            const response = await fetch(`http://localhost:8081/invitations/${invitationId}`, {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' }
+            });
+
+            if (!response.ok) {
+                throw new Error('刪除邀請時出錯');
+            }
+            alert('邀請已拒絕');
+            setNotifications(notifications.filter(notification => notification.id !== invitationId));
+        } catch (error) {
+            console.error('拒絕邀請時出錯:', error);
+            alert('拒絕邀請時出錯');
         }
     };
 
@@ -80,11 +140,11 @@ export const DataProvider = ({ children }) => {
 
     useEffect(() => {
         fetchData();
-        fetchNotifications(token);
+        fetchNotifications();
     }, [username]);
 
     return (
-        <DataContext.Provider value={{ teams, notifications, addTeamData, deleteTeamData, fetchNotifications }}>
+        <DataContext.Provider value={{ teams, notifications, addTeamData, deleteTeamData, fetchNotifications, acceptInvitation, rejectInvitation }}>
             {children}
         </DataContext.Provider>
     );

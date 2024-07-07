@@ -4,12 +4,12 @@ import TeamInfo from './TeamInfo';
 import Cookies from 'js-cookie';
 import settingImg from './img/gear.png';
 import notificationBellImg from './img/notification.png';
-import check from './img/check.png';
-import close from './img/close.png';
+import checkImg from './img/check.png';
+import closeImg from './img/close.png';
 import { DataContext } from './DataContext';
 
 const Sidebar = ({ toggleSettings, isSidebarOpen, toggleSidebar }) => {
-    const { teams, notifications, fetchNotifications } = useContext(DataContext);
+    const { teams, notifications, fetchNotifications, acceptInvitation, rejectInvitation } = useContext(DataContext);
     const username = Cookies.get('username');
     const [isNotificationOpen, setIsNotificationOpen] = useState(false);
 
@@ -55,8 +55,12 @@ const Sidebar = ({ toggleSettings, isSidebarOpen, toggleSidebar }) => {
                         <h2 className="text-2xl font-bold mb-4">通知</h2>
                         <ul className="notification-list">
                             {notifications.map((notification, index) => (
-                                <li key={index} className="mb-2">
+                                <li key={index} className="mb-2 flex justify-between items-center">
                                     {notification.teamName}
+                                    <div className="flex">
+                                        <img src={checkImg} alt="接受" className="w-5 h-5 cursor-pointer mr-2" onClick={() => acceptInvitation(notification, notification.id)} />
+                                        <img src={closeImg} alt="拒絕" className="w-5 h-5 cursor-pointer" onClick={() => rejectInvitation(notification.id)} />
+                                    </div>
                                 </li>
                             ))}
                         </ul>
