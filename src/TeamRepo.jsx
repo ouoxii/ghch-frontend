@@ -22,6 +22,7 @@ const TeamRepo = ({ onClose }) => {
     const [errors, setErrors] = useState({});
     const [repos, setRepos] = useState([]);
     const [invitations, setInvitations] = useState([]);
+    const [teamMembers, setTeamMembers] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -42,11 +43,16 @@ const TeamRepo = ({ onClose }) => {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 setRepos(repoResponse.ok ? await repoResponse.json() : []);
-
+                //邀請中列表
                 const inviteResponse = await fetch(`http://localhost:8081/invitations/${username}`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 setInvitations(inviteResponse.ok ? await inviteResponse.json() : []);
+                //teamMembers列表
+                const teamMembersResponse = await fetch(`http://localhost:8081/team-members/${username}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                setTeamMembers(teamMembersResponse.ok ? await teamMembersResponse.json() : []);
             } catch (error) {
                 console.error('獲取資料時出錯:', error);
                 alert('獲取資料時出錯');
@@ -231,6 +237,14 @@ const TeamRepo = ({ onClose }) => {
                 <div className="w-1/4 p-4">
                     <h2 className="text-xl font-bold mb-4">成員列表</h2>
                     <ul className="mb-4">
+                        {teamMembers.map(teamMember => (
+                            <li key={teamMember.id} className="flex items-center mb-2">
+                                <div className="w-12 h-12 rounded-full border-2 ml-1 border-white overflow-hidden">
+                                    <img src={`https://avatars.githubusercontent.com/${username}`} alt="" />
+                                </div>
+                                <span className="p-3 ml-2">{teamMember.username}</span>
+                            </li>
+                        ))}
                         {invitations.map(invite => (
                             <li key={invite.id} className="flex items-center mb-2">
                                 <span className="bg-gray-400 h-8 w-8 rounded-full inline-block"></span>
