@@ -8,7 +8,7 @@ export const DataProvider = ({ children }) => {
     const [teams, setTeam] = useState([]);
     const username = Cookies.get('username');
 
-    const fetchData = async () => {
+    const fetchTeamData = async () => {
         try {
             const response = await fetch(`http://localhost:8081/team-members/${username}`);
             if (!response.ok) {
@@ -42,7 +42,7 @@ export const DataProvider = ({ children }) => {
                 throw new Error('Network response was not ok');
             }
             alert("成功創建團隊");
-            fetchData();
+            fetchTeamData();
         } catch (error) {
             console.error('創建團隊時出錯:', error);
             alert('創建團隊時出錯');
@@ -73,11 +73,11 @@ export const DataProvider = ({ children }) => {
     };
 
     useEffect(() => {
-        fetchData();
+        fetchTeamData();
     }, [username]);
 
     return (
-        <DataContext.Provider value={{ teams, addTeamData, deleteTeamData }}>
+        <DataContext.Provider value={{ teams, fetchTeamData, addTeamData, deleteTeamData }}>
             {children}
         </DataContext.Provider>
     );

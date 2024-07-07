@@ -7,6 +7,7 @@ import rightChevron from './img/right-chevron.png';
 const SidebarTeamInfo = ({ team }) => {
     const [open, setOpen] = useState(false);
     const [repos, setRepos] = useState([]);
+    // console.log(repos)
 
     useEffect(() => {
         const fetchTeamMembers = async () => {
