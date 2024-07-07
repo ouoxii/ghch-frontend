@@ -27,7 +27,7 @@ const TeamRepo = ({ onClose }) => {
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const [isCreateOpen, setIsCreateOpen] = useState(false);
 
-    const { teams, addTeamdata, deleteTeamData } = useContext(DataContext);
+    const { teams, fetchTeamData, addTeamdata, deleteTeamData } = useContext(DataContext);
 
     useEffect(() => {
         const fetchTeamData = async () => {
@@ -117,6 +117,7 @@ const TeamRepo = ({ onClose }) => {
             if (!teamRepoResponse.ok) throw new Error('創建團隊儲存庫失敗');
 
             alert('成功創建儲存庫');
+            fetchTeamData();
         } catch (error) {
             console.error('創建儲存庫時出錯:', error);
             alert('創建儲存庫時出錯');

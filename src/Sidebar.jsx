@@ -1,6 +1,7 @@
 import React, { useState, useContext, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import TeamInfo from './TeamInfo';
+// import './Sidebar.css';
+import SidebarTeamInfo from './SidebarTeamInfo';
 import Cookies from 'js-cookie';
 import settingImg from './img/gear.png';
 import notificationBellImg from './img/notification.png';
@@ -9,7 +10,7 @@ import closeImg from './img/close.png';
 import { DataContext } from './DataContext';
 
 const Sidebar = ({ toggleSettings, isSidebarOpen, toggleSidebar }) => {
-    const { teams, notifications, fetchNotifications, acceptInvitation, rejectInvitation } = useContext(DataContext);
+    const { teams, addTeamData, deleteTeamData, notifications, fetchNotifications, acceptInvitation, rejectInvitation } = useContext(DataContext);
     const username = Cookies.get('username');
     const [isNotificationOpen, setIsNotificationOpen] = useState(false);
 
@@ -34,7 +35,7 @@ const Sidebar = ({ toggleSettings, isSidebarOpen, toggleSidebar }) => {
                 </div>
                 <div className='h-[85%] overflow-auto'>
                     {teams.map(team => (
-                        <TeamInfo key={team.id} team={team} />
+                        <SidebarTeamInfo team={team} />
                     ))}
                 </div>
                 <div className="w-[250px] absolute bottom-2 flex items-center">

@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
 import timelineData from './data/timelineData.json';
+import { DataContext } from './DataContext';
 
 const TeamOverview = () => {
     const location = useLocation();
@@ -14,6 +15,8 @@ const TeamOverview = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [teamData, setTeamData] = useState({ teamId: '', teamName: '', repoName: '' });
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+
+    const { teams, fetchTeamData, addTeamdata, deleteTeamData } = useContext(DataContext);
 
     useEffect(() => {
         const fetchTeamData = async () => {
@@ -95,6 +98,7 @@ const TeamOverview = () => {
 
             alert('成功刪除儲存庫');
             navigate('/'); // 重導向到首頁
+            fetchTeamData();
         } catch (error) {
             console.error('刪除過程中出錯:', error);
             alert('刪除過程中出錯');

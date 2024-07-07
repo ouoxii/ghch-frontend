@@ -9,7 +9,7 @@ export const DataProvider = ({ children }) => {
     const username = Cookies.get('username');
     const token = Cookies.get('token');
 
-    const fetchData = async () => {
+    const fetchTeamData = async () => {
         try {
             const response = await fetch(`http://localhost:8081/team-members/${username}`);
             if (!response.ok) {
@@ -35,7 +35,7 @@ export const DataProvider = ({ children }) => {
         }
     };
 
-    const acceptInvitation = async (notification,invitationId) => {
+    const acceptInvitation = async (notification, invitationId) => {
         const requestData = {
             username: username,
             teamId: notification.teamId,
@@ -55,7 +55,7 @@ export const DataProvider = ({ children }) => {
                 throw new Error('Network response was not ok');
             }
             alert('成功加入團隊');
-            fetchData();
+            fetchTeamData();
             fetchNotifications();
         } catch (error) {
             console.error('接受邀請時出錯:', error);
@@ -114,7 +114,7 @@ export const DataProvider = ({ children }) => {
                 throw new Error('Network response was not ok');
             }
             alert("成功創建團隊");
-            fetchData();
+            fetchTeamData();
         } catch (error) {
             console.error('創建團隊時出錯:', error);
             alert('創建團隊時出錯');
@@ -139,12 +139,12 @@ export const DataProvider = ({ children }) => {
     };
 
     useEffect(() => {
-        fetchData();
+        fetchTeamData();
         fetchNotifications();
     }, [username]);
 
     return (
-        <DataContext.Provider value={{ teams, notifications, addTeamData, deleteTeamData, fetchNotifications, acceptInvitation, rejectInvitation }}>
+        <DataContext.Provider value={{ teams, notifications, fetchTeamData, addTeamData, deleteTeamData, fetchNotifications, acceptInvitation, rejectInvitation }}>
             {children}
         </DataContext.Provider>
     );
