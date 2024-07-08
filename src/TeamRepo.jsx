@@ -141,6 +141,7 @@ const TeamRepo = ({ onClose }) => {
         };
 
         try {
+            console.log('Sending invite request:', inviteRequestData); // 調試日誌
             const inviteResponse = await fetch(`http://localhost:8081/invitations?token=${token}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -149,7 +150,23 @@ const TeamRepo = ({ onClose }) => {
             if (!inviteResponse.ok) throw new Error('邀請失敗');
 
             alert('邀請成功');
+
             setInviteData({ invitee: '' });
+            if (repos.length > 0) {
+                try {
+                    await Promise.all(repos.map(async (repo) => {
+                        const repoResponse = await fetch(`http://localhost:3001/collab/add?owner=${username}&repo=${repo.repoName}&username=${inviteRequestData.username}&token=${token}`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                        });
+                        if (!repoResponse.ok) throw new Error(`Failed to add collaborator to repo: ${repo.repoName}`);
+                    }));
+                    alert('Successfully added collaborators to all repos');
+                } catch (error) {
+                    console.error('Error adding collaborators:', error);
+                    alert('Error adding collaborators');
+                }
+            }
             const inviteRefreshResponse = await fetch(`http://localhost:8081/invitations/${username}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
