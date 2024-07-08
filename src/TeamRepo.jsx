@@ -22,6 +22,7 @@ const TeamRepo = ({ onClose }) => {
     const [errors, setErrors] = useState({});
     const [repos, setRepos] = useState([]);
     const [invitations, setInvitations] = useState([]);
+    const [teamMembers, setTeamMembers] = useState([]);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const [isCreateOpen, setIsCreateOpen] = useState(false);
@@ -41,12 +42,18 @@ const TeamRepo = ({ onClose }) => {
                 const repoResponse = await fetch(`http://localhost:8081/team-repos/${teamData.teamName}`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
-                setRepos(repoResponse.ok ? await repoResponse.json() : []);
+                const reposData = repoResponse.ok ? await repoResponse.json() : [];
+                setRepos(reposData);
 
                 const inviteResponse = await fetch(`http://localhost:8081/invitations/${username}`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 setInvitations(inviteResponse.ok ? await inviteResponse.json() : []);
+
+                const teamMembersResponse = await fetch(`http://localhost:8081/team-members/${username}`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+                setTeamMembers(teamMembersResponse.ok ? await teamMembersResponse.json() : []);
             } catch (error) {
                 console.error('獲取資料時出錯:', error);
                 alert('獲取資料時出錯');
@@ -112,6 +119,7 @@ const TeamRepo = ({ onClose }) => {
 
             alert('成功創建儲存庫');
             fetchTeamData();
+            navigate(`/team-overview/?teamId=${teamId}&teamName=${teamData.teamName}&repoName=${inputData.repoName}`);
         } catch (error) {
             console.error('創建儲存庫時出錯:', error);
             alert('創建儲存庫時出錯');
@@ -120,6 +128,11 @@ const TeamRepo = ({ onClose }) => {
 
     const handleInviteSubmit = async (event) => {
         event.preventDefault();
+
+        if (!inviteData.invitee) {
+            setErrors(prevState => ({ ...prevState, invitee: '成員名不可空白' }));
+            return;
+        }
 
         const inviteRequestData = {
             teamId: teamId,
@@ -137,7 +150,6 @@ const TeamRepo = ({ onClose }) => {
 
             alert('邀請成功');
             setInviteData({ invitee: '' });
-
             const inviteRefreshResponse = await fetch(`http://localhost:8081/invitations/${username}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
@@ -187,11 +199,6 @@ const TeamRepo = ({ onClose }) => {
             if (!deleteTeamMembersResponse.ok) throw new Error('刪除team-members時出錯');
 
             deleteTeamData(teamId, token);
-            // const deleteTeamResponse = await fetch(`http://localhost:8081/teams/${teamId}?token=${token}`, {
-            //     method: 'DELETE',
-            //     headers: { 'Content-Type': 'application/json' }
-            // });
-            // if (!deleteTeamResponse.ok) throw new Error('刪除團隊時出錯');
 
             alert('成功刪除團隊及其所有儲存庫');
             navigate('/');
@@ -232,6 +239,14 @@ const TeamRepo = ({ onClose }) => {
                 <div className="w-1/4 p-4">
                     <h2 className="text-xl font-bold mb-4">成員列表</h2>
                     <ul className="mb-4">
+                        {teamMembers.map(teamMember => (
+                            <li key={teamMember.id} className="flex items-center mb-2">
+                                <div className="w-12 h-12 rounded-full border-2 ml-1 border-white overflow-hidden">
+                                    <img src={`https://avatars.githubusercontent.com/${username}`} alt="" />
+                                </div>
+                                <span className="p-3 ml-2">{teamMember.username}</span>
+                            </li>
+                        ))}
                         {invitations.map(invite => (
                             <li key={invite.id} className="flex items-center mb-2">
                                 <span className="bg-gray-400 h-8 w-8 rounded-full inline-block"></span>
@@ -253,12 +268,12 @@ const TeamRepo = ({ onClose }) => {
                             發送邀請
                         </button>
                     </form>
-
+                    {errors.invitee && <span className="error text-red-500">{errors.invitee}</span>}
                 </div>
             </div>
             {isModalOpen && (
                 <div className="modal fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-40">
-                    <div className=" modal-content bg-white p-8 rounded">
+                    <div className="modal-content bg-white p-8 rounded">
                         <span className="close-button cursor-pointer absolute top-2 right-2" onClick={handleCloseModal}>&times;</span>
                         <h2 className="text-2xl font-bold mb-4">確認刪除</h2>
                         <p className="mb-4">確定要刪除這個團隊嗎？</p>
