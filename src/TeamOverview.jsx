@@ -82,14 +82,10 @@ const TeamOverview = () => {
     };
 
     const deleteTeam = async () => {
-        const token = Cookies.get('token');
 
         try {
-            const deleteRepoResponse = await fetch(`http://localhost:8081/team-repos/${teamRepoId}?token=${token}`, {
-                method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json'
-                }
+            const deleteRepoResponse = await fetch(`http://localhost:8081/team-repos/${teamRepoId}`, {
+                method: 'DELETE'
             });
 
             if (!deleteRepoResponse.ok) {
