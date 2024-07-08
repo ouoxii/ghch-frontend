@@ -291,9 +291,12 @@ const TeamRepo = ({ onClose }) => {
                                 <button className='ml-auto' onClick={handleCloseSettings}>✕</button>
                             </div>
                             <div className='p-5'>
-                                <button onClick={handleDeleteClick} className="w-full bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
-                                    刪除團隊
-                                </button></div>
+                                {teamData.owner === username && (
+                                    <button onClick={handleDeleteClick} className="w-full bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
+                                        刪除團隊
+                                    </button>
+                                )}
+                            </div>
 
                         </div>
                     </div>
