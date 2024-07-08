@@ -49,7 +49,7 @@ const TeamRepo = ({ onClose }) => {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 setInvitations(inviteResponse.ok ? await inviteResponse.json() : []);
-                //待修改teamMembersRespons//
+
                 const teamMembersResponse = await fetch(`http://localhost:8081/team-members/${username}`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
@@ -127,6 +127,11 @@ const TeamRepo = ({ onClose }) => {
 
     const handleInviteSubmit = async (event) => {
         event.preventDefault();
+
+        if (!inviteData.invitee) {
+            setErrors(prevState => ({ ...prevState, invitee: '成員名不可空白' }));
+            return;
+        }
 
         const inviteRequestData = {
             teamId: teamId,
@@ -262,7 +267,7 @@ const TeamRepo = ({ onClose }) => {
                             發送邀請
                         </button>
                     </form>
-
+                    {errors.invitee && <span className="error text-red-500">{errors.invitee}</span>}
                 </div>
             </div>
             {isModalOpen && (
