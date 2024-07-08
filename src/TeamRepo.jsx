@@ -49,7 +49,7 @@ const TeamRepo = ({ onClose }) => {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 setInvitations(inviteResponse.ok ? await inviteResponse.json() : []);
-
+                //待修改teamMembersRespons//
                 const teamMembersResponse = await fetch(`http://localhost:8081/team-members/${username}`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
@@ -62,28 +62,6 @@ const TeamRepo = ({ onClose }) => {
 
         fetchTeamData();
     }, [teamId, token, username]);
-
-    useEffect(() => {
-        const addCollaborators = async () => {
-            if (repos.length > 0) {
-                try {
-                    await Promise.all(repos.map(async (repo) => {
-                        const repoResponse = await fetch(`http://localhost:3001/repos/${teamData.owner}/${repo.repoName}/collaborators/${username}?token=${token}`, {
-                            method: 'PUT',
-                            headers: { 'Content-Type': 'application/json' },
-                        });
-                        if (!repoResponse.ok) throw new Error(`Failed to add collaborator to repo: ${repo.repoName}`);
-                    }));
-                    alert('Successfully added collaborators to all repos');
-                } catch (error) {
-                    console.error('Error adding collaborators:', error);
-                    alert('Error adding collaborators');
-                }
-            }
-        };
-
-        addCollaborators();
-    }, [repos, teamData.owner, username, token]);
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -166,7 +144,6 @@ const TeamRepo = ({ onClose }) => {
 
             alert('邀請成功');
             setInviteData({ invitee: '' });
-
             const inviteRefreshResponse = await fetch(`http://localhost:8081/invitations/${username}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
