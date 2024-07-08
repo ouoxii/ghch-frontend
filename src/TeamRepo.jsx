@@ -119,6 +119,7 @@ const TeamRepo = ({ onClose }) => {
 
             alert('成功創建儲存庫');
             fetchTeamData();
+            navigate(`/team-overview/?teamId=${teamId}&teamName=${teamData.teamName}&repoName=${inputData.repoName}`);
         } catch (error) {
             console.error('創建儲存庫時出錯:', error);
             alert('創建儲存庫時出錯');
