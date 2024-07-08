@@ -50,7 +50,7 @@ const TeamRepo = ({ onClose }) => {
                 });
                 setInvitations(inviteResponse.ok ? await inviteResponse.json() : []);
 
-                const teamMembersResponse = await fetch(`http://localhost:8081/team-members/${username}`, {
+                const teamMembersResponse = await fetch(`http://localhost:8081/team-members?teamName=${teamData.teamName}`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 setTeamMembers(teamMembersResponse.ok ? await teamMembersResponse.json() : []);
@@ -141,6 +141,7 @@ const TeamRepo = ({ onClose }) => {
         };
 
         try {
+            console.log('Sending invite request:', inviteRequestData); // 調試日誌
             const inviteResponse = await fetch(`http://localhost:8081/invitations?token=${token}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -149,7 +150,23 @@ const TeamRepo = ({ onClose }) => {
             if (!inviteResponse.ok) throw new Error('邀請失敗');
 
             alert('邀請成功');
+
             setInviteData({ invitee: '' });
+            if (repos.length > 0) {
+                try {
+                    await Promise.all(repos.map(async (repo) => {
+                        const repoResponse = await fetch(`http://localhost:3001/collab/add?owner=${username}&repo=${repo.repoName}&username=${inviteRequestData.username}&token=${token}`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json' },
+                        });
+                        if (!repoResponse.ok) throw new Error(`Failed to add collaborator to repo: ${repo.repoName}`);
+                    }));
+                    alert('Successfully added collaborators to all repos');
+                } catch (error) {
+                    console.error('Error adding collaborators:', error);
+                    alert('Error adding collaborators');
+                }
+            }
             const inviteRefreshResponse = await fetch(`http://localhost:8081/invitations/${username}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
@@ -242,7 +259,7 @@ const TeamRepo = ({ onClose }) => {
                         {teamMembers.map(teamMember => (
                             <li key={teamMember.id} className="flex items-center mb-2">
                                 <div className="w-12 h-12 rounded-full border-2 ml-1 border-white overflow-hidden">
-                                    <img src={`https://avatars.githubusercontent.com/${username}`} alt="" />
+                                    <img src={`https://avatars.githubusercontent.com/${teamMember.username}`} alt="" />
                                 </div>
                                 <span className="p-3 ml-2">{teamMember.username}</span>
                             </li>
@@ -291,9 +308,12 @@ const TeamRepo = ({ onClose }) => {
                                 <button className='ml-auto' onClick={handleCloseSettings}>✕</button>
                             </div>
                             <div className='p-5'>
-                                <button onClick={handleDeleteClick} className="w-full bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
-                                    刪除團隊
-                                </button></div>
+                                {teamData.owner === username && (
+                                    <button onClick={handleDeleteClick} className="w-full bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
+                                        刪除團隊
+                                    </button>
+                                )}
+                            </div>
 
                         </div>
                     </div>
