@@ -50,7 +50,7 @@ const TeamRepo = ({ onClose }) => {
                 });
                 setInvitations(inviteResponse.ok ? await inviteResponse.json() : []);
 
-                const teamMembersResponse = await fetch(`http://localhost:8081/team-members/${username}`, {
+                const teamMembersResponse = await fetch(`http://localhost:8081/team-members?teamName=${teamData.teamName}`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 setTeamMembers(teamMembersResponse.ok ? await teamMembersResponse.json() : []);
@@ -259,7 +259,7 @@ const TeamRepo = ({ onClose }) => {
                         {teamMembers.map(teamMember => (
                             <li key={teamMember.id} className="flex items-center mb-2">
                                 <div className="w-12 h-12 rounded-full border-2 ml-1 border-white overflow-hidden">
-                                    <img src={`https://avatars.githubusercontent.com/${username}`} alt="" />
+                                    <img src={`https://avatars.githubusercontent.com/${teamMember.username}`} alt="" />
                                 </div>
                                 <span className="p-3 ml-2">{teamMember.username}</span>
                             </li>
