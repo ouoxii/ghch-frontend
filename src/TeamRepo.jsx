@@ -161,10 +161,10 @@ const TeamRepo = ({ onClose }) => {
                         });
                         if (!repoResponse.ok) throw new Error(`Failed to add collaborator to repo: ${repo.repoName}`);
                     }));
-                    alert('Successfully added collaborators to all repos');
+                    alert('成功寄出協作邀請');
                 } catch (error) {
-                    console.error('Error adding collaborators:', error);
-                    alert('Error adding collaborators');
+                    console.error('寄出協作邀請失敗', error);
+                    alert('寄出協作邀請失敗');
                 }
             }
             const inviteRefreshResponse = await fetch(`http://localhost:8081/invitations/${username}`, {
