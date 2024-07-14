@@ -42,7 +42,7 @@ const SidebarTeamInfo = ({ team }) => {
             <div className='flex items-center p-1.5 rounded-xl hover:bg-zinc-300'>
                 <Link to={`/teamRepo/?teamId=${team.teamId}`} className='flex-grow  mb-1 ml-2 font-red-hat'>
 
-                    <div>{team.teamName}</div>
+                    <div className='w-40 overflow-hidden'>{team.teamName}</div>
                 </Link>
                 {open ? (
                     <img className="ml-auto w-[20px] h-[20px]" src={downChevron} alt="向下" onClick={() => toggleItem()} />

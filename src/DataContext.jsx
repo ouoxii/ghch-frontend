@@ -27,7 +27,12 @@ export const DataProvider = ({ children }) => {
         try {
             const response = await fetch(`http://localhost:8081/invitations/${username}`);
             if (!response.ok) {
-                throw new Error('Network response was not ok');
+                if (response.status === 404) {
+                    setNotifications([]); // 清空 repos
+                    throw new Error('No notification');
+                } else {
+                    throw new Error('Network response was not ok');
+                }
             }
             const data = await response.json();
             setNotifications(data);
@@ -35,6 +40,12 @@ export const DataProvider = ({ children }) => {
             console.error('Error fetching notifications:', error);
         }
     };
+
+    const autoUpdateNotification = () => {
+        fetchNotifications();
+        const id = setInterval(fetchNotifications, 15000);
+        return id;
+    }
 
     const acceptInvitation = async (notification, invitationId) => {
         const requestData = {
@@ -148,7 +159,8 @@ export const DataProvider = ({ children }) => {
     }, [username]);
 
     return (
-        <DataContext.Provider value={{ teams, notifications, fetchTeamData, addTeamData, deleteTeamData, fetchNotifications, acceptInvitation, rejectInvitation }}>
+        <DataContext.Provider value={{ teams, notifications, fetchTeamData, addTeamData, deleteTeamData,
+         fetchNotifications, autoUpdateNotification, acceptInvitation, rejectInvitation }}>
             {children}
         </DataContext.Provider>
     );
