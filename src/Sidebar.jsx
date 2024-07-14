@@ -16,11 +16,11 @@ const Sidebar = ({ toggleSettings, isSidebarOpen, toggleSidebar }) => {
     useEffect(() => {
         const id = autoUpdateNotification();
         return () => {
-            if(id){
+            if (id) {
                 clearInterval(id);
             }
         }
-    },[])
+    }, [])
     //autoUpdateNotification();
 
     const toggleNotification = () => {
@@ -46,27 +46,32 @@ const Sidebar = ({ toggleSettings, isSidebarOpen, toggleSidebar }) => {
                 </div>
                 <div className="w-[250px] absolute bottom-2 flex items-center">
                     <Link to="/">
-                        <button className="w-32 h-11 rounded-2xl bg-buttonBlue text-white shadow-lg ml-2 hover:bg-buttonBlue-light transition">建立新團隊</button>
+                        <button className="w-32 h-11 mb-1 rounded-2xl bg-buttonBlue text-white shadow-lg ml-2 hover:bg-buttonBlue-light transition">建立新團隊</button>
                     </Link>
-                    <div className="relative w-12 h-12 flex justify-center items-center ml-2">
+                    <div className="relative w-12 h-11 flex justify-center items-center ml-3">
                         <img src={notificationBellImg} onClick={toggleNotification} className="w-8 h-8 cursor-pointer" alt="通知" />
-                        <span className="bg-red-500 w-4 h-4 rounded-full text-white text-xs flex justify-center items-center absolute -right-1 -top-1">{notifications.length}</span>
+                        {notifications.length !== 0 && (<span className="bg-red-500 w-4 h-4 rounded-full text-white text-xs flex justify-center items-center absolute -right-1 -top-1">
+                            {notifications.length}</span>)}
                     </div>
-                    <img className="w-9 h-9 ml-auto mr-4 hover:cursor-pointer" src={settingImg} onClick={toggleSettings} alt="設定" />
+                    <img className="w-8 h-8 ml-auto mr-4 hover:cursor-pointer" src={settingImg} onClick={toggleSettings} alt="設定" />
                 </div>
             </div>
             {isNotificationOpen && (
-                <div className="fixed bottom-20 right-4 z-40 bg-white rounded shadow-lg p-4">
-                    <div className="relative">
-                        <span className="close-button cursor-pointer absolute top-2 right-2" onClick={toggleNotification}>&times;</span>
-                        <h2 className="text-2xl font-bold mb-4">通知</h2>
-                        <ul className="notification-list">
+                <div className="fixed bottom-20 left-4 z-40 w-56 bg-gray-50 rounded-lg shadow-lg px-2 pb-3">
+                    <div className="flex flex-col">
+                        <div className='flex items-start'>
+                            <h2 className="font-bold mt-4 ml-2">團隊邀請</h2>
+                            <span className="cursor-pointer ml-auto text-xl" onClick={toggleNotification}>&times;</span>
+                        </div>
+                        <ul className="">
                             {notifications.map((notification, index) => (
-                                <li key={index} className="mb-2 flex justify-between items-center">
-                                    {notification.teamName}
+                                <li key={index} className="flex justify-between items-center mt-3">
+                                    <div className='ml-2 text-xl w-20 overflow-hidden'>{notification.teamName}</div>
                                     <div className="flex">
-                                        <img src={checkImg} alt="接受" className="w-5 h-5 cursor-pointer mr-2" onClick={() => acceptInvitation(notification, notification.id)} />
-                                        <img src={closeImg} alt="拒絕" className="w-5 h-5 cursor-pointer" onClick={() => rejectInvitation(notification.id)} />
+                                        {/* <img src={checkImg} alt="接受" className="w-5 h-5 cursor-pointer mr-2" onClick={() => acceptInvitation(notification, notification.id)} />
+                                        <img src={closeImg} alt="拒絕" className="w-5 h-5 cursor-pointer" onClick={() => rejectInvitation(notification.id)} /> */}
+                                        <button className='bg-blue-500 text-white rounded-md px-2 py-1 mr-1 hover:bg-blue-700' onClick={() => acceptInvitation(notification, notification.id)}>確認</button>
+                                        <button className='bg-red-500 text-white rounded-md px-2 py-1 hover:bg-red-700' onClick={() => rejectInvitation(notification.id)}>刪除</button>
                                     </div>
                                 </li>
                             ))}
