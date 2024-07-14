@@ -26,11 +26,12 @@ const TeamRepo = ({ onClose }) => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const [isCreateOpen, setIsCreateOpen] = useState(false);
+    const [intervalId, setIntervalId] = useState(null);
 
     const { teams, fetchTeamData, addTeamdata, deleteTeamData } = useContext(DataContext);
 
     useEffect(() => {
-        const fetchTeamData = async () => {
+        const fetchData = async () => {
             try {
                 const teamResponse = await fetch(`http://localhost:8081/teams/${teamId}`, {
                     headers: { 'Authorization': `Bearer ${token}` }
@@ -57,11 +58,27 @@ const TeamRepo = ({ onClose }) => {
             } catch (error) {
                 console.error('獲取資料時出錯:', error);
                 alert('獲取資料時出錯');
+                navigate('/');
             }
         };
 
-        fetchTeamData();
+        fetchData();
     }, [teamId, token, username]);
+
+    useEffect(() => {
+        const getTeamMembers = async () => {
+            const teamMembersResponse = await fetch(`http://localhost:8081/team-members?teamName=${teamData.teamName}`);
+            setTeamMembers(teamMembersResponse.ok ? await teamMembersResponse.json() : []);
+        }
+
+        const id = setInterval(getTeamMembers, 15000);
+
+        return () => {
+            if (id) {
+                clearInterval(id);
+            }
+        };
+    }, [teamData.teamName])
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;

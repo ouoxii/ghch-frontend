@@ -10,15 +10,21 @@ import closeImg from './img/close.png';
 import { DataContext } from './DataContext';
 
 const Sidebar = ({ toggleSettings, isSidebarOpen, toggleSidebar }) => {
-    const { teams, addTeamData, deleteTeamData, notifications, fetchNotifications, acceptInvitation, rejectInvitation } = useContext(DataContext);
+    const { teams, notifications, fetchNotifications, autoUpdateNotification, acceptInvitation, rejectInvitation } = useContext(DataContext);
     const username = Cookies.get('username');
     const [isNotificationOpen, setIsNotificationOpen] = useState(false);
+    useEffect(() => {
+        const id = autoUpdateNotification();
+        return () => {
+            if(id){
+                clearInterval(id);
+            }
+        }
+    },[])
+    //autoUpdateNotification();
 
     const toggleNotification = () => {
         setIsNotificationOpen(!isNotificationOpen);
-        if (!isNotificationOpen) {
-            fetchNotifications();
-        }
     };
 
     return (
