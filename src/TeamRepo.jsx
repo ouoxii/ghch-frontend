@@ -133,6 +133,16 @@ const TeamRepo = ({ onClose }) => {
                 body: JSON.stringify(teamRepoRequestData)
             });
             if (!teamRepoResponse.ok) throw new Error('創建團隊儲存庫失敗');
+
+            await Promise.all(teamMembers.map(async (teamMember) => {
+                if (teamMember.username !== username) {
+                    const collabResponse = await fetch(`http://localhost:3001/collab/add?owner=${username}&repo=${teamRepoRequestData.repoName}&username=${teamMember.username}&token=${token}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                    });
+                    if (!collabResponse.ok) throw new Error(`Failed to add collaborator to repo: ${teamRepoRequestData.repoName}`);
+                }
+            }));
             const location = teamRepoResponse.headers.get('Location');
             const repoId = location.split('/').pop();
             alert('成功創建儲存庫');
@@ -297,19 +307,20 @@ const TeamRepo = ({ onClose }) => {
                             </li>
                         ))}
                     </ul>
-                    <form id="inviteForm" onSubmit={handleInviteSubmit} className="mb-4 flex">
-                        <input
-                            type="text"
-                            name="invitee"
-                            value={inviteData.invitee}
-                            onChange={handleInviteChange}
-                            placeholder="邀請成員"
-                            className="flex-grow p-2 border rounded mr-2"
-                        />
-                        <button type="submit" className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-                            發送邀請
-                        </button>
-                    </form>
+                    {teamData.owner === username && (
+                        <form id="inviteForm" onSubmit={handleInviteSubmit} className="mb-4 flex">
+                            <input
+                                type="text"
+                                name="invitee"
+                                value={inviteData.invitee}
+                                onChange={handleInviteChange}
+                                placeholder="邀請成員"
+                                className="flex-grow p-2 border rounded mr-2"
+                            />
+                            <button type="submit" className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                                發送邀請
+                            </button>
+                        </form>)}
                     {errors.invitee && <span className="error text-red-500">{errors.invitee}</span>}
                 </div>
             </div>
