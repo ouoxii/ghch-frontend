@@ -133,10 +133,11 @@ const TeamRepo = ({ onClose }) => {
                 body: JSON.stringify(teamRepoRequestData)
             });
             if (!teamRepoResponse.ok) throw new Error('創建團隊儲存庫失敗');
-
+            const location = teamRepoResponse.headers.get('Location');
+            const repoId = location.split('/').pop();
             alert('成功創建儲存庫');
             fetchTeamData();
-            navigate(`/team-overview/?teamId=${teamId}&teamName=${teamData.teamName}&repoName=${inputData.repoName}`);
+            navigate(`/team-overview/?teamId=${teamId}&teamName=${teamData.teamName}&repoName=${inputData.repoName}&repoId=${repoId}`);
         } catch (error) {
             console.error('創建儲存庫時出錯:', error);
             alert('創建儲存庫時出錯');

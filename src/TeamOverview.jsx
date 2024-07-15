@@ -11,22 +11,18 @@ const TeamOverview = () => {
     const repoName = queryParams.get('repoName');
     const teamRepoId = queryParams.get('repoId');
     const teamName = queryParams.get('teamName');
+    const teamId = queryParams.get('teamId');
 
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [teamData, setTeamData] = useState({ teamId: '', teamName: '', repoName: '' });
+    const [teamData, setTeamData] = useState({ id: '', teamName: '', owner: '' });
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
     const { teams, fetchTeamData, addTeamdata, deleteTeamData } = useContext(DataContext);
-
+    const token = Cookies.get('token');
     useEffect(() => {
         const fetchTeamData = async () => {
             try {
-                const token = Cookies.get('token');
-                const teamResponse = await fetch(`http://localhost:8081/team-repos/${teamName}`, {
-                    headers: {
-                        'Authorization': `Bearer ${token}`
-                    }
-                });
+                const teamResponse = await fetch(`http://localhost:8081/teams/${teamId}`);
                 if (!teamResponse.ok) {
                     throw new Error('無法獲取團隊資料');
                 }
@@ -93,7 +89,17 @@ const TeamOverview = () => {
             }
 
             alert('成功刪除儲存庫');
-            navigate('/'); // 重導向到首頁
+
+            const deleteGithubRepoResponse = await fetch(`http://localhost:3001/repo/delete?token=${token}&owner=${teamData.owner}&repo=${repoName}`,
+                { method: 'POST' }
+            );
+            if (!deleteGithubRepoResponse.ok) {
+                throw new Error('刪除Github儲存庫時出錯');
+            }
+
+            alert('成功刪除Github儲存庫');
+            
+            navigate(`/teamRepo/?teamId=${teamId}`); // 重導向到首頁
             fetchTeamData();
         } catch (error) {
             console.error('刪除過程中出錯:', error);

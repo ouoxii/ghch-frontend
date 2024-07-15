@@ -53,7 +53,7 @@ const SidebarTeamInfo = ({ team }) => {
             {open && (
                 <ul>
                     {repos.map(repo => (
-                        <li key={repo.id}><Link to={`/team-overview/?repoId=${repo.id}&repoName=${repo.repoName}&teamName=${repo.teamName}`} className=' hover:bg-zinc-300 py-1 px-4 mb-1 mx-1 block rounded-xl font-red-hat'>{repo.repoName}</Link></li>
+                        <li key={repo.id}><Link to={`/team-overview/?repoId=${repo.id}&repoName=${repo.repoName}&teamName=${repo.teamName}&teamId=${team.teamId}`} className=' hover:bg-zinc-300 py-1 px-4 mb-1 mx-1 block rounded-xl font-red-hat'>{repo.repoName}</Link></li>
                     ))}
                     {/* <div><Link to="/PRDiscussion">Pull request #1 討論區</Link></div>
                     <div><Link to="/PRDiscussion">Pull request #2 討論區</Link></div> */}
