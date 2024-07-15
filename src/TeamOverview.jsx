@@ -11,6 +11,8 @@ const TeamOverview = () => {
     const repoName = queryParams.get('repoName');
     const teamRepoId = queryParams.get('repoId');
     const teamName = queryParams.get('teamName');
+    const username = Cookies.get('username');
+    const token = Cookies.get('token');
 
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [teamData, setTeamData] = useState({ teamId: '', teamName: '', repoName: '' });
@@ -84,6 +86,13 @@ const TeamOverview = () => {
     const deleteTeam = async () => {
 
         try {
+            const deleteGitResponse = await fetch(`http://localhost:3001/repo/delete?owner=${username}&repo=${repoName}&token=${token}`, {
+                method: 'POST'
+            });
+            if (!deleteGitResponse.ok) {
+                throw new Error('刪除git儲存庫時出錯');
+            }
+
             const deleteRepoResponse = await fetch(`http://localhost:8081/team-repos/${teamRepoId}`, {
                 method: 'DELETE'
             });

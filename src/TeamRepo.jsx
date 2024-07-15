@@ -133,10 +133,11 @@ const TeamRepo = ({ onClose }) => {
                 body: JSON.stringify(teamRepoRequestData)
             });
             if (!teamRepoResponse.ok) throw new Error('創建團隊儲存庫失敗');
-
+            const location = teamRepoResponse.headers.get('Location');
+            const repoId = location.split('/').pop();
             alert('成功創建儲存庫');
             fetchTeamData();
-            navigate(`/team-overview/?teamId=${teamId}&teamName=${teamData.teamName}&repoName=${inputData.repoName}`);
+            navigate(`/team-overview/?teamId=${teamId}&teamName=${teamData.teamName}&repoId=${repoId}&repoName=${inputData.repoName}`);
         } catch (error) {
             console.error('創建儲存庫時出錯:', error);
             alert('創建儲存庫時出錯');
@@ -221,9 +222,14 @@ const TeamRepo = ({ onClose }) => {
             for (const repo of repos) {
                 const deleteRepoResponse = await fetch(`http://localhost:8081/team-repos/${repo.id}?token=${token}`, {
                     method: 'DELETE',
-                    headers: { 'Content-Type': 'application/json' }
                 });
                 if (!deleteRepoResponse.ok) throw new Error('刪除儲存庫時出錯');
+                const deleteGitResponse = await fetch(`http://localhost:3001/repo/delete?owner=${username}&repo=${repo.repoName}&token=${token}`, {
+                    method: 'POST'
+                });
+                if (!deleteGitResponse.ok) {
+                    throw new Error('刪除儲存庫時出錯');
+                }
             }
 
             const deleteTeamMembersResponse = await fetch(`http://localhost:8081/team-members?token=${token}&teamId=${teamId}`, {
@@ -260,7 +266,7 @@ const TeamRepo = ({ onClose }) => {
                     <div className="mb-4">
                         {repos.map(repo => (
                             <div key={repo.id} className="p-4 bg-blue-50 rounded-lg shadow-md mb-4 h-24">
-                                <Link to={`/team-overview/?repoId=${repo.id}&repoName=${repo.repoName}&teamName=${teamData.teamName}`}>
+                                <Link to={`/team-overview/?teamId=${teamId}&teamName=${teamData.teamName}&repoId=${repo.id}&repoName=${repo.repoName}`}>
                                     <p className="text-xl font-semibold">{repo.repoName}</p>
                                 </Link>
                             </div>
