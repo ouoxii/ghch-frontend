@@ -12,7 +12,6 @@ const TeamOverview = () => {
     const teamRepoId = queryParams.get('repoId');
     const teamName = queryParams.get('teamName');
     const username = Cookies.get('username');
-    const token = Cookies.get('token');
     const teamId = queryParams.get('teamId');
 
     const [isModalOpen, setIsModalOpen] = useState(false);
