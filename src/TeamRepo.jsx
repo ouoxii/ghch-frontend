@@ -133,11 +133,21 @@ const TeamRepo = ({ onClose }) => {
                 body: JSON.stringify(teamRepoRequestData)
             });
             if (!teamRepoResponse.ok) throw new Error('創建團隊儲存庫失敗');
+
+            await Promise.all(teamMembers.map(async (teamMember) => {
+                if (teamMember.username !== username) {
+                    const collabResponse = await fetch(`http://localhost:3001/collab/add?owner=${username}&repo=${teamRepoRequestData.repoName}&username=${teamMember.username}&token=${token}`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                    });
+                    if (!collabResponse.ok) throw new Error(`Failed to add collaborator to repo: ${teamRepoRequestData.repoName}`);
+                }
+            }));
             const location = teamRepoResponse.headers.get('Location');
             const repoId = location.split('/').pop();
             alert('成功創建儲存庫');
             fetchTeamData();
-            navigate(`/team-overview/?teamId=${teamId}&teamName=${teamData.teamName}&repoName=${inputData.repoName}&repoId=${repoId}`);
+            navigate(`/team-overview/?teamId=${teamId}&teamName=${teamData.teamName}&repoId=${repoId}&repoName=${inputData.repoName}`);
         } catch (error) {
             console.error('創建儲存庫時出錯:', error);
             alert('創建儲存庫時出錯');
@@ -222,9 +232,14 @@ const TeamRepo = ({ onClose }) => {
             for (const repo of repos) {
                 const deleteRepoResponse = await fetch(`http://localhost:8081/team-repos/${repo.id}?token=${token}`, {
                     method: 'DELETE',
-                    headers: { 'Content-Type': 'application/json' }
                 });
                 if (!deleteRepoResponse.ok) throw new Error('刪除儲存庫時出錯');
+                const deleteGitResponse = await fetch(`http://localhost:3001/repo/delete?owner=${username}&repo=${repo.repoName}&token=${token}`, {
+                    method: 'POST'
+                });
+                if (!deleteGitResponse.ok) {
+                    throw new Error('刪除儲存庫時出錯');
+                }
             }
 
             const deleteTeamMembersResponse = await fetch(`http://localhost:8081/team-members?token=${token}&teamId=${teamId}`, {
@@ -261,7 +276,7 @@ const TeamRepo = ({ onClose }) => {
                     <div className="mb-4">
                         {repos.map(repo => (
                             <div key={repo.id} className="p-4 bg-blue-50 rounded-lg shadow-md mb-4 h-24">
-                                <Link to={`/team-overview/?repoId=${repo.id}&repoName=${repo.repoName}&teamName=${teamData.teamName}`}>
+                                <Link to={`/team-overview/?teamId=${teamId}&teamName=${teamData.teamName}&repoId=${repo.id}&repoName=${repo.repoName}`}>
                                     <p className="text-xl font-semibold">{repo.repoName}</p>
                                 </Link>
                             </div>
@@ -292,19 +307,20 @@ const TeamRepo = ({ onClose }) => {
                             </li>
                         ))}
                     </ul>
-                    <form id="inviteForm" onSubmit={handleInviteSubmit} className="mb-4 flex">
-                        <input
-                            type="text"
-                            name="invitee"
-                            value={inviteData.invitee}
-                            onChange={handleInviteChange}
-                            placeholder="邀請成員"
-                            className="flex-grow p-2 border rounded mr-2"
-                        />
-                        <button type="submit" className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-                            發送邀請
-                        </button>
-                    </form>
+                    {teamData.owner === username && (
+                        <form id="inviteForm" onSubmit={handleInviteSubmit} className="mb-4 flex">
+                            <input
+                                type="text"
+                                name="invitee"
+                                value={inviteData.invitee}
+                                onChange={handleInviteChange}
+                                placeholder="邀請成員"
+                                className="flex-grow p-2 border rounded mr-2"
+                            />
+                            <button type="submit" className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                                發送邀請
+                            </button>
+                        </form>)}
                     {errors.invitee && <span className="error text-red-500">{errors.invitee}</span>}
                 </div>
             </div>
