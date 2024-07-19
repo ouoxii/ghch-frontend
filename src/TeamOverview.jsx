@@ -107,8 +107,7 @@ const TeamOverview = () => {
 
             alert('成功刪除Github儲存庫');
 
-            navigate(`/teamRepo/?teamId=${teamId}`); // 重導向到首頁
-            fetchTeamData();
+            navigate(`/teamRepo/?teamId=${teamId}`);
         } catch (error) {
             console.error('刪除過程中出錯:', error);
             alert('刪除過程中出錯');
