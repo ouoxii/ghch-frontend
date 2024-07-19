@@ -70,8 +70,8 @@ const Sidebar = ({ toggleSettings, isSidebarOpen, toggleSidebar }) => {
                                     <div className="flex">
                                         {/* <img src={checkImg} alt="接受" className="w-5 h-5 cursor-pointer mr-2" onClick={() => acceptInvitation(notification, notification.id)} />
                                         <img src={closeImg} alt="拒絕" className="w-5 h-5 cursor-pointer" onClick={() => rejectInvitation(notification.id)} /> */}
-                                        <button className='bg-blue-500 text-white rounded-md px-2 py-1 mr-1 hover:bg-blue-700' onClick={() => acceptInvitation(notification, notification.id)}>確認</button>
-                                        <button className='bg-red-500 text-white rounded-md px-2 py-1 hover:bg-red-700' onClick={() => rejectInvitation(notification.id)}>刪除</button>
+                                        <button className='bg-blue-500 text-white font-semibold rounded-md px-2 py-1 mr-1 hover:bg-blue-700' onClick={() => acceptInvitation(notification, notification.id)}>確認</button>
+                                        <button className='bg-white text-red-500 font-semibold border border-red-500 rounded-md px-2 py-1 hover:bg-red-500 hover:text-white' onClick={() => rejectInvitation(notification.id)}>刪除</button>
                                     </div>
                                 </li>
                             ))}

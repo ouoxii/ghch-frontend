@@ -17,6 +17,7 @@ const TeamOverview = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [teamData, setTeamData] = useState({ id: '', teamName: '', owner: '' });
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+    const [timelineData, setTimelineData] = useState([]);
 
     const { teams, fetchTeamData, addTeamdata, deleteTeamData } = useContext(DataContext);
     const token = Cookies.get('token');
@@ -28,6 +29,7 @@ const TeamOverview = () => {
                     throw new Error('無法獲取團隊資料');
                 }
                 const teamData = await teamResponse.json();
+                // console.log(teamData);
                 setTeamData(teamData);
             } catch (error) {
                 console.error('獲取團隊資料時出錯:', error);
@@ -47,8 +49,9 @@ const TeamOverview = () => {
         document.body.appendChild(script);
     }, [teamName]);
 
-    const drawChart = () => {
-        const container = document.getElementById('example7.1');
+
+    const drawChart = async () => {
+        const container = document.getElementById('timeLineChart');
         const chart = new window.google.visualization.Timeline(container);
         const dataTable = new window.google.visualization.DataTable();
         dataTable.addColumn({ type: 'string', id: 'Branch' });
@@ -56,16 +59,6 @@ const TeamOverview = () => {
         dataTable.addColumn({ type: 'string', id: 'style', role: 'style' });
         dataTable.addColumn({ type: 'date', id: 'Start' });
         dataTable.addColumn({ type: 'date', id: 'End' });
-
-        const dataRows = timelineData.timelineData.map(item => [
-            item.Branch,
-            item.Author,
-            item.style,
-            new Date(item.Start),
-            new Date(item.End)
-        ]);
-
-        dataTable.addRows(dataRows);
 
         const options = {
             timeline: { showRowLabels: false },
@@ -75,7 +68,31 @@ const TeamOverview = () => {
             height: 300
         };
 
-        chart.draw(dataTable, options);
+        try {
+            const chartDataResponse = await fetch(`http://localhost:8080/graph-branch?owner=${teamData.owner}&repo=${repoName}`);
+            if (!chartDataResponse.ok) {
+                if (chartDataResponse.status === 404) {
+                    setTimelineData([]);
+                    throw new Error('沒有分支資料');
+                } else {
+                    throw new Error('獲取綜觀圖資料失敗');
+                }
+            }
+            const chartData = await chartDataResponse.json();
+            setTimelineData(chartData);
+            const dataRows = timelineData.map(item => [
+                item.Branch,
+                item.Author,
+                item.style,
+                new Date(item.Start),
+                new Date(item.End)
+            ]);
+            dataTable.addRows(dataRows);
+            chart.draw(dataTable, options);
+
+        } catch (error) {
+            alert(error);
+        }
     };
 
     const deleteTeam = async () => {
@@ -97,15 +114,6 @@ const TeamOverview = () => {
             }
 
             alert('成功刪除儲存庫');
-
-            const deleteGithubRepoResponse = await fetch(`http://localhost:3001/repo/delete?token=${token}&owner=${teamData.owner}&repo=${repoName}`,
-                { method: 'POST' }
-            );
-            if (!deleteGithubRepoResponse.ok) {
-                throw new Error('刪除Github儲存庫時出錯');
-            }
-
-            alert('成功刪除Github儲存庫');
 
             navigate(`/teamRepo/?teamId=${teamId}`); // 重導向到首頁
             fetchTeamData();
@@ -139,7 +147,11 @@ const TeamOverview = () => {
             </div>
             <div className="flex flex-col h-full">
                 <div className="flex-grow">
-                    <div id="example7.1" style={{ height: '300px' }} className='p-3'></div>
+                    <div id="timeLineChart" className='p-3 h-80'>
+                        {timelineData.length === 0 && (
+                            <div> 暫無資料 </div>
+                        )}
+                    </div>
                 </div>
                 <div className="h-1/4 flex justify-between items-center">
                     <Link to="/branchchart" className="max-w-xs p-3 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">

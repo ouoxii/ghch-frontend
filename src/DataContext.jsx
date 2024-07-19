@@ -92,8 +92,7 @@ export const DataProvider = ({ children }) => {
     const rejectInvitation = async (invitationId) => {
         try {
             const response = await fetch(`http://localhost:8081/invitations/${invitationId}`, {
-                method: 'DELETE',
-                headers: { 'Content-Type': 'application/json' }
+                method: 'DELETE'
             });
 
             if (!response.ok) {

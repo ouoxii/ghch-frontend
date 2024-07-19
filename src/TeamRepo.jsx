@@ -40,7 +40,7 @@ const TeamRepo = ({ onClose }) => {
                 const teamData = await teamResponse.json();
                 setTeamData(teamData);
 
-                const repoResponse = await fetch(`http://localhost:8081/team-repos/${teamData.teamName}`, {
+                const repoResponse = await fetch(`http://localhost:8081/team-repos/${teamId}`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 const reposData = repoResponse.ok ? await repoResponse.json() : [];
