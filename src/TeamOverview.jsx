@@ -45,7 +45,7 @@ const TeamOverview = () => {
             window.google.charts.setOnLoadCallback(drawChart);
         };
         document.body.appendChild(script);
-    }, [teamName]);
+    }, [teamName, teamId]);
 
     const drawChart = () => {
         const container = document.getElementById('example7.1');
@@ -107,8 +107,7 @@ const TeamOverview = () => {
 
             alert('成功刪除Github儲存庫');
 
-            navigate(`/teamRepo/?teamId=${teamId}`); // 重導向到首頁
-            fetchTeamData();
+            navigate(`/teamRepo/?teamId=${teamId}`);
         } catch (error) {
             console.error('刪除過程中出錯:', error);
             alert('刪除過程中出錯');

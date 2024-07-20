@@ -40,13 +40,13 @@ const TeamRepo = ({ onClose }) => {
                 const teamData = await teamResponse.json();
                 setTeamData(teamData);
 
-                const repoResponse = await fetch(`http://localhost:8081/team-repos/${teamData.teamName}`, {
+                const repoResponse = await fetch(`http://localhost:8081/team-repos/${teamData.id}`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 const reposData = repoResponse.ok ? await repoResponse.json() : [];
                 setRepos(reposData);
 
-                const inviteResponse = await fetch(`http://localhost:8081/invitations/${username}`, {
+                const inviteResponse = await fetch(`http://localhost:8081/invitations?teamId=${teamData.id}`, {
                     headers: { 'Authorization': `Bearer ${token}` }
                 });
                 setInvitations(inviteResponse.ok ? await inviteResponse.json() : []);
@@ -169,7 +169,6 @@ const TeamRepo = ({ onClose }) => {
         };
 
         try {
-            console.log('Sending invite request:', inviteRequestData); // 調試日誌
             const inviteResponse = await fetch(`http://localhost:8081/invitations?token=${token}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -188,8 +187,25 @@ const TeamRepo = ({ onClose }) => {
                             headers: { 'Content-Type': 'application/json' },
                         });
                         if (!repoResponse.ok) throw new Error(`Failed to add collaborator to repo: ${repo.repoName}`);
+                        const responseData = await repoResponse.json();
+                        const id = responseData.data.id;
+                        console.log(id);
+                        const GitinviteRequestData = {
+                            teamId: teamId,
+                            repoName: repo.repoName,
+                            teamName: teamData.teamName,
+                            invitationId: id
+                        };
+                        const inviteResponse = await fetch(`http://localhost:8081/repo-invitations`, {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify(GitinviteRequestData)
+                        });
+                        if (!inviteResponse.ok) throw new Error('新增失敗');
+
+                        alert('邀請成功');
                     }));
-                    alert('成功寄出協作邀請');
+                    alert('成功寄出協作邀請 ');
                 } catch (error) {
                     console.error('寄出協作邀請失敗', error);
                     alert('寄出協作邀請失敗');
@@ -207,9 +223,8 @@ const TeamRepo = ({ onClose }) => {
 
     const deleteInvitation = async (id) => {
         try {
-            const response = await fetch(`http://localhost:8081/invitations/${id}?token=${token}`, {
+            const response = await fetch(`http://localhost:8081/invitations/${id}`, {
                 method: 'DELETE',
-                headers: { 'Content-Type': 'application/json' }
             });
             if (!response.ok) throw new Error('刪除邀請時出錯');
 
@@ -223,14 +238,16 @@ const TeamRepo = ({ onClose }) => {
 
     const deleteTeam = async () => {
         try {
-            const repoResponse = await fetch(`http://localhost:8081/team-repos/${teamData.teamName}`, {
-                headers: { 'Authorization': `Bearer ${token}` }
+            const repoResponse = await fetch(`http://localhost:8081/team-repos/${teamData.id}`, {
+                method: 'GET',
             });
-
             const repos = repoResponse.ok ? await repoResponse.json() : [];
-
+            await Promise.all(invitations.map(async (invite) => {
+                console.log("invite: ", invite.id);
+                deleteInvitation(invite.id);
+            }));
             for (const repo of repos) {
-                const deleteRepoResponse = await fetch(`http://localhost:8081/team-repos/${repo.id}?token=${token}`, {
+                const deleteRepoResponse = await fetch(`http://localhost:8081/team-repos/${repo.id}`, {
                     method: 'DELETE',
                 });
                 if (!deleteRepoResponse.ok) throw new Error('刪除儲存庫時出錯');
@@ -244,7 +261,6 @@ const TeamRepo = ({ onClose }) => {
 
             const deleteTeamMembersResponse = await fetch(`http://localhost:8081/team-members?token=${token}&teamId=${teamId}`, {
                 method: 'DELETE',
-                headers: { 'Content-Type': 'application/json' }
             });
             if (!deleteTeamMembersResponse.ok) throw new Error('刪除team-members時出錯');
 
@@ -301,7 +317,9 @@ const TeamRepo = ({ onClose }) => {
                         ))}
                         {invitations.map(invite => (
                             <li key={invite.id} className="flex items-center mb-2">
-                                <span className="bg-gray-400 h-8 w-8 rounded-full inline-block"></span>
+                                <div className="w-12 h-12 rounded-full border-2 ml-1 border-white overflow-hidden">
+                                    <img src={`https://avatars.githubusercontent.com/${invite.username}`} alt="" />
+                                </div>
                                 <span className="p-3 ml-2">{invite.username}</span>
                                 <button onClick={() => deleteInvitation(invite.id)} className="ml-auto bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded">刪除邀請</button>
                             </li>

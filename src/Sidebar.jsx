@@ -71,7 +71,7 @@ const Sidebar = ({ toggleSettings, isSidebarOpen, toggleSidebar }) => {
                                         {/* <img src={checkImg} alt="接受" className="w-5 h-5 cursor-pointer mr-2" onClick={() => acceptInvitation(notification, notification.id)} />
                                         <img src={closeImg} alt="拒絕" className="w-5 h-5 cursor-pointer" onClick={() => rejectInvitation(notification.id)} /> */}
                                         <button className='bg-blue-500 text-white rounded-md px-2 py-1 mr-1 hover:bg-blue-700' onClick={() => acceptInvitation(notification, notification.id)}>確認</button>
-                                        <button className='bg-red-500 text-white rounded-md px-2 py-1 hover:bg-red-700' onClick={() => rejectInvitation(notification.id)}>刪除</button>
+                                        <button className='bg-red-500 text-white rounded-md px-2 py-1 hover:bg-red-700' onClick={() => rejectInvitation(notification, notification.id)}>刪除</button>
                                     </div>
                                 </li>
                             ))}

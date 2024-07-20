@@ -28,7 +28,7 @@ export const DataProvider = ({ children }) => {
             const response = await fetch(`http://localhost:8081/invitations/${username}`);
             if (!response.ok) {
                 if (response.status === 404) {
-                    setNotifications([]); // 清空 repos
+                    setNotifications([]);
                     throw new Error('No notification');
                 } else {
                     throw new Error('Network response was not ok');
@@ -48,6 +48,38 @@ export const DataProvider = ({ children }) => {
     }
 
     const acceptInvitation = async (notification, invitationId) => {
+        async function compareAndAcceptInvitations(teamId, token) {
+            try {
+                const fetchInviteResponse = await fetch(`http://localhost:8081/repo-invitations/${teamId}`, {
+                    method: 'GET',
+                });
+                const teamInvitations = await fetchInviteResponse.json();
+
+                const fetchUserInviteResponse = await fetch(`http://localhost:3001/collab/user-invitations?token=${token}`, {
+                    method: 'GET',
+                });
+                const userInvitations = await fetchUserInviteResponse.json();
+
+                for (const teamInvite of teamInvitations) {
+                    for (const userInvite of userInvitations) {
+                        if (teamInvite.invitationId === userInvite.invitation_id.toString()) {
+                            const acceptInviteResponse = await fetch(`http://localhost:3001/collab/accept?invitation_id=${userInvite.invitation_id}&token=${token}`, {
+                                method: 'PATCH',
+                            });
+                            if (acceptInviteResponse.ok) {
+                                console.log(`Successfully accepted invitation with ID: ${userInvite.invitation_id}`);
+                            } else {
+                                console.error(`Failed to accept invitation with ID: ${userInvite.invitation_id}`);
+                            }
+                        }
+                    }
+                }
+
+
+            } catch (error) {
+                console.error('Error comparing and accepting invitations:', error);
+            }
+        }
         const requestData = {
             username: username,
             teamId: notification.teamId,
@@ -66,6 +98,7 @@ export const DataProvider = ({ children }) => {
             if (!response.ok) {
                 throw new Error('Network response was not ok');
             }
+            compareAndAcceptInvitations(notification.teamId, token);
             alert('成功加入團隊');
             fetchTeamData();
             fetchNotifications();
@@ -83,13 +116,45 @@ export const DataProvider = ({ children }) => {
             if (!response.ok) {
                 throw new Error('刪除邀請時出錯');
             }
+
             setNotifications(notifications.filter(notification => notification.id !== invitationId));
         } catch (error) {
-            console.error('拒絕邀請時出錯:', error)
+            console.error('刪除邀請時出錯:', error)
         }
     };
+    const rejectInvitation = async (notification, invitationId) => {
+        async function compareAndDeclineInvitations(teamId, token) {
+            try {
+                const fetchInviteResponse = await fetch(`http://localhost:8081/repo-invitations/${teamId}`, {
+                    method: 'GET',
+                });
+                const teamInvitations = await fetchInviteResponse.json();
 
-    const rejectInvitation = async (invitationId) => {
+                const fetchUserInviteResponse = await fetch(`http://localhost:3001/collab/user-invitations?token=${token}`, {
+                    method: 'GET',
+                });
+                const userInvitations = await fetchUserInviteResponse.json();
+
+                for (const teamInvite of teamInvitations) {
+                    for (const userInvite of userInvitations) {
+                        if (teamInvite.invitationId === userInvite.invitation_id.toString()) {
+                            const declineInviteResponse = await fetch(`http://localhost:3001/collab/decline?invitation_id=${userInvite.invitation_id}&token=${token}`, {
+                                method: 'DELETE',
+                            });
+                            if (declineInviteResponse.ok) {
+                                alert(`Successfully declined invitation with ID: ${userInvite.invitation_id}`);
+                            } else {
+                                alert(`Failed to decline invitation with ID: ${userInvite.invitation_id}`);
+                            }
+                        }
+                    }
+                }
+
+
+            } catch (error) {
+                console.error('Error comparing and declining invitations:', error);
+            }
+        }
         try {
             const response = await fetch(`http://localhost:8081/invitations/${invitationId}`, {
                 method: 'DELETE',
@@ -99,6 +164,7 @@ export const DataProvider = ({ children }) => {
             if (!response.ok) {
                 throw new Error('刪除邀請時出錯');
             }
+            compareAndDeclineInvitations(notification.teamId, token);
             alert('邀請已拒絕');
             setNotifications(notifications.filter(notification => notification.id !== invitationId));
         } catch (error) {
@@ -159,8 +225,10 @@ export const DataProvider = ({ children }) => {
     }, [username]);
 
     return (
-        <DataContext.Provider value={{ teams, notifications, fetchTeamData, addTeamData, deleteTeamData,
-         fetchNotifications, autoUpdateNotification, acceptInvitation, rejectInvitation }}>
+        <DataContext.Provider value={{
+            teams, notifications, fetchTeamData, addTeamData, deleteTeamData,
+            fetchNotifications, autoUpdateNotification, acceptInvitation, rejectInvitation
+        }}>
             {children}
         </DataContext.Provider>
     );
