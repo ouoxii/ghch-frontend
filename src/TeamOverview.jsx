@@ -45,7 +45,7 @@ const TeamOverview = () => {
             window.google.charts.setOnLoadCallback(drawChart);
         };
         document.body.appendChild(script);
-    }, [teamName]);
+    }, [teamName, teamId]);
 
     const drawChart = () => {
         const container = document.getElementById('example7.1');
