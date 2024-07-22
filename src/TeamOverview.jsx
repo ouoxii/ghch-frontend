@@ -161,9 +161,10 @@ const TeamOverview = () => {
                                 <button className='ml-auto' onClick={handleCloseSettings}>✕</button>
                             </div>
                             <div className='p-5'>
-                                <button onClick={handleDeleteClick} className="w-full bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
-                                    刪除儲存庫
-                                </button></div>
+                                {teamData.owner === username && (
+                                    <button onClick={handleDeleteClick} className="w-full bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
+                                        刪除儲存庫
+                                    </button>)}</div>
                         </div>
                     </div>
                 </div>
