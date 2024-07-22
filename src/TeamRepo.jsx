@@ -238,25 +238,26 @@ const TeamRepo = ({ onClose }) => {
 
     const deleteTeam = async () => {
         try {
+
+            for (const invite of invitations) {
+                await deleteInvitation(invite.id);
+            }
+
             const repoResponse = await fetch(`http://localhost:8081/team-repos/${teamData.id}`, {
                 method: 'GET',
             });
             const repos = repoResponse.ok ? await repoResponse.json() : [];
-            await Promise.all(invitations.map(async (invite) => {
-                console.log("invite: ", invite.id);
-                deleteInvitation(invite.id);
-            }));
+
             for (const repo of repos) {
                 const deleteRepoResponse = await fetch(`http://localhost:8081/team-repos/${repo.id}`, {
                     method: 'DELETE',
                 });
                 if (!deleteRepoResponse.ok) throw new Error('刪除儲存庫時出錯');
+
                 const deleteGitResponse = await fetch(`http://localhost:3001/repo/delete?owner=${username}&repo=${repo.repoName}&token=${token}`, {
                     method: 'POST'
                 });
-                if (!deleteGitResponse.ok) {
-                    throw new Error('刪除儲存庫時出錯');
-                }
+                if (!deleteGitResponse.ok) throw new Error('刪除儲存庫時出錯');
             }
 
             const deleteTeamMembersResponse = await fetch(`http://localhost:8081/team-members?token=${token}&teamId=${teamId}`, {
@@ -273,6 +274,7 @@ const TeamRepo = ({ onClose }) => {
             alert('刪除過程中出錯');
         }
     };
+
 
     const handleDeleteClick = () => setIsModalOpen(true);
     const handleCloseModal = () => setIsModalOpen(false);
