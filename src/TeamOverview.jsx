@@ -12,14 +12,13 @@ const TeamOverview = () => {
     const teamRepoId = queryParams.get('repoId');
     const teamName = queryParams.get('teamName');
     const username = Cookies.get('username');
+    const token = Cookies.get('token');
     const teamId = queryParams.get('teamId');
-
+    const { compareAndAcceptInvitations } = useContext(DataContext);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [teamData, setTeamData] = useState({ id: '', teamName: '', owner: '' });
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
-    const { teams, fetchTeamData, addTeamdata, deleteTeamData } = useContext(DataContext);
-    const token = Cookies.get('token');
     useEffect(() => {
         const fetchTeamData = async () => {
             try {
@@ -29,6 +28,7 @@ const TeamOverview = () => {
                 }
                 const teamData = await teamResponse.json();
                 setTeamData(teamData);
+                await compareAndAcceptInvitations(teamId, token);
             } catch (error) {
                 console.error('獲取團隊資料時出錯:', error);
                 alert('獲取團隊資料時出錯');
@@ -45,7 +45,7 @@ const TeamOverview = () => {
             window.google.charts.setOnLoadCallback(drawChart);
         };
         document.body.appendChild(script);
-    }, [teamName, teamId]);
+    }, [teamName, teamId, token, compareAndAcceptInvitations]);
 
     const drawChart = () => {
         const container = document.getElementById('example7.1');
@@ -97,15 +97,6 @@ const TeamOverview = () => {
             }
 
             alert('成功刪除儲存庫');
-
-            const deleteGithubRepoResponse = await fetch(`http://localhost:3001/repo/delete?token=${token}&owner=${teamData.owner}&repo=${repoName}`,
-                { method: 'POST' }
-            );
-            if (!deleteGithubRepoResponse.ok) {
-                throw new Error('刪除Github儲存庫時出錯');
-            }
-
-            alert('成功刪除Github儲存庫');
 
             navigate(`/teamRepo/?teamId=${teamId}`);
         } catch (error) {
@@ -170,9 +161,10 @@ const TeamOverview = () => {
                                 <button className='ml-auto' onClick={handleCloseSettings}>✕</button>
                             </div>
                             <div className='p-5'>
-                                <button onClick={handleDeleteClick} className="w-full bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
-                                    刪除儲存庫
-                                </button></div>
+                                {teamData.owner === username && (
+                                    <button onClick={handleDeleteClick} className="w-full bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
+                                        刪除儲存庫
+                                    </button>)}</div>
                         </div>
                     </div>
                 </div>
