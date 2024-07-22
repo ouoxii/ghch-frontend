@@ -12,14 +12,13 @@ const TeamOverview = () => {
     const teamRepoId = queryParams.get('repoId');
     const teamName = queryParams.get('teamName');
     const username = Cookies.get('username');
+    const token = Cookies.get('token');
     const teamId = queryParams.get('teamId');
-
+    const { compareAndAcceptInvitations } = useContext(DataContext);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [teamData, setTeamData] = useState({ id: '', teamName: '', owner: '' });
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
-    const { teams, fetchTeamData, addTeamdata, deleteTeamData } = useContext(DataContext);
-    const token = Cookies.get('token');
     useEffect(() => {
         const fetchTeamData = async () => {
             try {
@@ -29,6 +28,7 @@ const TeamOverview = () => {
                 }
                 const teamData = await teamResponse.json();
                 setTeamData(teamData);
+                await compareAndAcceptInvitations(teamId, token);
             } catch (error) {
                 console.error('獲取團隊資料時出錯:', error);
                 alert('獲取團隊資料時出錯');
@@ -45,7 +45,7 @@ const TeamOverview = () => {
             window.google.charts.setOnLoadCallback(drawChart);
         };
         document.body.appendChild(script);
-    }, [teamName, teamId]);
+    }, [teamName, teamId, token, compareAndAcceptInvitations]);
 
     const drawChart = () => {
         const container = document.getElementById('example7.1');

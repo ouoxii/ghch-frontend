@@ -141,6 +141,21 @@ const TeamRepo = ({ onClose }) => {
                         headers: { 'Content-Type': 'application/json' },
                     });
                     if (!collabResponse.ok) throw new Error(`Failed to add collaborator to repo: ${teamRepoRequestData.repoName}`);
+                    const responseData = await collabResponse.json();
+                    const id = responseData.data.id;
+                    console.log(id);
+                    const GitinviteRequestData = {
+                        teamId: teamId,
+                        repoName: inputData.repoName,
+                        teamName: teamData.teamName,
+                        invitationId: id
+                    };
+                    const inviteResponse = await fetch(`http://localhost:8081/repo-invitations`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(GitinviteRequestData)
+                    });
+                    if (!inviteResponse.ok) throw new Error('新增失敗');
                 }
             }));
             const location = teamRepoResponse.headers.get('Location');
