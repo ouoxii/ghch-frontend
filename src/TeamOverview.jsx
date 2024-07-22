@@ -98,15 +98,6 @@ const TeamOverview = () => {
 
             alert('成功刪除儲存庫');
 
-            const deleteGithubRepoResponse = await fetch(`http://localhost:3001/repo/delete?token=${token}&owner=${teamData.owner}&repo=${repoName}`,
-                { method: 'POST' }
-            );
-            if (!deleteGithubRepoResponse.ok) {
-                throw new Error('刪除Github儲存庫時出錯');
-            }
-
-            alert('成功刪除Github儲存庫');
-
             navigate(`/teamRepo/?teamId=${teamId}`);
         } catch (error) {
             console.error('刪除過程中出錯:', error);

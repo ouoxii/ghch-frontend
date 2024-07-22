@@ -71,6 +71,15 @@ export const DataProvider = ({ children }) => {
                             } else {
                                 console.error(`Failed to accept invitation with ID: ${userInvite.invitation_id}`);
                             }
+                            const deleteInviteResponse = await fetch(`http://localhost:8081/repo-invitations?invitationId=${userInvite.invitation_id}`, {
+                                method: 'DELETE',
+                            });
+                            if (deleteInviteResponse.ok) {
+                                alert(`Successfully delete invitation with ID: ${userInvite.invitation_id}`);
+                            } else {
+                                alert(`Failed to delete invitation with ID: ${userInvite.invitation_id}`);
+                            }
+
                         }
                     }
                 }
@@ -145,6 +154,14 @@ export const DataProvider = ({ children }) => {
                                 alert(`Successfully declined invitation with ID: ${userInvite.invitation_id}`);
                             } else {
                                 alert(`Failed to decline invitation with ID: ${userInvite.invitation_id}`);
+                            }
+                            const deleteInviteResponse = await fetch(`http://localhost:8081/repo-invitations?invitationId=${userInvite.invitation_id}`, {
+                                method: 'DELETE',
+                            });
+                            if (deleteInviteResponse.ok) {
+                                alert(`Successfully delete invitation with ID: ${userInvite.invitation_id}`);
+                            } else {
+                                alert(`Failed to delete invitation with ID: ${userInvite.invitation_id}`);
                             }
                         }
                     }
