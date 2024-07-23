@@ -12,15 +12,14 @@ const TeamOverview = () => {
     const teamRepoId = queryParams.get('repoId');
     const teamName = queryParams.get('teamName');
     const username = Cookies.get('username');
+    const token = Cookies.get('token');
     const teamId = queryParams.get('teamId');
-
+    const { compareAndAcceptInvitations } = useContext(DataContext);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [teamData, setTeamData] = useState({ id: '', teamName: '', owner: '' });
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const [timelineData, setTimelineData] = useState([]);
 
-    const { teams, fetchTeamData, addTeamdata, deleteTeamData } = useContext(DataContext);
-    const token = Cookies.get('token');
     useEffect(() => {
         const fetchTeamData = async () => {
             try {
@@ -31,6 +30,7 @@ const TeamOverview = () => {
                 const teamData = await teamResponse.json();
                 // console.log(teamData);
                 setTeamData(teamData);
+                await compareAndAcceptInvitations(teamId, token);
             } catch (error) {
                 console.error('獲取團隊資料時出錯:', error);
                 alert('獲取團隊資料時出錯');
@@ -47,7 +47,7 @@ const TeamOverview = () => {
             window.google.charts.setOnLoadCallback(drawChart);
         };
         document.body.appendChild(script);
-    }, [teamName]);
+    }, [teamName, teamId, token, compareAndAcceptInvitations]);
 
 
     const drawChart = async () => {
@@ -114,6 +114,8 @@ const TeamOverview = () => {
             }
 
             alert('成功刪除儲存庫');
+
+            navigate(`/teamRepo/?teamId=${teamId}`);
 
             navigate(`/teamRepo/?teamId=${teamId}`); // 重導向到首頁
             fetchTeamData();
@@ -183,9 +185,10 @@ const TeamOverview = () => {
                                 <button className='ml-auto' onClick={handleCloseSettings}>✕</button>
                             </div>
                             <div className='p-5'>
-                                <button onClick={handleDeleteClick} className="w-full bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
-                                    刪除儲存庫
-                                </button></div>
+                                {teamData.owner === username && (
+                                    <button onClick={handleDeleteClick} className="w-full bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
+                                        刪除儲存庫
+                                    </button>)}</div>
                         </div>
                     </div>
                 </div>
