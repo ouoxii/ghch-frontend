@@ -122,7 +122,7 @@ const TeamOverview = () => {
     const handleCloseSettings = () => setIsSettingsOpen(false);
 
     return (
-        <div className="container mx-auto p-4 w-full h-screen">
+        <div className="container mx-auto p-4">
             <div className="flex justify-between items-center p-4 border-b border-gray-300">
                 <h1 className="text-xl font-bold">{teamName} / {repoName}</h1>
                 <button className="text-blue-500" onClick={handleSettingsClick}>儲存庫設定</button>
