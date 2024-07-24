@@ -13,7 +13,7 @@ const SidebarTeamInfo = ({ team }) => {
         const fetchTeamMembers = async () => {
             try {
                 // console.log(team)
-                const response = await fetch(`http://localhost:8081/team-repos/${team.teamName}`);
+                const response = await fetch(`http://localhost:8081/team-repos/${team.teamId}`);
                 if (!response.ok) {
                     if (response.status === 404) {
                         setRepos([]); // 清空 repos

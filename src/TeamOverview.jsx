@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
-import timelineData from './data/timelineData.json';
 import { DataContext } from './DataContext';
 
 const TeamOverview = () => {
@@ -18,6 +17,7 @@ const TeamOverview = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [teamData, setTeamData] = useState({ id: '', teamName: '', owner: '' });
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+    const [timelineData, setTimelineData] = useState([]);
 
     useEffect(() => {
         const fetchTeamData = async () => {
@@ -35,20 +35,62 @@ const TeamOverview = () => {
             }
         };
 
-        fetchTeamData();
+        const fetchGraphBranch = async () => {
+            try {
+                const chartDataResponse = await fetch(`http://localhost:8080/graph-branch?owner=${username}&repo=${repoName}`);
+                if (!chartDataResponse.ok) {
+                    if (chartDataResponse.status === 404) {
+                        setTimelineData([]);
+                        throw new Error('沒有分支資料');
+                    } else {
+                        throw new Error('獲取綜觀圖資料失敗');
+                    }
+                }
+                const chartData = await chartDataResponse.json();
+                setTimelineData(chartData);
+            } catch (error) {
+                alert(error);
+            }
+        }
 
-        const script = document.createElement('script');
-        script.src = 'https://www.gstatic.com/charts/loader.js';
-        script.async = true;
-        script.onload = () => {
-            window.google.charts.load('current', { packages: ['timeline'] });
-            window.google.charts.setOnLoadCallback(drawChart);
+        const loadCharts = () => {
+            const script = document.createElement('script');
+            script.src = 'https://www.gstatic.com/charts/loader.js';
+            script.id = 'googleChart';
+            script.async = true;
+            script.onload = () => {
+                window.google.charts.load('current', { packages: ['timeline'] });
+            };
+            document.body.appendChild(script);
+            
         };
-        document.body.appendChild(script);
-    }, [teamName, teamId, token, compareAndAcceptInvitations]);
 
-    const drawChart = () => {
-        const container = document.getElementById('example7.1');
+        const loadDataAndCharts = async () => {
+            await fetchTeamData();
+            await fetchGraphBranch();
+            loadCharts();
+        };
+
+        loadDataAndCharts();
+
+        return () => {
+            const scriptElement = document.getElementById('googleChart');
+            if (scriptElement && document.body.contains(scriptElement)) {
+                document.body.removeChild(scriptElement);
+            }
+        };
+    }, [teamName, teamId, token]);
+
+    useEffect(() => {
+        if (timelineData.length > 0 && window.google) {
+            window.google.charts.setOnLoadCallback(drawChart);
+        }
+    }, [timelineData]);
+
+
+    const drawChart = async () => {
+
+        const container = document.getElementById('timeLineChart');
         const chart = new window.google.visualization.Timeline(container);
         const dataTable = new window.google.visualization.DataTable();
         dataTable.addColumn({ type: 'string', id: 'Branch' });
@@ -56,16 +98,6 @@ const TeamOverview = () => {
         dataTable.addColumn({ type: 'string', id: 'style', role: 'style' });
         dataTable.addColumn({ type: 'date', id: 'Start' });
         dataTable.addColumn({ type: 'date', id: 'End' });
-
-        const dataRows = timelineData.timelineData.map(item => [
-            item.Branch,
-            item.Author,
-            item.style,
-            new Date(item.Start),
-            new Date(item.End)
-        ]);
-
-        dataTable.addRows(dataRows);
 
         const options = {
             timeline: { showRowLabels: false },
@@ -75,6 +107,19 @@ const TeamOverview = () => {
             height: 300
         };
 
+        console.log(timelineData);
+        const dataRows = timelineData.map(item => [
+            item.name,
+            item.committer,
+            item.style || '',
+            new Date(item.startTime),
+            new Date(item.endTime)
+        ]);
+        // const dataRows = [[
+        //     'test', 'vvvvss', , new Date('2024-07-23T19:15:57.000+00:00'), new Date('2024-07-24T19:15:57.000+00:00')
+        // ]];
+        console.log(dataRows);
+        dataTable.addRows(dataRows);
         chart.draw(dataTable, options);
     };
 
@@ -99,6 +144,8 @@ const TeamOverview = () => {
             alert('成功刪除儲存庫');
 
             navigate(`/teamRepo/?teamId=${teamId}`);
+
+            navigate(`/teamRepo/?teamId=${teamId}`); // 重導向到首頁
         } catch (error) {
             console.error('刪除過程中出錯:', error);
             alert('刪除過程中出錯');
@@ -129,7 +176,11 @@ const TeamOverview = () => {
             </div>
             <div className="flex flex-col h-full">
                 <div className="flex-grow">
-                    <div id="example7.1" style={{ height: '300px' }} className='p-3'></div>
+                    <div id="timeLineChart" className='p-3 h-80'>
+                        {timelineData.length === 0 && (
+                            <div> ... </div>
+                        )}
+                    </div>
                 </div>
                 <div className="h-1/4 flex justify-between items-center">
                     <Link to="/branchchart" className="max-w-xs p-3 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
