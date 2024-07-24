@@ -18,6 +18,7 @@ const TeamOverview = () => {
     const [teamData, setTeamData] = useState({ id: '', teamName: '', owner: '' });
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const [timelineData, setTimelineData] = useState([]);
+    const [selectedBranch, setSelectedBranch] = useState('main');
 
     useEffect(() => {
         const fetchTeamData = async () => {
@@ -62,7 +63,7 @@ const TeamOverview = () => {
                 window.google.charts.load('current', { packages: ['timeline'] });
             };
             document.body.appendChild(script);
-            
+
         };
 
         const loadDataAndCharts = async () => {
@@ -165,13 +166,35 @@ const TeamOverview = () => {
         setIsModalOpen(false);
     };
 
+    const branches = ['select Branch', 'feature-1', 'feature-2', 'bugfix'];
+    const handleBranchChange = (e) => {
+        const branch = e.target.value;
+        setSelectedBranch(branch);
+        navigate(`/gitgraph`);
+    };
+
     const handleSettingsClick = () => setIsSettingsOpen(!isSettingsOpen);
     const handleCloseSettings = () => setIsSettingsOpen(false);
 
     return (
         <div className="container mx-auto p-4">
             <div className="flex justify-between items-center p-4 border-b border-gray-300">
-                <h1 className="text-xl font-bold">{teamName} / {repoName}</h1>
+                <div className='inline-flex items-center whitespace-nowrap'>
+                    <h1 className="text-xl font-bold mr-4">{teamName} / {repoName}</h1>
+                    <div className="relative mt-2">
+                        <select
+                            value={selectedBranch}
+                            onChange={handleBranchChange}
+                            className="block appearance-none bg-white border border-gray-400 hover:border-gray-500 px-4 py-2 pr-8 rounded shadow leading-tight focus:outline-none focus:shadow-outline"
+                        >
+                            {branches.map((branch) => (
+                                <option key={branch} value={branch}>{branch}</option>
+                            ))}
+                        </select>
+                    </div>
+                </div>
+
+
                 <button className="text-blue-500" onClick={handleSettingsClick}>儲存庫設定</button>
             </div>
             <div className="flex flex-col h-full">
@@ -186,9 +209,10 @@ const TeamOverview = () => {
                     <Link to="/branchchart" className="max-w-xs p-3 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
                         分支進度圖
                     </Link>
-                    <Link to="/gitgraph" className="max-w-xs p-3 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                    {/* <Link to="/gitgraph" className="max-w-xs p-3 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
                         個人分支圖
-                    </Link>
+                    </Link> */}
+
                 </div>
             </div>
 
