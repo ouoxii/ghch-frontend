@@ -11,7 +11,7 @@ const TeamRepo = ({ onClose }) => {
     const token = Cookies.get('token');
     const username = Cookies.get('username');
 
-    const [teamData, setTeamData] = useState({ owner: '', teamName: '', repoName: '' });
+    const [teamData, setTeamData] = useState({ owner: '', teamName: '', id: '' });
     const [inputData, setInputData] = useState({
         repoName: '',
         description: '',
@@ -158,6 +158,21 @@ const TeamRepo = ({ onClose }) => {
                     if (!inviteResponse.ok) throw new Error('新增失敗');
                 }
             }));
+
+            //組長clone repo到本地端desktop/GHCH
+            const cloneRepoResponse = await fetch(`http://localhost:8080/git-repo/clone?repoOwner=${teamData.owner}&repoName=${teamRepoRequestData.repoName}`,
+                {
+                    method: 'POST',
+                    haerders: { 'Content-Type': 'application/json' }
+                }
+            );
+            if (!cloneRepoResponse.ok) {
+                throw new Error('clone repo fail');
+            } else {
+                const locationHeader = cloneRepoResponse.headers.get('Location');
+                console.log(locationHeader);
+            }
+
             const location = teamRepoResponse.headers.get('Location');
             const repoId = location.split('/').pop();
             alert('成功創建儲存庫');

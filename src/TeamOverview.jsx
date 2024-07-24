@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useContext } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
-import timelineData from './data/timelineData.json';
 import { DataContext } from './DataContext';
 
 const TeamOverview = () => {
@@ -28,7 +27,6 @@ const TeamOverview = () => {
                     throw new Error('無法獲取團隊資料');
                 }
                 const teamData = await teamResponse.json();
-                // console.log(teamData);
                 setTeamData(teamData);
                 await compareAndAcceptInvitations(teamId, token);
             } catch (error) {
@@ -37,20 +35,61 @@ const TeamOverview = () => {
             }
         };
 
-        fetchTeamData();
+        const fetchGraphBranch = async () => {
+            try {
+                const chartDataResponse = await fetch(`http://localhost:8080/graph-branch?owner=${username}&repo=${repoName}`);
+                if (!chartDataResponse.ok) {
+                    if (chartDataResponse.status === 404) {
+                        setTimelineData([]);
+                        throw new Error('沒有分支資料');
+                    } else {
+                        throw new Error('獲取綜觀圖資料失敗');
+                    }
+                }
+                const chartData = await chartDataResponse.json();
+                setTimelineData(chartData);
+            } catch (error) {
+                alert(error);
+            }
+        }
 
-        const script = document.createElement('script');
-        script.src = 'https://www.gstatic.com/charts/loader.js';
-        script.async = true;
-        script.onload = () => {
-            window.google.charts.load('current', { packages: ['timeline'] });
-            window.google.charts.setOnLoadCallback(drawChart);
+        const loadCharts = () => {
+            const script = document.createElement('script');
+            script.src = 'https://www.gstatic.com/charts/loader.js';
+            script.id = 'googleChart';
+            script.async = true;
+            script.onload = () => {
+                window.google.charts.load('current', { packages: ['timeline'] });
+            };
+            document.body.appendChild(script);
+            
         };
-        document.body.appendChild(script);
-    }, [teamName, teamId, token, compareAndAcceptInvitations]);
+
+        const loadDataAndCharts = async () => {
+            await fetchTeamData();
+            await fetchGraphBranch();
+            loadCharts();
+        };
+
+        loadDataAndCharts();
+
+        return () => {
+            const scriptElement = document.getElementById('googleChart');
+            if (scriptElement && document.body.contains(scriptElement)) {
+                document.body.removeChild(scriptElement);
+            }
+        };
+    }, [teamName, teamId, token]);
+
+    useEffect(() => {
+        if (timelineData.length > 0 && window.google) {
+            window.google.charts.setOnLoadCallback(drawChart);
+        }
+    }, [timelineData]);
 
 
     const drawChart = async () => {
+
         const container = document.getElementById('timeLineChart');
         const chart = new window.google.visualization.Timeline(container);
         const dataTable = new window.google.visualization.DataTable();
@@ -68,31 +107,20 @@ const TeamOverview = () => {
             height: 300
         };
 
-        try {
-            const chartDataResponse = await fetch(`http://localhost:8080/graph-branch?owner=${teamData.owner}&repo=${repoName}`);
-            if (!chartDataResponse.ok) {
-                if (chartDataResponse.status === 404) {
-                    setTimelineData([]);
-                    throw new Error('沒有分支資料');
-                } else {
-                    throw new Error('獲取綜觀圖資料失敗');
-                }
-            }
-            const chartData = await chartDataResponse.json();
-            setTimelineData(chartData);
-            const dataRows = timelineData.map(item => [
-                item.Branch,
-                item.Author,
-                item.style,
-                new Date(item.Start),
-                new Date(item.End)
-            ]);
-            dataTable.addRows(dataRows);
-            chart.draw(dataTable, options);
-
-        } catch (error) {
-            alert(error);
-        }
+        console.log(timelineData);
+        const dataRows = timelineData.map(item => [
+            item.name,
+            item.committer,
+            item.style || '',
+            new Date(item.startTime),
+            new Date(item.endTime)
+        ]);
+        // const dataRows = [[
+        //     'test', 'vvvvss', , new Date('2024-07-23T19:15:57.000+00:00'), new Date('2024-07-24T19:15:57.000+00:00')
+        // ]];
+        console.log(dataRows);
+        dataTable.addRows(dataRows);
+        chart.draw(dataTable, options);
     };
 
     const deleteTeam = async () => {
@@ -118,7 +146,6 @@ const TeamOverview = () => {
             navigate(`/teamRepo/?teamId=${teamId}`);
 
             navigate(`/teamRepo/?teamId=${teamId}`); // 重導向到首頁
-            fetchTeamData();
         } catch (error) {
             console.error('刪除過程中出錯:', error);
             alert('刪除過程中出錯');
@@ -151,7 +178,7 @@ const TeamOverview = () => {
                 <div className="flex-grow">
                     <div id="timeLineChart" className='p-3 h-80'>
                         {timelineData.length === 0 && (
-                            <div> 暫無資料 </div>
+                            <div> ... </div>
                         )}
                     </div>
                 </div>
