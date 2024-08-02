@@ -50,19 +50,21 @@ const HorizontalGraph = () => {
                 <table className="table-fixed mt-4">
                     <thead>
                         <tr>
-                            <th className="w-1/4 px-4 py-2">Summary</th>
-                            <th className="w-1/4 px-4 py-2">Description</th>
-                            <th className="w-1/4 px-4 py-2">Author</th>
-                            <th className="w-1/4 px-4 py-2">Date</th>
+                            <th className="w-1/5 px-4 py-2">Summary</th>
+                            <th className="w-1/5 px-4 py-2">Description</th>
+                            <th className="w-1/5 px-4 py-2">Author</th>
+                            <th className="w-1/5 px-4 py-2">Date</th>
+                            <th className="w-1/5 px-4 py-2">Hash</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {commitData.map((commit, index) => (
+                        {commitData.slice().reverse().map((commit, index) => (
                             <tr key={index}>
                                 <td className="border px-4 py-2">{commit.subject}</td>
                                 <td className="border px-4 py-2">{commit.body}</td>
                                 <td className="border px-4 py-2">{commit.author}</td>
                                 <td className="border px-4 py-2">{commit.date}</td>
+                                <td className="border px-4 py-2">{commit.hash}</td>
                             </tr>
                         ))}
                     </tbody>
@@ -119,7 +121,8 @@ function showTooltip(commit) {
     tooltip.innerHTML = `
     <strong>${commit.subject}</strong><br>
     ${commit.body}<br>
-    <em>${commit.author}</em><br>
+    <em>${commit.author.name}</em><br>
+    <span>Hash: ${commit.hash}</span>
   `;
     tooltip.classList.remove("hidden");
     tooltip.style.left = `${commit.x + 10}px`;
