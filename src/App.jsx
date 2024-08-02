@@ -8,6 +8,7 @@ import TeamOverview from './TeamOverview';
 import PRDiscussion from './PRDiscussion';
 import TeamRepo from './TeamRepo';
 import BranchChart from './BranchChart';
+import GitGraph from './HorizontalGraph';
 import Cookies from 'js-cookie';
 import { DataProvider } from './DataContext';
 
@@ -80,6 +81,7 @@ function App() {
                   <Route path="/team-overview" element={<TeamOverview />} />
                   <Route path="/PRDiscussion" element={<PRDiscussion />} />
                   <Route path="/teamRepo" element={<TeamRepo />} />
+                  <Route path="/gitgraph" element={<GitGraph />} />
                 </Routes>
               </div>
 
