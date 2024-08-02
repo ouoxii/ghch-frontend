@@ -19,6 +19,7 @@ const TeamOverview = () => {
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const [timelineData, setTimelineData] = useState([]);
     const [selectedBranch, setSelectedBranch] = useState('main');
+    const [chartsLoaded, setChartsLoaded] = useState(false);
 
     useEffect(() => {
         const fetchTeamData = async () => {
@@ -36,23 +37,6 @@ const TeamOverview = () => {
             }
         };
 
-        const fetchGraphBranch = async () => {
-            try {
-                const chartDataResponse = await fetch(`http://localhost:8080/graph-branch?owner=${username}&repo=${repoName}`);
-                if (!chartDataResponse.ok) {
-                    if (chartDataResponse.status === 404) {
-                        setTimelineData([]);
-                        throw new Error('沒有分支資料');
-                    } else {
-                        throw new Error('獲取綜觀圖資料失敗');
-                    }
-                }
-                const chartData = await chartDataResponse.json();
-                setTimelineData(chartData);
-            } catch (error) {
-                alert(error);
-            }
-        }
 
         const loadCharts = () => {
             const script = document.createElement('script');
@@ -61,6 +45,9 @@ const TeamOverview = () => {
             script.async = true;
             script.onload = () => {
                 window.google.charts.load('current', { packages: ['timeline'] });
+                window.google.charts.setOnLoadCallback(() => {
+                    setChartsLoaded(true);
+                });
             };
             document.body.appendChild(script);
 
@@ -68,7 +55,7 @@ const TeamOverview = () => {
 
         const loadDataAndCharts = async () => {
             await fetchTeamData();
-            await fetchGraphBranch();
+            // await fetchLocalGraphBranch();
             loadCharts();
         };
 
@@ -83,10 +70,82 @@ const TeamOverview = () => {
     }, [teamName, teamId, token]);
 
     useEffect(() => {
-        if (timelineData.length > 0 && window.google) {
-            window.google.charts.setOnLoadCallback(drawChart);
+        const fetchLocalGraphBranch = async () => {
+            try {
+                const chartDataResponse = await fetch(`http://localhost:8080/graph-branch?owner=${username}&repo=${repoName}`);
+                if (!chartDataResponse.ok) {
+                    if (chartDataResponse.status === 404) {
+                        setTimelineData([]);
+                        throw new Error('沒有本地端分支資料');
+                    } else {
+                        throw new Error('獲取本地端綜觀圖失敗');
+                    }
+                }
+                const chartData = await chartDataResponse.json();
+                setTimelineData(chartData);
+            } catch (error) {
+                console.log(error);
+            }
         }
-    }, [timelineData]);
+
+        const fetchCloudGraphBranch = async () => {
+            try {
+                if (teamData.owner) {
+                    const clooudGraphBranchResponse = await fetch(`http://localhost:8081/cloud-graph-branch?owner=${teamData.owner}&repo=${repoName}`,
+                        {
+                            method: 'GET'
+                        }
+                    );
+                    if (!clooudGraphBranchResponse.ok) {
+                        if (clooudGraphBranchResponse.status === 404) {
+                            setTimelineData([]);
+                            throw new Error('沒有雲端分支資料');
+                        } else {
+                            throw new Error('獲取雲端綜觀圖失敗')
+                        }
+                    }
+                    const chartData = await clooudGraphBranchResponse.json();
+                    setTimelineData(chartData);
+                }
+            } catch (error) {
+                console.log(error);
+            }
+        };
+
+        if (teamData.owner === username) {
+            fetchLocalGraphBranch();
+        } else {
+            fetchCloudGraphBranch();
+        }
+
+    }, [teamData, username])
+
+    useEffect(() => {
+        if (chartsLoaded && timelineData.length > 0) {
+            drawChart();
+        }
+    }, [timelineData, chartsLoaded]);
+
+    useEffect(() => {
+        const postGraphBranch = async () => {
+            try {
+                const postGraphBranchResponse = await fetch(`http://localhost:8080/graph-branch?owner=${username}&repo=${repoName}`,
+                    {
+                        method: 'POST'
+                    }
+                );
+                if (!postGraphBranchResponse.ok) {
+                    throw new Error('上傳分支圖失敗');
+                }
+            } catch (error) {
+                console.log(error);
+            }
+        }
+
+        if (timelineData.length > 0 && teamData.owner === username) {
+            postGraphBranch();
+        }
+    }, [teamData, username, timelineData])
 
 
     const drawChart = async () => {
@@ -108,7 +167,7 @@ const TeamOverview = () => {
             height: 300
         };
 
-        console.log(timelineData);
+        // console.log(timelineData);
         const dataRows = timelineData.map(item => [
             item.name,
             item.committer,
@@ -119,7 +178,7 @@ const TeamOverview = () => {
         // const dataRows = [[
         //     'test', 'vvvvss', , new Date('2024-07-23T19:15:57.000+00:00'), new Date('2024-07-24T19:15:57.000+00:00')
         // ]];
-        console.log(dataRows);
+        // console.log(dataRows);
         dataTable.addRows(dataRows);
         chart.draw(dataTable, options);
     };
