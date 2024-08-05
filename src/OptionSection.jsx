@@ -5,9 +5,9 @@ import { useNavigate } from 'react-router-dom';
 const OptionSection = ({ isVisible, onClose, toggleSettings }) => {
     const [activeSection, setActiveSection] = useState('account');
     const [inputData, setInputData] = useState({
-        Name: '',
-        Email: '',
-        dfBranch: ''
+        username: '',
+        lastName: '',
+        firstName: '',
     });
     const [userData, setUserData] = useState({
         id: '',
@@ -21,6 +21,7 @@ const OptionSection = ({ isVisible, onClose, toggleSettings }) => {
         const username = Cookies.get('username');
         if (id && username) {
             setUserData({ id, username });
+            setInputData(prevData => ({ ...prevData, username }));
         }
     }, []);
 
@@ -46,9 +47,26 @@ const OptionSection = ({ isVisible, onClose, toggleSettings }) => {
         window.location.reload(); // Reload the page to ensure redirect and clear URL parameters
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        console.log(inputData);
+        try {
+            const response = await fetch(`http://localhost:8081/app-users/${userData.id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(inputData),
+            });
+
+            if (response.ok) {
+                console.log('User updated successfully');
+                onClose(); // Close the modal
+            } else {
+                console.error('Failed to update user');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+        }
     };
 
     if (!isVisible) return null;
@@ -84,7 +102,7 @@ const OptionSection = ({ isVisible, onClose, toggleSettings }) => {
                                             <div>ID: {userData.id}</div>
                                         </div>
                                         <button className='bg-slate-300 text-black py-1 px-3 rounded-xl h-9 cursor-pointer mt-1 ml-auto
-                                         hover:bg-buttonBlue-dark hover:text-white transition duration-200' onClick={handleLogout}>Sign out of GitHub.com</button>   
+                                         hover:bg-buttonBlue-dark hover:text-white transition duration-200' onClick={handleLogout}>Sign out of GitHub.com</button>
                                     </div>
                                 </div>
                             )}
@@ -92,47 +110,47 @@ const OptionSection = ({ isVisible, onClose, toggleSettings }) => {
                                 <div className='flex-col w-full'>
                                     <div>
                                         <form onSubmit={handleSubmit}>
-                                            <div>Name</div>
+                                            <div>Username</div>
                                             <div className="mb-3 mt-1">
                                                 <input
                                                     type="text"
-                                                    name="Name"
-                                                    value={inputData.Name}
+                                                    name="username"
+                                                    value={inputData.username}
                                                     onChange={handleInputChange}
                                                     placeholder=""
                                                 />
                                             </div>
-                                            <div>Email</div>
+                                            <div>First Name</div>
                                             <div className="mb-3 mt-1">
                                                 <input
                                                     type="text"
-                                                    name="Email"
-                                                    value={inputData.Email}
+                                                    name="firstName"
+                                                    value={inputData.firstName}
                                                     onChange={handleInputChange}
                                                     placeholder=""
                                                 />
                                             </div>
-                                            <div>Default branch name for new repositories</div>
+                                            <div>Last Name</div>
                                             <div className="mb-3 mt-1">
                                                 <input
                                                     type="text"
-                                                    name="dfBranch"
-                                                    value={inputData.dfBranch}
+                                                    name="lastName"
+                                                    value={inputData.lastName}
                                                     onChange={handleInputChange}
                                                     placeholder=""
                                                 />
+                                            </div>
+                                            <div className="flex justify-end">
+                                                <button type="submit" className="bg-white border border-gray-300 rounded-md h-9 w-36 mr-3 mt-1
+                                                hover:bg-blue-200 transition duration-300">Save</button>
+                                                <button type="button" className="bg-white border border-gray-300 rounded-md h-9 w-36 mr-3 mt-1
+                                                hover:bg-red-300 transition duration-300" onClick={onClose}>Cancel</button>
                                             </div>
                                         </form>
                                     </div>
                                 </div>
                             )}
                         </div>
-                    </div>
-                    <div className="flex justify-end absolute bottom-3 w-full">
-                        <button className="bg-white border border-gray-300 rounded-md h-9 w-36 mr-3 mt-1
-                        hover:bg-blue-200 transition duration-300" onClick={onClose}>Save</button>
-                        <button className="bg-white border border-gray-300 rounded-md h-9 w-36 mr-3 mt-1
-                        hover:bg-red-300 transition duration-300" onClick={onClose}>Cancel</button>
                     </div>
                 </div>
             </div>
