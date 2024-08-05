@@ -72,7 +72,7 @@ const TeamOverview = () => {
     useEffect(() => {
         const fetchLocalGraphBranch = async () => {
             try {
-                const chartDataResponse = await fetch(`http://localhost:8080/graph-branch?owner=${username}&repo=${repoName}`);
+                const chartDataResponse = await fetch(`http://localhost:8080/graph?owner=${username}&repo=${repoName}`);
                 if (!chartDataResponse.ok) {
                     if (chartDataResponse.status === 404) {
                         setTimelineData([]);
@@ -129,7 +129,7 @@ const TeamOverview = () => {
     useEffect(() => {
         const postGraphBranch = async () => {
             try {
-                const postGraphBranchResponse = await fetch(`http://localhost:8080/graph-branch?owner=${username}&repo=${repoName}`,
+                const postGraphBranchResponse = await fetch(`http://localhost:8080/graph/upload?owner=${username}&repo=${repoName}`,
                     {
                         method: 'POST'
                     }
