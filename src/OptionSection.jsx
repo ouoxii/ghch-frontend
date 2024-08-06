@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import Cookies from 'js-cookie';
 import { useNavigate } from 'react-router-dom';
+import { DataContext } from './DataContext';
 
-const OptionSection = ({ isVisible, onClose, toggleSettings }) => {
-    const [activeSection, setActiveSection] = useState('account');
+const OptionSection = ({ isVisible, onClose, toggleSettings, defaultActiveSection = 'account', showPrompt = false, onSave }) => {
+    const { setIsSettingsOpen } = useContext(DataContext);
+    const [activeSection, setActiveSection] = useState(defaultActiveSection);
     const [inputData, setInputData] = useState({
         username: '',
         lastName: '',
@@ -13,6 +15,7 @@ const OptionSection = ({ isVisible, onClose, toggleSettings }) => {
         id: '',
         username: ''
     });
+    const [error, setError] = useState('');
 
     const navigate = useNavigate();
 
@@ -21,9 +24,38 @@ const OptionSection = ({ isVisible, onClose, toggleSettings }) => {
         const username = Cookies.get('username');
         if (id && username) {
             setUserData({ id, username });
-            setInputData(prevData => ({ ...prevData, username }));
+            fetchUserData(id);
         }
     }, []);
+
+    const fetchUserData = async (id) => {
+        try {
+            const response = await fetch(`http://localhost:8081/app-users/${id}`);
+            if (response.ok) {
+                const data = await response.json();
+                setInputData({
+                    username: data.username || '',
+                    firstName: data.firstName || '',
+                    lastName: data.lastName || ''
+                });
+            } else {
+                setInputData({
+                    username: '',
+                    firstName: '',
+                    lastName: ''
+                });
+                setError('無法獲取使用者資料');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            setInputData({
+                username: '',
+                firstName: '',
+                lastName: ''
+            });
+            setError('請求過程中發生錯誤');
+        }
+    };
 
     const toggleSection = (section) => {
         setActiveSection(section);
@@ -49,6 +81,10 @@ const OptionSection = ({ isVisible, onClose, toggleSettings }) => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (!inputData.firstName.trim() || !inputData.lastName.trim()) {
+            setError('First Name 和 Last Name 不能為空');
+            return;
+        }
         try {
             const response = await fetch(`http://localhost:8081/app-users/${userData.id}`, {
                 method: 'PUT',
@@ -60,12 +96,17 @@ const OptionSection = ({ isVisible, onClose, toggleSettings }) => {
 
             if (response.ok) {
                 console.log('User updated successfully');
-                onClose(); // Close the modal
+                setError('');
+                setIsSettingsOpen(false);
+                onSave();
+                onClose();
             } else {
                 console.error('Failed to update user');
+                setError('Failed to update user');
             }
         } catch (error) {
             console.error('Error:', error);
+            setError('Error occurred while updating user');
         }
     };
 
@@ -76,12 +117,12 @@ const OptionSection = ({ isVisible, onClose, toggleSettings }) => {
     return (
         <div className="fixed top-0 left-0 w-screen h-screen z-40 flex justify-center items-center backdrop-blur-sm bg-gray-500 bg-opacity-50" onClick={toggleSettings}>
             <div className='flex flex-col w-[55%] h-[80%] rounded-xl shadow-lg overflow-hidden bg-white'>
-                {/* <div className="overlay" onClick={onClose}></div> */}
                 <div className="flex flex-col h-full relative" onClick={(e) => e.stopPropagation()}>
                     <div className="m-3 flex">
                         <h2>Options</h2>
                         <button className='ml-auto' onClick={onClose}>✕</button>
                     </div>
+
                     <div className="flex ">
                         <div className="flex-col w-[33%]">
                             <div className={`p-3 cursor-pointer ${activeSection === 'account' ? 'bg-[#365f9b] text-white' : ''}`} onClick={() => toggleSection('account')}>
@@ -118,6 +159,7 @@ const OptionSection = ({ isVisible, onClose, toggleSettings }) => {
                                                     value={inputData.username}
                                                     onChange={handleInputChange}
                                                     placeholder=""
+                                                    readOnly
                                                 />
                                             </div>
                                             <div>First Name</div>
@@ -140,11 +182,12 @@ const OptionSection = ({ isVisible, onClose, toggleSettings }) => {
                                                     placeholder=""
                                                 />
                                             </div>
+                                            {error && <p style={{ color: 'red' }}>{error}</p>}
+                                            {showPrompt && <p style={{ color: 'red' }}>請填寫您的姓名</p>}
                                             <div className="flex justify-end">
                                                 <button type="submit" className="bg-white border border-gray-300 rounded-md h-9 w-36 mr-3 mt-1
                                                 hover:bg-blue-200 transition duration-300">Save</button>
-                                                <button type="button" className="bg-white border border-gray-300 rounded-md h-9 w-36 mr-3 mt-1
-                                                hover:bg-red-300 transition duration-300" onClick={onClose}>Cancel</button>
+
                                             </div>
                                         </form>
                                     </div>

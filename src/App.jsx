@@ -1,6 +1,5 @@
-import React, { useEffect, useState } from 'react';
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
-
+import React, { useEffect, useContext, useState } from 'react';
+import { Route, Routes, useNavigate } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import CreateTeamBlock from './CreateTeamBlock';
 import OptionSection from './OptionSection';
@@ -10,22 +9,19 @@ import TeamRepo from './TeamRepo';
 import BranchChart from './BranchChart';
 import GitGraph from './HorizontalGraph';
 import Cookies from 'js-cookie';
-import { DataProvider } from './DataContext';
-
+import { DataContext } from './DataContext';
 
 function App() {
-  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const { isSettingsOpen, setIsSettingsOpen } = useContext(DataContext);
+  const navigate = useNavigate();
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [showPrompt, setShowPrompt] = useState(false);
 
   const toggleSettings = () => {
     setIsSettingsOpen(!isSettingsOpen);
   };
-
-  const toggleNotifications = () => {
-    setIsNotificationsOpen(!isNotificationsOpen);
-  };
-
 
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
@@ -34,62 +30,87 @@ function App() {
   const location = window.location;
   const queryParams = new URLSearchParams(location.search);
   const paraId = queryParams.get('id');
-  const paraIusername = queryParams.get('username');
+  const paraUsername = queryParams.get('username');
   const paraToken = queryParams.get('token');
 
-  if (paraId && paraIusername && paraToken) {
+  if (paraId && paraUsername && paraToken) {
     Cookies.set('id', paraId, { expires: 1 });
-    Cookies.set('username', paraIusername, { expires: 1 });
+    Cookies.set('username', paraUsername, { expires: 1 });
     Cookies.set('token', paraToken, { expires: 1 });
   }
 
-  // 在這裡檢查 id、username、token 是否存在
-  //window.location.reload();
   const id = Cookies.get('id');
   const username = Cookies.get('username');
   const token = Cookies.get('token');
+
+  useEffect(() => {
+    if (id) {
+      fetchUserData(id);
+    }
+  }, [id]);
+
+  const fetchUserData = async (id) => {
+    try {
+      const response = await fetch(`http://localhost:8081/app-users/${id}`);
+      if (response.ok) {
+        const data = await response.json();
+        setFirstName(data.firstName || '');
+        setLastName(data.lastName || '');
+        if (!data.firstName || !data.lastName) {
+          setIsSettingsOpen(true);
+          setShowPrompt(true);
+        }
+      } else {
+        console.error('Failed to fetch user data');
+      }
+    } catch (error) {
+      console.error('Error:', error);
+    }
+  };
 
   const handleLogin = () => {
     window.location.href = `http://localhost:8080/login`;
   };
 
+  const handleCloseSettings = () => {
+    if (firstName && lastName) {
+      setIsSettingsOpen(false);
+      setShowPrompt(false);
+    }
+  };
+
   if (id && username && token) {
     return (
-
-      <Router>
-        <DataProvider>
-          {isSettingsOpen && (
-            <OptionSection
-              isVisible={isSettingsOpen}
-              onClose={() => setIsSettingsOpen(false)}
-              toggleSettings={toggleSettings}
-            />
-          )}
-          <div className='flex h-screen overflow-hidden'>
-
-            <Sidebar toggleSettings={toggleSettings} isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
-            <main className={`absolute flex overflow-hidden h-screen top-0 left-[220px] z-0 transition-transform transform ${isSidebarOpen ? 'translate-x-0 w-[calc(100%-220px)]' : '-translate-x-[220px] w-[calc(100%-1px)]'}`}>
-              <div className='flex'>
-                <button className="h-10 w-10 " onClick={toggleSidebar}>
-                  ☰
-                </button>
-              </div>
-              <div className='flex overflow-hidden w-full'>
-                <Routes>
-                  <Route path="/" element={<CreateTeamBlock />} />
-                  <Route path="/branchchart" element={<BranchChart />} />
-                  <Route path="/team-overview" element={<TeamOverview />} />
-                  <Route path="/PRDiscussion" element={<PRDiscussion />} />
-                  <Route path="/teamRepo" element={<TeamRepo />} />
-                  <Route path="/gitgraph" element={<GitGraph />} />
-                </Routes>
-              </div>
-
-            </main>
+      <div className='flex h-screen overflow-hidden'>
+        {isSettingsOpen && (
+          <OptionSection
+            isVisible={isSettingsOpen}
+            onClose={handleCloseSettings}
+            toggleSettings={toggleSettings}
+            defaultActiveSection="git"
+            showPrompt={showPrompt}
+            onSave={() => setShowPrompt(false)}
+          />
+        )}
+        <Sidebar toggleSettings={toggleSettings} isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
+        <main className={`absolute flex overflow-hidden h-screen top-0 left-[220px] z-0 transition-transform transform ${isSidebarOpen ? 'translate-x-0 w-[calc(100%-220px)]' : '-translate-x-[220px] w-[calc(100%-1px)]'}`}>
+          <div className='flex'>
+            <button className="h-10 w-10 " onClick={toggleSidebar}>
+              ☰
+            </button>
           </div>
-        </DataProvider>
-      </Router>
-
+          <div className='flex overflow-hidden w-full'>
+            <Routes>
+              <Route path="/" element={<CreateTeamBlock />} />
+              <Route path="/branchchart" element={<BranchChart />} />
+              <Route path="/team-overview" element={<TeamOverview />} />
+              <Route path="/PRDiscussion" element={<PRDiscussion />} />
+              <Route path="/teamRepo" element={<TeamRepo />} />
+              <Route path="/gitgraph" element={<GitGraph />} />
+            </Routes>
+          </div>
+        </main>
+      </div>
     );
   } else {
     return (
@@ -106,7 +127,6 @@ function App() {
         bg-gradient-radial from-pink-300 to-neutral-50"></div>
         <div className="absolute inset-0 w-[200px] h-[250px] z-0 top-[calc(50%-120px)] left-[calc(50%-180px)] rounded-full blur-2xl
         bg-gradient-radial from-indigo-300 to-neutral-50"></div>
-
       </div>
     );
   }

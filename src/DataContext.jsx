@@ -9,6 +9,7 @@ export const DataContext = createContext();
 export const DataProvider = ({ children }) => {
     const [teams, setTeams] = useState([]);
     const [notifications, setNotifications] = useState([]);
+    const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const username = Cookies.get('username');
     const token = Cookies.get('token');
     const navigate = useNavigate();
@@ -242,7 +243,7 @@ export const DataProvider = ({ children }) => {
         <DataContext.Provider value={{
             teams, notifications, fetchTeamData, addTeamData, deleteTeamData,
             fetchNotifications, autoUpdateNotification, acceptInvitation, rejectInvitation,
-            compareAndAcceptInvitations, compareAndDeclineInvitations
+            compareAndAcceptInvitations, compareAndDeclineInvitations, isSettingsOpen, setIsSettingsOpen
         }}>
             {children}
         </DataContext.Provider>
