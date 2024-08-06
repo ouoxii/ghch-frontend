@@ -20,9 +20,11 @@ const TeamOverview = () => {
     const [timelineData, setTimelineData] = useState([]);
     const [selectedBranch, setSelectedBranch] = useState('main');
     const [chartsLoaded, setChartsLoaded] = useState(false);
+    const [branches, setBranches] = useState(['select Branch']);
 
     useEffect(() => {
         const fetchTeamData = async () => {
+            console.log(teamData.owner);
             try {
                 const teamResponse = await fetch(`http://localhost:8081/teams/${teamId}`);
                 if (!teamResponse.ok) {
@@ -37,7 +39,6 @@ const TeamOverview = () => {
             }
         };
 
-
         const loadCharts = () => {
             const script = document.createElement('script');
             script.src = 'https://www.gstatic.com/charts/loader.js';
@@ -50,12 +51,10 @@ const TeamOverview = () => {
                 });
             };
             document.body.appendChild(script);
-
         };
 
         const loadDataAndCharts = async () => {
             await fetchTeamData();
-            // await fetchLocalGraphBranch();
             loadCharts();
         };
 
@@ -67,7 +66,7 @@ const TeamOverview = () => {
                 document.body.removeChild(scriptElement);
             }
         };
-    }, [teamName, teamId, token]);
+    }, [teamName, teamId, token, teamData.owner]);
 
     useEffect(() => {
         const fetchLocalGraphBranch = async () => {
@@ -83,6 +82,7 @@ const TeamOverview = () => {
                 }
                 const chartData = await chartDataResponse.json();
                 setTimelineData(chartData);
+                setBranches(['select Branch', ...chartData.filter(branch => branch.name !== 'HEAD').map(branch => branch.name)]);
             } catch (error) {
                 console.log(error);
             }
@@ -91,11 +91,9 @@ const TeamOverview = () => {
         const fetchCloudGraphBranch = async () => {
             try {
                 if (teamData.owner) {
-                    const clooudGraphBranchResponse = await fetch(`http://localhost:8081/cloud-graph-branch?owner=${teamData.owner}&repo=${repoName}`,
-                        {
-                            method: 'GET'
-                        }
-                    );
+                    const clooudGraphBranchResponse = await fetch(`http://localhost:8081/cloud-graph-branch?owner=${teamData.owner}&repo=${repoName}`, {
+                        method: 'GET'
+                    });
                     if (!clooudGraphBranchResponse.ok) {
                         if (clooudGraphBranchResponse.status === 404) {
                             setTimelineData([]);
@@ -106,6 +104,7 @@ const TeamOverview = () => {
                     }
                     const chartData = await clooudGraphBranchResponse.json();
                     setTimelineData(chartData);
+                    setBranches(['select Branch', ...chartData.filter(branch => branch.name !== 'HEAD').map(branch => branch.name)]);
                 }
             } catch (error) {
                 console.log(error);
@@ -118,7 +117,7 @@ const TeamOverview = () => {
             fetchCloudGraphBranch();
         }
 
-    }, [teamData, username])
+    }, [teamData, username]);
 
     useEffect(() => {
         if (chartsLoaded && timelineData.length > 0) {
@@ -129,11 +128,9 @@ const TeamOverview = () => {
     useEffect(() => {
         const postGraphBranch = async () => {
             try {
-                const postGraphBranchResponse = await fetch(`http://localhost:8080/graph/upload?owner=${username}&repo=${repoName}`,
-                    {
-                        method: 'POST'
-                    }
-                );
+                const postGraphBranchResponse = await fetch(`http://localhost:8080/graph/upload?owner=${username}&repo=${repoName}`, {
+                    method: 'POST'
+                });
                 if (!postGraphBranchResponse.ok) {
                     throw new Error('上傳分支圖失敗');
                 }
@@ -145,11 +142,9 @@ const TeamOverview = () => {
         if (timelineData.length > 0 && teamData.owner === username) {
             postGraphBranch();
         }
-    }, [teamData, username, timelineData])
-
+    }, [teamData, username, timelineData]);
 
     const drawChart = async () => {
-
         const container = document.getElementById('timeLineChart');
         const chart = new window.google.visualization.Timeline(container);
         const dataTable = new window.google.visualization.DataTable();
@@ -167,7 +162,6 @@ const TeamOverview = () => {
             height: 300
         };
 
-        // console.log(timelineData);
         const dataRows = timelineData.map(item => [
             item.name,
             item.committer,
@@ -175,16 +169,11 @@ const TeamOverview = () => {
             new Date(item.startTime),
             new Date(item.endTime)
         ]);
-        // const dataRows = [[
-        //     'test', 'vvvvss', , new Date('2024-07-23T19:15:57.000+00:00'), new Date('2024-07-24T19:15:57.000+00:00')
-        // ]];
-        // console.log(dataRows);
         dataTable.addRows(dataRows);
         chart.draw(dataTable, options);
     };
 
     const deleteTeam = async () => {
-
         try {
             const deleteGitResponse = await fetch(`http://localhost:3001/repo/delete?owner=${username}&repo=${repoName}&token=${token}`, {
                 method: 'POST'
@@ -205,7 +194,6 @@ const TeamOverview = () => {
 
             navigate(`/teamRepo/?teamId=${teamId}`);
 
-            navigate(`/teamRepo/?teamId=${teamId}`); // 重導向到首頁
         } catch (error) {
             console.error('刪除過程中出錯:', error);
             alert('刪除過程中出錯');
@@ -225,11 +213,10 @@ const TeamOverview = () => {
         setIsModalOpen(false);
     };
 
-    const branches = ['select Branch', 'feature-1', 'feature-2', 'bugfix'];
     const handleBranchChange = (e) => {
         const branch = e.target.value;
         setSelectedBranch(branch);
-        navigate(`/gitgraph`);
+        navigate(`/gitgraph?repo=${repoName}&branch=${branch}`);
     };
 
     const handleSettingsClick = () => setIsSettingsOpen(!isSettingsOpen);
@@ -268,12 +255,8 @@ const TeamOverview = () => {
                     <Link to="/branchchart" className="max-w-xs p-3 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
                         分支進度圖
                     </Link>
-                    {/* <Link to="/gitgraph" className="max-w-xs p-3 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-                        個人分支圖
-                    </Link> */}
                 </div>
             </div>
-
 
             {isModalOpen && (
                 <div className="modal fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-40">
@@ -285,7 +268,6 @@ const TeamOverview = () => {
                         <button onClick={handleCloseModal} className="bg-gray-300 hover:bg-gray-400 text-black font-bold py-2 px-4 rounded mr-2">取消</button>
                     </div>
                 </div>
-
             )}
             {isSettingsOpen && (
                 <div className="fixed inset-0 flex items-center justify-center bg-gray-500 bg-opacity-50">
