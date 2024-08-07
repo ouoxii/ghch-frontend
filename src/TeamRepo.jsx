@@ -34,25 +34,25 @@ const TeamRepo = ({ onClose }) => {
         const fetchData = async () => {
             try {
                 const teamResponse = await fetch(`http://localhost:8081/teams/${teamId}`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
+
                 });
                 if (!teamResponse.ok) throw new Error('無法獲取團隊資料');
                 const teamData = await teamResponse.json();
                 setTeamData(teamData);
 
                 const repoResponse = await fetch(`http://localhost:8081/team-repos/${teamData.id}`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
+
                 });
                 const reposData = repoResponse.ok ? await repoResponse.json() : [];
                 setRepos(reposData);
 
                 const inviteResponse = await fetch(`http://localhost:8081/invitations?teamId=${teamData.id}`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
+
                 });
                 setInvitations(inviteResponse.ok ? await inviteResponse.json() : []);
 
                 const teamMembersResponse = await fetch(`http://localhost:8081/team-members?teamName=${teamData.teamName}`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
+
                 });
                 setTeamMembers(teamMembersResponse.ok ? await teamMembersResponse.json() : []);
             } catch (error) {
@@ -192,6 +192,7 @@ const TeamRepo = ({ onClose }) => {
             return;
         }
 
+
         const inviteRequestData = {
             teamId: teamId,
             username: inviteData.invitee,
@@ -199,6 +200,9 @@ const TeamRepo = ({ onClose }) => {
         };
 
         try {
+            const inviteeResponse = await fetch(`http://localhost:8081/app-users/${inviteData.invitee}`, {});
+            if (!inviteeResponse.ok) throw new Error('此成員不存在');
+
             const inviteResponse = await fetch(`http://localhost:8081/invitations?token=${token}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -233,9 +237,8 @@ const TeamRepo = ({ onClose }) => {
                         });
                         if (!inviteResponse.ok) throw new Error('新增失敗');
 
-                        alert('邀請成功');
                     }));
-                    alert('成功寄出協作邀請 ');
+                    alert('成功寄出GitHub協作邀請 ');
                 } catch (error) {
                     console.error('寄出協作邀請失敗', error);
                     alert('寄出協作邀請失敗');
@@ -246,8 +249,8 @@ const TeamRepo = ({ onClose }) => {
             });
             setInvitations(inviteRefreshResponse.ok ? await inviteRefreshResponse.json() : []);
         } catch (error) {
-            console.error('邀請時出錯:', error);
-            alert('邀請時出錯');
+            console.error('邀請時錯誤:', error);
+            alert(error);
         }
     };
 
@@ -256,13 +259,13 @@ const TeamRepo = ({ onClose }) => {
             const response = await fetch(`http://localhost:8081/invitations/${id}`, {
                 method: 'DELETE',
             });
-            if (!response.ok) throw new Error('刪除邀請時出錯');
+            if (!response.ok) throw new Error('刪除邀請時錯誤');
 
             alert('成功刪除邀請');
             setInvitations(invitations.filter(invitation => invitation.id !== id));
         } catch (error) {
             console.error('刪除邀請時出錯:', error);
-            alert('刪除邀請時出錯');
+            alert(error);
         }
     };
 
@@ -282,12 +285,12 @@ const TeamRepo = ({ onClose }) => {
                 const deleteRepoResponse = await fetch(`http://localhost:8081/team-repos/${repo.id}`, {
                     method: 'DELETE',
                 });
-                if (!deleteRepoResponse.ok) throw new Error('刪除儲存庫時出錯');
+                if (!deleteRepoResponse.ok) throw new Error('刪除Cloud儲存庫時出錯');
 
                 const deleteGitResponse = await fetch(`http://localhost:3001/repo/delete?owner=${username}&repo=${repo.repoName}&token=${token}`, {
                     method: 'POST'
                 });
-                if (!deleteGitResponse.ok) throw new Error('刪除儲存庫時出錯');
+                if (!deleteGitResponse.ok) throw new Error('刪除Git儲存庫時出錯');
             }
 
             const deleteTeamMembersResponse = await fetch(`http://localhost:8081/team-members?token=${token}&teamId=${teamId}`, {
@@ -301,7 +304,7 @@ const TeamRepo = ({ onClose }) => {
             navigate('/');
         } catch (error) {
             console.error('刪除過程中出錯:', error);
-            alert('刪除過程中出錯');
+            alert(error);
         }
     };
 

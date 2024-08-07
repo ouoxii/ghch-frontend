@@ -33,7 +33,6 @@
 .discussion-content-container {
     display: flex;
     justify-content: space-between;
-    /* 确保头像和消息内容在两端对齐 */
     align-items: center;
     margin-bottom: 10px;
 }

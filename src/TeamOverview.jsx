@@ -20,6 +20,7 @@ const TeamOverview = () => {
     const [timelineData, setTimelineData] = useState([]);
     const [selectedBranch, setSelectedBranch] = useState('main');
     const [chartsLoaded, setChartsLoaded] = useState(false);
+    const [branches, setBranches] = useState(['select Branch']);
 
     useEffect(() => {
         const fetchTeamData = async () => {
@@ -34,9 +35,9 @@ const TeamOverview = () => {
             } catch (error) {
                 console.error('獲取團隊資料時出錯:', error);
                 alert('獲取團隊資料時出錯');
+                navigate('/');
             }
         };
-
 
         const loadCharts = () => {
             const script = document.createElement('script');
@@ -50,12 +51,10 @@ const TeamOverview = () => {
                 });
             };
             document.body.appendChild(script);
-
         };
 
         const loadDataAndCharts = async () => {
             await fetchTeamData();
-            // await fetchLocalGraphBranch();
             loadCharts();
         };
 
@@ -67,23 +66,26 @@ const TeamOverview = () => {
                 document.body.removeChild(scriptElement);
             }
         };
-    }, [teamName, teamId, token, teamRepoId]);
+    }, [teamName, teamId, token, teamData.owner, teamRepoId]);
 
     useEffect(() => {
         const fetchLocalGraphBranch = async () => {
             try {
-                // const chartDataResponse = await fetch(`http://localhost:8080/graph?owner=${username}&repo=${repoName}`);
-                const chartDataResponse = await fetch(`http://localhost:8080/graph?owner=ntou01057042&repo=github-flow-tutor`);//指定repo
+                const chartDataResponse = await fetch(`http://localhost:8080/graph?owner=${username}&repo=${repoName}`);
+                //const chartDataResponse = await fetch(`http://localhost:8080/graph?owner=ntou01057042&repo=github-flow-tutor`);//指定repo
                 if (!chartDataResponse.ok) {
                     if (chartDataResponse.status === 404) {
                         setTimelineData([]);
                         throw new Error('沒有本地端分支資料');
                     } else {
-                        throw new Error('獲取本地端綜觀圖失敗');
+                        throw new Error('獲取本地端分支資料失敗');
                     }
                 }
+
                 const chartData = await chartDataResponse.json();
+
                 setTimelineData(chartData);
+                setBranches(['select Branch', ...chartData.filter(branch => branch.name !== 'HEAD').map(branch => branch.name)]);
             } catch (error) {
                 console.log(error);
             }
@@ -92,21 +94,21 @@ const TeamOverview = () => {
         const fetchCloudGraphBranch = async () => {
             try {
                 if (teamData.owner) {
-                    const clooudGraphBranchResponse = await fetch(`http://localhost:8081/cloud-graph-branch?owner=${teamData.owner}&repo=${repoName}`,
-                        {
-                            method: 'GET'
-                        }
-                    );
-                    if (!clooudGraphBranchResponse.ok) {
-                        if (clooudGraphBranchResponse.status === 404) {
+                    const cloudGraphBranchResponse = await fetch(`http://localhost:8081/cloud-graph-branch?owner=${teamData.owner}&repo=${repoName}`, {
+                        method: 'GET'
+                    });
+                    if (!cloudGraphBranchResponse.ok) {
+                        if (cloudGraphBranchResponse.status === 404) {
                             setTimelineData([]);
                             throw new Error('沒有雲端分支資料');
                         } else {
                             throw new Error('獲取雲端分支資料失敗')
                         }
                     }
-                    const chartData = await clooudGraphBranchResponse.json();
+                    const chartData = await cloudGraphBranchResponse.json();
                     setTimelineData(chartData);
+                    const uniqueBranches = [...new Set(chartData.filter(branch => branch.name !== 'HEAD').map(branch => branch.name))];
+                    setBranches(['select Branch', ...uniqueBranches]);
                 }
             } catch (error) {
                 console.log(error);
@@ -130,11 +132,9 @@ const TeamOverview = () => {
     useEffect(() => {
         const postGraphBranch = async () => {
             try {
-                const postGraphBranchResponse = await fetch(`http://localhost:8080/graph/upload?owner=${username}&repo=${repoName}`,
-                    {
-                        method: 'POST'
-                    }
-                );
+                const postGraphBranchResponse = await fetch(`http://localhost:8080/graph/upload?owner=${username}&repo=${repoName}`, {
+                    method: 'POST'
+                });
                 if (!postGraphBranchResponse.ok) {
                     throw new Error('上傳分支圖失敗');
                 }
@@ -146,11 +146,9 @@ const TeamOverview = () => {
         if (timelineData.length > 0 && teamData.owner === username) {
             postGraphBranch();
         }
-    }, [teamData, username, timelineData])
-
+    }, [teamData, username, timelineData]);
 
     const drawChart = async () => {
-
         const container = document.getElementById('timeLineChart');
         const chart = new window.google.visualization.Timeline(container);
         const dataTable = new window.google.visualization.DataTable();
@@ -210,7 +208,6 @@ const TeamOverview = () => {
     };
 
     const deleteTeam = async () => {
-
         try {
             const deleteGitResponse = await fetch(`http://localhost:3001/repo/delete?owner=${username}&repo=${repoName}&token=${token}`, {
                 method: 'POST'
@@ -231,10 +228,9 @@ const TeamOverview = () => {
 
             navigate(`/teamRepo/?teamId=${teamId}`);
 
-            navigate(`/teamRepo/?teamId=${teamId}`); // 重導向到首頁
         } catch (error) {
             console.error('刪除過程中出錯:', error);
-            alert('刪除過程中出錯');
+            alert(error);
         }
     };
 
@@ -251,11 +247,10 @@ const TeamOverview = () => {
         setIsModalOpen(false);
     };
 
-    const branches = ['select Branch', 'feature-1', 'feature-2', 'bugfix'];
     const handleBranchChange = (e) => {
         const branch = e.target.value;
         setSelectedBranch(branch);
-        navigate(`/gitgraph`);
+        navigate(`/gitgraph?repo=${repoName}&branch=${branch}&owner=${teamData.owner}`);
     };
 
     const handleSettingsClick = () => setIsSettingsOpen(!isSettingsOpen);
@@ -296,12 +291,8 @@ const TeamOverview = () => {
                     <Link to={`/branchchart?teamId=${teamId}&teamName=${teamName}&repoId=${teamRepoId}&repoName=${repoName}`} className="max-w-xs p-3 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
                         分支進度圖
                     </Link>
-                    {/* <Link to="/gitgraph" className="max-w-xs p-3 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-                        個人分支圖
-                    </Link> */}
                 </div>
             </div>
-
 
             {isModalOpen && (
                 <div className="modal fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-40">
@@ -313,7 +304,6 @@ const TeamOverview = () => {
                         <button onClick={handleCloseModal} className="bg-gray-300 hover:bg-gray-400 text-black font-bold py-2 px-4 rounded mr-2">取消</button>
                     </div>
                 </div>
-
             )}
             {isSettingsOpen && (
                 <div className="fixed inset-0 flex items-center justify-center bg-gray-500 bg-opacity-50">

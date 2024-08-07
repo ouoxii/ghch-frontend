@@ -72,8 +72,8 @@ const BranchChart = (/*帳號跟repo名稱*/) => {
     useEffect(() => {
         const fetchLocalGraphBranch = async () => {
             try {
-                // const chartDataResponse = await fetch(`http://localhost:8080/graph?owner=${username}&repo=${repoName}`);
-                const chartDataResponse = await fetch(`http://localhost:8080/graph?owner=ntou01057042&repo=github-flow-tutor`);//指定repo
+                const chartDataResponse = await fetch(`http://localhost:8080/graph?owner=${username}&repo=${repoName}`);
+                //const chartDataResponse = await fetch(`http://localhost:8080/graph?owner=ntou01057042&repo=github-flow-tutor`);//指定repo
                 if (!chartDataResponse.ok) {
                     if (chartDataResponse.status === 404) {
                         setTimelineData([]);
@@ -151,8 +151,8 @@ const BranchChart = (/*帳號跟repo名稱*/) => {
     useEffect(() => {
         const fetchLocalGraphCommit = async () => {
             try {
-                // const commitstDataResponse = await fetch(`http://localhost:8080/graph/commits?owner=${username}&repo=${repoName}`);
-                const commitstDataResponse = await fetch(`http://localhost:8080/graph/commits?owner=ntou01057042&repo=github-flow-tutor`);//指定repo
+                const commitstDataResponse = await fetch(`http://localhost:8080/graph/commits?owner=${username}&repo=${repoName}`);
+                //const commitstDataResponse = await fetch(`http://localhost:8080/graph/commits?owner=ntou01057042&repo=github-flow-tutor`);//指定repo
                 if (!commitstDataResponse.ok) {
                     if (commitstDataResponse.status === 404) {
                         setTimelineData([]);
@@ -200,7 +200,7 @@ const BranchChart = (/*帳號跟repo名稱*/) => {
 
     }, [teamData, username, teamRepoId])
 
-    const drawTooltipCharts =  () => {
+    const drawTooltipCharts = () => {
         const tooltipOptions = {
             title: 'Commit frequency',
             legend: 'none',
@@ -269,19 +269,19 @@ const BranchChart = (/*帳號跟repo名稱*/) => {
             tooltipDataArray[i] = [];
         }
 
-        for (let i = 0; i < dataRows.length-1; i++) {
+        for (let i = 0; i < dataRows.length - 1; i++) {
             tooltipDataArray[0][i] = 'date';
-            tooltipDataArray[0][dataRows.length-1 + i] = dataRows[i+1][1];
+            tooltipDataArray[0][dataRows.length - 1 + i] = dataRows[i + 1][1];
         }
 
         let j = 0;
         for (const branch in branchCommitCounts) {
-        
+
             const day = Object.keys(branchCommitCounts[branch]);
-            for(let i = 1; i < 15; i++){
-                tooltipDataArray[i][j] = new Date(day[i-1]);
-                const num = branchCommitCounts[branch][day[i-1]];
-                tooltipDataArray[i][j+dataRows.length-1] = num;
+            for (let i = 1; i < 15; i++) {
+                tooltipDataArray[i][j] = new Date(day[i - 1]);
+                const num = branchCommitCounts[branch][day[i - 1]];
+                tooltipDataArray[i][j + dataRows.length - 1] = num;
             }
             j++;
         }
@@ -289,12 +289,12 @@ const BranchChart = (/*帳號跟repo名稱*/) => {
         //調整資料以符合需求
         console.log(dataRows)
         for (let i = 0; i < tooltipDataArray.length; i++) {
-            if(i === 0){
-                tooltipDataArray[i].splice(0 , 0, 'date');
-                tooltipDataArray[i].splice(dataRows.length , 0, 'main');
-            }else{
-                tooltipDataArray[i].splice(0 , 0, null);
-                tooltipDataArray[i].splice(dataRows.length , 0, 0);
+            if (i === 0) {
+                tooltipDataArray[i].splice(0, 0, 'date');
+                tooltipDataArray[i].splice(dataRows.length, 0, 'main');
+            } else {
+                tooltipDataArray[i].splice(0, 0, null);
+                tooltipDataArray[i].splice(dataRows.length, 0, 0);
             }
         }
         console.log(tooltipDataArray);
@@ -303,7 +303,7 @@ const BranchChart = (/*帳號跟repo名稱*/) => {
         const view = new window.google.visualization.DataView(data);
 
         for (let i = 0; i < dataRows.length; i++) {
-            view.setColumns([i , i + dataRows.length]);
+            view.setColumns([i, i + dataRows.length]);
             const hiddenDiv = document.getElementById('hidden_div');
             const tooltipChart = new window.google.visualization.ColumnChart(hiddenDiv);
 
@@ -374,7 +374,7 @@ const BranchChart = (/*帳號跟repo名稱*/) => {
 
     const scrollRef = useRef(null);
 
-    // 
+    //
     useEffect(() => {
         if (scrollRef.current) {
             scrollRef.current.scrollLeft = scrollRef.current.scrollWidth;

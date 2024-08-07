@@ -1,18 +1,21 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import Cookies from 'js-cookie';
 import { useNavigate } from 'react-router-dom';
+import { DataContext } from './DataContext';
 
-const OptionSection = ({ isVisible, onClose, toggleSettings }) => {
-    const [activeSection, setActiveSection] = useState('account');
+const OptionSection = ({ isVisible, onClose, toggleSettings, defaultActiveSection = 'account', showPrompt = false, onSave }) => {
+    const { setIsSettingsOpen } = useContext(DataContext);
+    const [activeSection, setActiveSection] = useState(defaultActiveSection);
     const [inputData, setInputData] = useState({
-        Name: '',
-        Email: '',
-        dfBranch: ''
+        username: '',
+        lastName: '',
+        firstName: '',
     });
     const [userData, setUserData] = useState({
         id: '',
         username: ''
     });
+    const [error, setError] = useState('');
 
     const navigate = useNavigate();
 
@@ -21,8 +24,38 @@ const OptionSection = ({ isVisible, onClose, toggleSettings }) => {
         const username = Cookies.get('username');
         if (id && username) {
             setUserData({ id, username });
+            fetchUserData(id);
         }
     }, []);
+
+    const fetchUserData = async (id) => {
+        try {
+            const response = await fetch(`http://localhost:8081/app-users/${id}`);
+            if (response.ok) {
+                const data = await response.json();
+                setInputData({
+                    username: data.username || '',
+                    firstName: data.firstName || '',
+                    lastName: data.lastName || ''
+                });
+            } else {
+                setInputData({
+                    username: '',
+                    firstName: '',
+                    lastName: ''
+                });
+                setError('無法獲取使用者資料');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            setInputData({
+                username: '',
+                firstName: '',
+                lastName: ''
+            });
+            setError('請求過程中發生錯誤');
+        }
+    };
 
     const toggleSection = (section) => {
         setActiveSection(section);
@@ -46,9 +79,35 @@ const OptionSection = ({ isVisible, onClose, toggleSettings }) => {
         window.location.reload(); // Reload the page to ensure redirect and clear URL parameters
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
-        console.log(inputData);
+        if (!inputData.firstName.trim() || !inputData.lastName.trim()) {
+            setError('First Name 和 Last Name 不能為空');
+            return;
+        }
+        try {
+            const response = await fetch(`http://localhost:8081/app-users/${userData.id}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(inputData),
+            });
+
+            if (response.ok) {
+                console.log('User updated successfully');
+                setError('');
+                setIsSettingsOpen(false);
+                onSave();
+                onClose();
+            } else {
+                console.error('Failed to update user');
+                setError('Failed to update user');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            setError('Error occurred while updating user');
+        }
     };
 
     if (!isVisible) return null;
@@ -58,12 +117,12 @@ const OptionSection = ({ isVisible, onClose, toggleSettings }) => {
     return (
         <div className="fixed top-0 left-0 w-screen h-screen z-40 flex justify-center items-center backdrop-blur-sm bg-gray-500 bg-opacity-50" onClick={toggleSettings}>
             <div className='flex flex-col w-[55%] h-[80%] rounded-xl shadow-lg overflow-hidden bg-white'>
-                {/* <div className="overlay" onClick={onClose}></div> */}
                 <div className="flex flex-col h-full relative" onClick={(e) => e.stopPropagation()}>
                     <div className="m-3 flex">
                         <h2>Options</h2>
                         <button className='ml-auto' onClick={onClose}>✕</button>
                     </div>
+
                     <div className="flex ">
                         <div className="flex-col w-[33%]">
                             <div className={`p-3 cursor-pointer ${activeSection === 'account' ? 'bg-[#365f9b] text-white' : ''}`} onClick={() => toggleSection('account')}>
@@ -84,7 +143,7 @@ const OptionSection = ({ isVisible, onClose, toggleSettings }) => {
                                             <div>ID: {userData.id}</div>
                                         </div>
                                         <button className='bg-slate-300 text-black py-1 px-3 rounded-xl h-9 cursor-pointer mt-1 ml-auto
-                                         hover:bg-buttonBlue-dark hover:text-white transition duration-200' onClick={handleLogout}>Sign out of GitHub.com</button>   
+                                         hover:bg-buttonBlue-dark hover:text-white transition duration-200' onClick={handleLogout}>Sign out of GitHub.com</button>
                                     </div>
                                 </div>
                             )}
@@ -92,47 +151,49 @@ const OptionSection = ({ isVisible, onClose, toggleSettings }) => {
                                 <div className='flex-col w-full'>
                                     <div>
                                         <form onSubmit={handleSubmit}>
-                                            <div>Name</div>
+                                            <div>Username</div>
                                             <div className="mb-3 mt-1">
                                                 <input
                                                     type="text"
-                                                    name="Name"
-                                                    value={inputData.Name}
+                                                    name="username"
+                                                    value={inputData.username}
+                                                    onChange={handleInputChange}
+                                                    placeholder=""
+                                                    readOnly
+                                                />
+                                            </div>
+                                            <div>First Name</div>
+                                            <div className="mb-3 mt-1">
+                                                <input
+                                                    type="text"
+                                                    name="firstName"
+                                                    value={inputData.firstName}
                                                     onChange={handleInputChange}
                                                     placeholder=""
                                                 />
                                             </div>
-                                            <div>Email</div>
+                                            <div>Last Name</div>
                                             <div className="mb-3 mt-1">
                                                 <input
                                                     type="text"
-                                                    name="Email"
-                                                    value={inputData.Email}
+                                                    name="lastName"
+                                                    value={inputData.lastName}
                                                     onChange={handleInputChange}
                                                     placeholder=""
                                                 />
                                             </div>
-                                            <div>Default branch name for new repositories</div>
-                                            <div className="mb-3 mt-1">
-                                                <input
-                                                    type="text"
-                                                    name="dfBranch"
-                                                    value={inputData.dfBranch}
-                                                    onChange={handleInputChange}
-                                                    placeholder=""
-                                                />
+                                            {error && <p style={{ color: 'red' }}>{error}</p>}
+                                            {showPrompt && <p style={{ color: 'red' }}>請填寫您的姓名</p>}
+                                            <div className="flex justify-end">
+                                                <button type="submit" className="bg-white border border-gray-300 rounded-md h-9 w-36 mr-3 mt-1
+                                                hover:bg-blue-200 transition duration-300">Save</button>
+
                                             </div>
                                         </form>
                                     </div>
                                 </div>
                             )}
                         </div>
-                    </div>
-                    <div className="flex justify-end absolute bottom-3 w-full">
-                        <button className="bg-white border border-gray-300 rounded-md h-9 w-36 mr-3 mt-1
-                        hover:bg-blue-200 transition duration-300" onClick={onClose}>Save</button>
-                        <button className="bg-white border border-gray-300 rounded-md h-9 w-36 mr-3 mt-1
-                        hover:bg-red-300 transition duration-300" onClick={onClose}>Cancel</button>
                     </div>
                 </div>
             </div>
