@@ -31,23 +31,23 @@ export const DataProvider = ({ children }) => {
                             method: 'PATCH',
                         });
                         if (acceptInviteResponse.ok) {
-                            console.log(`Successfully accepted invitation with ID: ${userInvite.invitation_id}`);
+                            console.log(`成功接受邀請 invitation_id: ${userInvite.invitation_id}`);
                         } else {
-                            console.error(`Failed to accept invitation with ID: ${userInvite.invitation_id}`);
+                            console.error(`接受邀請失敗 invitation_id: ${userInvite.invitation_id}`);
                         }
                         const deleteInviteResponse = await fetch(`http://localhost:8081/repo-invitations?invitationId=${userInvite.invitation_id}`, {
                             method: 'DELETE',
                         });
                         if (deleteInviteResponse.ok) {
-                            alert(`Successfully delete invitation with ID: ${userInvite.invitation_id}`);
+                            console.log(`成功刪除cloud邀請ID: ${userInvite.invitation_id}`);
                         } else {
-                            alert(`Failed to delete invitation with ID: ${userInvite.invitation_id}`);
+                            console.log(`刪除cloud邀請ID失敗: ${userInvite.invitation_id}`);
                         }
                     }
                 }
             }
         } catch (error) {
-            console.error('Error comparing and accepting invitations:', error);
+            console.error('接受邀請比對流程錯誤: ', error);
         }
     };
 
@@ -70,35 +70,36 @@ export const DataProvider = ({ children }) => {
                             method: 'DELETE',
                         });
                         if (declineInviteResponse.ok) {
-                            alert(`Successfully declined invitation with ID: ${userInvite.invitation_id}`);
+                            console.log(`成功拒絕邀請 ID: ${userInvite.invitation_id}`);
                         } else {
-                            alert(`Failed to decline invitation with ID: ${userInvite.invitation_id}`);
+                            console.log(`拒絕邀請失敗 ID: ${userInvite.invitation_id}`);
                         }
                         const deleteInviteResponse = await fetch(`http://localhost:8081/repo-invitations?invitationId=${userInvite.invitation_id}`, {
                             method: 'DELETE',
                         });
                         if (deleteInviteResponse.ok) {
-                            alert(`Successfully delete invitation with ID: ${userInvite.invitation_id}`);
+                            console.log(`成功刪除cloud邀請ID: ${userInvite.invitation_id}`);
                         } else {
-                            alert(`Failed to delete invitation with ID: ${userInvite.invitation_id}`);
+                            console.log(`刪除cloud邀請ID失敗: ${userInvite.invitation_id}`);
                         }
                     }
                 }
             }
         } catch (error) {
-            console.error('Error comparing and declining invitations:', error);
+            console.error('拒絕邀請比對流程錯誤: ', error);
         }
     };
+
     const fetchTeamData = async () => {
         try {
             const response = await fetch(`http://localhost:8081/team-members/${username}`);
             if (!response.ok) {
-                throw new Error('Network response was not ok');
+                throw new Error('列出所屬 Team 錯誤');
             }
             const data = await response.json();
             setTeams(data);
         } catch (error) {
-            console.error('Error fetching data:', error);
+            console.error('列出所屬 Team 錯誤: ', error);
         }
     };
 
@@ -108,15 +109,15 @@ export const DataProvider = ({ children }) => {
             if (!response.ok) {
                 if (response.status === 404) {
                     setNotifications([]);
-                    throw new Error('No notification');
+                    throw new Error('沒有邀請');
                 } else {
-                    throw new Error('Network response was not ok');
+                    throw new Error('查詢邀請失敗');
                 }
             }
             const data = await response.json();
             setNotifications(data);
         } catch (error) {
-            console.error('Error fetching notifications:', error);
+            console.error('查詢邀請失敗: ', error);
         }
     };
 
@@ -204,7 +205,7 @@ export const DataProvider = ({ children }) => {
             });
 
             if (!response.ok) {
-                throw new Error('Network response was not ok');
+                throw new Error('創建團隊失敗');
             }
             alert("成功創建團隊");
             const location = response.headers.get('Location');
@@ -225,7 +226,7 @@ export const DataProvider = ({ children }) => {
             });
 
             if (!response.ok) {
-                throw new Error('刪除團隊時出錯');
+                throw new Error('刪除團隊時錯誤');
             }
 
             setTeams(prevTeams => prevTeams.filter(team => team.teamId !== teamId));

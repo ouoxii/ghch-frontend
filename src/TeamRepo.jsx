@@ -34,25 +34,25 @@ const TeamRepo = ({ onClose }) => {
         const fetchData = async () => {
             try {
                 const teamResponse = await fetch(`http://localhost:8081/teams/${teamId}`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
+
                 });
                 if (!teamResponse.ok) throw new Error('無法獲取團隊資料');
                 const teamData = await teamResponse.json();
                 setTeamData(teamData);
 
                 const repoResponse = await fetch(`http://localhost:8081/team-repos/${teamData.id}`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
+
                 });
                 const reposData = repoResponse.ok ? await repoResponse.json() : [];
                 setRepos(reposData);
 
                 const inviteResponse = await fetch(`http://localhost:8081/invitations?teamId=${teamData.id}`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
+
                 });
                 setInvitations(inviteResponse.ok ? await inviteResponse.json() : []);
 
                 const teamMembersResponse = await fetch(`http://localhost:8081/team-members?teamName=${teamData.teamName}`, {
-                    headers: { 'Authorization': `Bearer ${token}` }
+
                 });
                 setTeamMembers(teamMembersResponse.ok ? await teamMembersResponse.json() : []);
             } catch (error) {
@@ -282,12 +282,12 @@ const TeamRepo = ({ onClose }) => {
                 const deleteRepoResponse = await fetch(`http://localhost:8081/team-repos/${repo.id}`, {
                     method: 'DELETE',
                 });
-                if (!deleteRepoResponse.ok) throw new Error('刪除儲存庫時出錯');
+                if (!deleteRepoResponse.ok) throw new Error('刪除Cloud儲存庫時出錯');
 
                 const deleteGitResponse = await fetch(`http://localhost:3001/repo/delete?owner=${username}&repo=${repo.repoName}&token=${token}`, {
                     method: 'POST'
                 });
-                if (!deleteGitResponse.ok) throw new Error('刪除儲存庫時出錯');
+                if (!deleteGitResponse.ok) throw new Error('刪除Git儲存庫時出錯');
             }
 
             const deleteTeamMembersResponse = await fetch(`http://localhost:8081/team-members?token=${token}&teamId=${teamId}`, {
