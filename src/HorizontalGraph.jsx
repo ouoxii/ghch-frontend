@@ -8,15 +8,15 @@ import {
 import "tailwindcss/tailwind.css";
 import Cookies from "js-cookie";
 
-const username = Cookies.get('username');
+// const username = Cookies.get('username');
 
-const withoutAuthor = templateExtend(TemplateName.Metro, {
-    commit: {
-        message: {
-            displayAuthor: false
-        }
-    }
-});
+// const withoutAuthor = templateExtend(TemplateName.Metro, {
+//     commit: {
+//         message: {
+//             displayAuthor: false
+//         }
+//     }
+// });
 
 const HorizontalGraph = () => {
     const [commitData, setCommitData] = useState([]);
@@ -145,18 +145,18 @@ function initGraph(gitgraph, commitData) {
     });
 }
 
-function showTooltip(commit) {
-    const tooltip = document.getElementById("tooltip");
-    tooltip.innerHTML = `
-    <strong>${commit.subject}</strong><br>
-    ${commit.body}<br>
-    <em>${commit.author.name}</em><br>
-    <span>Hash: ${commit.hash}</span>
-  `;
-    tooltip.classList.remove("hidden");
-    tooltip.style.left = `${commit.x + 10}px`;
-    tooltip.style.top = `${commit.y + 10}px`;
-}
+// function showTooltip(commit) {
+//     const tooltip = document.getElementById("tooltip");
+//     tooltip.innerHTML = `
+//     <strong>${commit.subject}</strong><br>
+//     ${commit.body}<br>
+//     <em>${commit.author.name}</em><br>
+//     <span>Hash: ${commit.hash}</span>
+//   `;
+//     tooltip.classList.remove("hidden");
+//     tooltip.style.left = `${commit.x + 10}px`;
+//     tooltip.style.top = `${commit.y + 10}px`;
+// }
 
 function hideTooltip() {
     const tooltip = document.getElementById("tooltip");
@@ -190,4 +190,4 @@ function transformCommitData(data) {
 }
 
 
-export default HorizontalGraph;
+// export default HorizontalGraph;
