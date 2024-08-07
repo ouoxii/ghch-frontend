@@ -192,6 +192,7 @@ const TeamRepo = ({ onClose }) => {
             return;
         }
 
+
         const inviteRequestData = {
             teamId: teamId,
             username: inviteData.invitee,
@@ -199,6 +200,9 @@ const TeamRepo = ({ onClose }) => {
         };
 
         try {
+            const inviteeResponse = await fetch(`http://localhost:8081/app-users/${inviteData.invitee}`, {});
+            if (!inviteeResponse.ok) throw new Error('此成員不存在');
+
             const inviteResponse = await fetch(`http://localhost:8081/invitations?token=${token}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -233,9 +237,8 @@ const TeamRepo = ({ onClose }) => {
                         });
                         if (!inviteResponse.ok) throw new Error('新增失敗');
 
-                        alert('邀請成功');
                     }));
-                    alert('成功寄出協作邀請 ');
+                    alert('成功寄出GitHub協作邀請 ');
                 } catch (error) {
                     console.error('寄出協作邀請失敗', error);
                     alert('寄出協作邀請失敗');
@@ -246,8 +249,8 @@ const TeamRepo = ({ onClose }) => {
             });
             setInvitations(inviteRefreshResponse.ok ? await inviteRefreshResponse.json() : []);
         } catch (error) {
-            console.error('邀請時出錯:', error);
-            alert('邀請時出錯');
+            console.error('邀請時錯誤:', error);
+            alert(error);
         }
     };
 
@@ -256,13 +259,13 @@ const TeamRepo = ({ onClose }) => {
             const response = await fetch(`http://localhost:8081/invitations/${id}`, {
                 method: 'DELETE',
             });
-            if (!response.ok) throw new Error('刪除邀請時出錯');
+            if (!response.ok) throw new Error('刪除邀請時錯誤');
 
             alert('成功刪除邀請');
             setInvitations(invitations.filter(invitation => invitation.id !== id));
         } catch (error) {
             console.error('刪除邀請時出錯:', error);
-            alert('刪除邀請時出錯');
+            alert(error);
         }
     };
 
@@ -301,7 +304,7 @@ const TeamRepo = ({ onClose }) => {
             navigate('/');
         } catch (error) {
             console.error('刪除過程中出錯:', error);
-            alert('刪除過程中出錯');
+            alert(error);
         }
     };
 

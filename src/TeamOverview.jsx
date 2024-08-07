@@ -35,6 +35,7 @@ const TeamOverview = () => {
             } catch (error) {
                 console.error('獲取團隊資料時出錯:', error);
                 alert('獲取團隊資料時出錯');
+                navigate('/');
             }
         };
 
@@ -76,7 +77,7 @@ const TeamOverview = () => {
                         setTimelineData([]);
                         throw new Error('沒有本地端分支資料');
                     } else {
-                        throw new Error('獲取本地端綜觀圖失敗');
+                        throw new Error('獲取本地端分支資料失敗');
                     }
                 }
 
@@ -198,7 +199,7 @@ const TeamOverview = () => {
 
         } catch (error) {
             console.error('刪除過程中出錯:', error);
-            alert('刪除過程中出錯');
+            alert(error);
         }
     };
 

@@ -185,7 +185,7 @@ export const DataProvider = ({ children }) => {
             setNotifications(notifications.filter(notification => notification.id !== invitationId));
         } catch (error) {
             console.error('拒絕邀請時出錯:', error);
-            alert('拒絕邀請時出錯');
+            alert(error);
         }
     };
 
@@ -214,7 +214,7 @@ export const DataProvider = ({ children }) => {
             navigate(`/teamRepo/?teamId=${teamId}`);
         } catch (error) {
             console.error('創建團隊時出錯:', error);
-            alert('創建團隊時出錯');
+            alert(error);
         }
     };
 
