@@ -66,12 +66,13 @@ const TeamOverview = () => {
                 document.body.removeChild(scriptElement);
             }
         };
-    }, [teamName, teamId, token, teamData.owner]);
+    }, [teamName, teamId, token, teamData.owner, teamRepoId]);
 
     useEffect(() => {
         const fetchLocalGraphBranch = async () => {
             try {
                 const chartDataResponse = await fetch(`http://localhost:8080/graph?owner=${username}&repo=${repoName}`);
+                //const chartDataResponse = await fetch(`http://localhost:8080/graph?owner=ntou01057042&repo=github-flow-tutor`);//指定repo
                 if (!chartDataResponse.ok) {
                     if (chartDataResponse.status === 404) {
                         setTimelineData([]);
@@ -101,7 +102,7 @@ const TeamOverview = () => {
                             setTimelineData([]);
                             throw new Error('沒有雲端分支資料');
                         } else {
-                            throw new Error('獲取雲端綜觀圖失敗')
+                            throw new Error('獲取雲端分支資料失敗')
                         }
                     }
                     const chartData = await cloudGraphBranchResponse.json();
@@ -120,7 +121,7 @@ const TeamOverview = () => {
             fetchCloudGraphBranch();
         }
 
-    }, [teamData, username]);
+    }, [teamData, username, teamRepoId])
 
     useEffect(() => {
         if (chartsLoaded && timelineData.length > 0) {
@@ -161,17 +162,47 @@ const TeamOverview = () => {
             timeline: { showRowLabels: false },
             avoidOverlappingGridLines: false,
             alternatingRowStyle: false,
-            width: 1000,
+            width: 1200,
             height: 300
         };
 
-        const dataRows = timelineData.map(item => [
-            item.name,
-            item.committer,
-            item.style || '',
-            new Date(item.startTime),
-            new Date(item.endTime)
-        ]);
+        // Convert times to Date objects and then to timestamps (milliseconds)
+        const startTimes = timelineData.map(item => new Date(item.startTime).getTime());
+        const endTimes = timelineData.map(item => new Date(item.endTime).getTime());
+
+        // Find the earliest start time and the latest end time
+        const earliestStart = new Date(Math.min(...startTimes));
+        const latestEnd = new Date(Math.max(...endTimes));
+
+        // console.log("Earliest Start Time:", earliestStart.toISOString());
+        // console.log("Latest End Time:", latestEnd.toISOString());
+
+        const minTimeUnit = (latestEnd - earliestStart) / 50;
+
+        // console.log(timelineData);
+
+        // Adjust endTime if the duration is less than minTimeUnit
+        const dataRows = timelineData.map(item => {
+            const startTime = new Date(item.startTime);
+            let endTime = new Date(item.endTime);
+
+            const duration = endTime - startTime;
+            if (duration < minTimeUnit) {
+                endTime = new Date(startTime.getTime() + minTimeUnit);
+            }
+
+            return [
+                item.committer,
+                item.name,
+                item.style || '',
+                startTime,
+                endTime
+            ];
+        });
+        // const dataRows = [[
+        //     'test', 'vvvvss', , new Date('2024-07-23T19:15:57.000+00:00'), new Date('2024-07-24T19:15:57.000+00:00')
+        // ]];
+        // console.log(dataRows);
         dataTable.addRows(dataRows);
         chart.draw(dataTable, options);
     };
@@ -248,14 +279,16 @@ const TeamOverview = () => {
             </div>
             <div className="flex flex-col h-full">
                 <div className="flex-grow">
-                    <div id="timeLineChart" className='p-3 h-80'>
-                        {timelineData.length === 0 && (
-                            <div> ... </div>
-                        )}
-                    </div>
+                    {timelineData.length === 0 ? (
+                        <div>尚無分支資料</div>
+                    ) : (
+                        <div id="timeLineChart" className='p-3 h-80'>
+                            {/* 在這裡渲染時間線圖表的內容 */}
+                        </div>
+                    )}
                 </div>
                 <div className="h-1/4 flex justify-between items-center">
-                    <Link to="/branchchart" className="max-w-xs p-3 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                    <Link to={`/branchchart?teamId=${teamId}&teamName=${teamName}&repoId=${teamRepoId}&repoName=${repoName}`} className="max-w-xs p-3 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
                         分支進度圖
                     </Link>
                 </div>
