@@ -28,16 +28,17 @@ const HorizontalGraph = () => {
                 const queryParams = new URLSearchParams(window.location.search);
                 const branch = queryParams.get('branch');
                 const repo = queryParams.get('repo');
-                const response = await fetch(`http://localhost:8080/flow-commit/ouoxii/${repo}?branch=${branch}`);
+                const owner = queryParams.get('owner');
+                const response = await fetch(`http://localhost:8080/flow-commit/${owner}/${repo}?branch=${branch}`);
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 const data = await response.json();
                 const transformedData = transformCommitData(data);
-                console.log("Transformed Commit Data:", transformedData);
+                // console.log("Transformed Commit Data:", transformedData);
                 setCommitData(transformedData);
             } catch (error) {
-                console.error("Error fetching commit data:", error);
+                console.error("加載個人分支圖錯誤:", error);
                 setError(error);
             }
         };

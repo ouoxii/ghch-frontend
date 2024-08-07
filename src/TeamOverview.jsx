@@ -24,7 +24,6 @@ const TeamOverview = () => {
 
     useEffect(() => {
         const fetchTeamData = async () => {
-            console.log(teamData.owner);
             try {
                 const teamResponse = await fetch(`http://localhost:8081/teams/${teamId}`);
                 if (!teamResponse.ok) {
@@ -80,7 +79,9 @@ const TeamOverview = () => {
                         throw new Error('獲取本地端綜觀圖失敗');
                     }
                 }
+
                 const chartData = await chartDataResponse.json();
+
                 setTimelineData(chartData);
                 setBranches(['select Branch', ...chartData.filter(branch => branch.name !== 'HEAD').map(branch => branch.name)]);
             } catch (error) {
@@ -91,20 +92,21 @@ const TeamOverview = () => {
         const fetchCloudGraphBranch = async () => {
             try {
                 if (teamData.owner) {
-                    const clooudGraphBranchResponse = await fetch(`http://localhost:8081/cloud-graph-branch?owner=${teamData.owner}&repo=${repoName}`, {
+                    const cloudGraphBranchResponse = await fetch(`http://localhost:8081/cloud-graph-branch?owner=${teamData.owner}&repo=${repoName}`, {
                         method: 'GET'
                     });
-                    if (!clooudGraphBranchResponse.ok) {
-                        if (clooudGraphBranchResponse.status === 404) {
+                    if (!cloudGraphBranchResponse.ok) {
+                        if (cloudGraphBranchResponse.status === 404) {
                             setTimelineData([]);
                             throw new Error('沒有雲端分支資料');
                         } else {
                             throw new Error('獲取雲端綜觀圖失敗')
                         }
                     }
-                    const chartData = await clooudGraphBranchResponse.json();
+                    const chartData = await cloudGraphBranchResponse.json();
                     setTimelineData(chartData);
-                    setBranches(['select Branch', ...chartData.filter(branch => branch.name !== 'HEAD').map(branch => branch.name)]);
+                    const uniqueBranches = [...new Set(chartData.filter(branch => branch.name !== 'HEAD').map(branch => branch.name))];
+                    setBranches(['select Branch', ...uniqueBranches]);
                 }
             } catch (error) {
                 console.log(error);
@@ -216,7 +218,7 @@ const TeamOverview = () => {
     const handleBranchChange = (e) => {
         const branch = e.target.value;
         setSelectedBranch(branch);
-        navigate(`/gitgraph?repo=${repoName}&branch=${branch}`);
+        navigate(`/gitgraph?repo=${repoName}&branch=${branch}&owner=${teamData.owner}`);
     };
 
     const handleSettingsClick = () => setIsSettingsOpen(!isSettingsOpen);
