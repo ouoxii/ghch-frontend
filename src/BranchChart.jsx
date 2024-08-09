@@ -72,9 +72,9 @@ const BranchChart = (/*帳號跟repo名稱*/) => {
     useEffect(() => {
         const fetchLocalGraphBranch = async () => {
             try {
-                // const chartDataResponse = await fetch(`http://localhost:8080/graph?owner=${username}&repo=${repoName}`);
+                const chartDataResponse = await fetch(`http://localhost:8080/graph?owner=${username}&repo=${repoName}`);
                 // const chartDataResponse = await fetch(`http://localhost:8080/graph?owner=ouoxii&repo=hello4`);//指定repo
-                const chartDataResponse = await fetch(`http://localhost:8080/graph?owner=ntou01057042&repo=github-flow-tutor`);//指定repo
+                // const chartDataResponse = await fetch(`http://localhost:8080/graph?owner=ntou01057042&repo=github-flow-tutor`);//指定repo
                 if (!chartDataResponse.ok) {
                     if (chartDataResponse.status === 404) {
                         setTimelineData([]);
@@ -153,9 +153,9 @@ const BranchChart = (/*帳號跟repo名稱*/) => {
     useEffect(() => {
         const fetchLocalGraphCommit = async () => {
             try {
-                // const commitstDataResponse = await fetch(`http://localhost:8080/graph/commits?owner=${username}&repo=${repoName}`);
+                const commitstDataResponse = await fetch(`http://localhost:8080/graph/commits?owner=${username}&repo=${repoName}`);
                 // const commitstDataResponse = await fetch(`http://localhost:8080/graph/commits?owner=ouoxii&repo=hello4`);//指定repo
-                const commitstDataResponse = await fetch(`http://localhost:8080/graph/commits?owner=ntou01057042&repo=github-flow-tutor`);//指定repo
+                // const commitstDataResponse = await fetch(`http://localhost:8080/graph/commits?owner=ntou01057042&repo=github-flow-tutor`);//指定repo
                 if (!commitstDataResponse.ok) {
                     if (commitstDataResponse.status === 404) {
                         setTimelineData([]);
@@ -331,7 +331,7 @@ const BranchChart = (/*帳號跟repo名稱*/) => {
                 tooltipDataArray[i].splice(0, 0, 'date');
                 tooltipDataArray[i].splice(dataRows.length, 0, 'main');
             } else {
-                tooltipDataArray[i].splice(0, 0, null);
+                tooltipDataArray[i].splice(0, 0, '');
                 tooltipDataArray[i].splice(dataRows.length, 0, 0);
             }
         }
@@ -347,7 +347,7 @@ const BranchChart = (/*帳號跟repo名稱*/) => {
 
             window.google.visualization.events.addListener(tooltipChart, 'ready', function () {
                 let tooltipImg = '<img src="' + tooltipChart.getImageURI() + '">';
-                console.log(timelineData)
+                // console.log(timelineData)
                 let commitDetail = '<p style="margin-left:50px">' + tooltipDataArray[0][i+timelineData.length] + '<p>';
                 dataRows[i][2] = tooltipImg + commitDetail;
             });
@@ -383,7 +383,7 @@ const BranchChart = (/*帳號跟repo名稱*/) => {
         // console.log("Latest End Time:", latestEnd.toISOString());
 
         const scaleFactor = 2 / 1000000;
-        const chartWidth = (latestEnd - earliestStart) * scaleFactor;
+        const chartWidth = (latestEnd - earliestStart) * scaleFactor + 1000;
 
         const primaryOptions = {
             title: 'Team branch chart',
