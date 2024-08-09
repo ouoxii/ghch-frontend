@@ -72,8 +72,9 @@ const BranchChart = (/*帳號跟repo名稱*/) => {
     useEffect(() => {
         const fetchLocalGraphBranch = async () => {
             try {
-                const chartDataResponse = await fetch(`http://localhost:8080/graph?owner=${username}&repo=${repoName}`);
-                //const chartDataResponse = await fetch(`http://localhost:8080/graph?owner=ntou01057042&repo=github-flow-tutor`);//指定repo
+                // const chartDataResponse = await fetch(`http://localhost:8080/graph?owner=${username}&repo=${repoName}`);
+                // const chartDataResponse = await fetch(`http://localhost:8080/graph?owner=ouoxii&repo=hello4`);//指定repo
+                const chartDataResponse = await fetch(`http://localhost:8080/graph?owner=ntou01057042&repo=github-flow-tutor`);//指定repo
                 if (!chartDataResponse.ok) {
                     if (chartDataResponse.status === 404) {
                         setTimelineData([]);
@@ -83,7 +84,8 @@ const BranchChart = (/*帳號跟repo名稱*/) => {
                     }
                 }
                 const chartData = await chartDataResponse.json();
-                setTimelineData(chartData);
+                const newChartData = chartData.filter(branch => branch.name != 'HEAD');
+                setTimelineData(newChartData);
             } catch (error) {
                 console.log(error);
             }
@@ -151,8 +153,9 @@ const BranchChart = (/*帳號跟repo名稱*/) => {
     useEffect(() => {
         const fetchLocalGraphCommit = async () => {
             try {
-                const commitstDataResponse = await fetch(`http://localhost:8080/graph/commits?owner=${username}&repo=${repoName}`);
-                //const commitstDataResponse = await fetch(`http://localhost:8080/graph/commits?owner=ntou01057042&repo=github-flow-tutor`);//指定repo
+                // const commitstDataResponse = await fetch(`http://localhost:8080/graph/commits?owner=${username}&repo=${repoName}`);
+                // const commitstDataResponse = await fetch(`http://localhost:8080/graph/commits?owner=ouoxii&repo=hello4`);//指定repo
+                const commitstDataResponse = await fetch(`http://localhost:8080/graph/commits?owner=ntou01057042&repo=github-flow-tutor`);//指定repo
                 if (!commitstDataResponse.ok) {
                     if (commitstDataResponse.status === 404) {
                         setTimelineData([]);
@@ -162,7 +165,8 @@ const BranchChart = (/*帳號跟repo名稱*/) => {
                     }
                 }
                 const commitsData = await commitstDataResponse.json();
-                setTooltipData(commitsData);
+                const newCommitData = commitsData.filter(commit => commit.branchName != 'HEAD')
+                setTooltipData(newCommitData);
             } catch (error) {
                 console.log(error);
             }
@@ -208,12 +212,46 @@ const BranchChart = (/*帳號跟repo名稱*/) => {
                 format: 'M/d',
             }
         };
-        const dataRows = timelineData.map(item => [
-            item.committer,
-            item.name,
-            new Date(item.startTime),
-            new Date(item.endTime)
-        ]);
+
+        // Convert times to Date objects and then to timestamps (milliseconds)
+        const startTimes = timelineData.map(item => new Date(item.startTime).getTime());
+        const endTimes = timelineData.map(item => new Date(item.endTime).getTime());
+
+        // Find the earliest start time and the latest end time
+        const earliestStart = new Date(Math.min(...startTimes));
+        const latestEnd = new Date(Math.max(...endTimes));
+
+        // console.log("Earliest Start Time:", earliestStart.toISOString());
+        // console.log("Latest End Time:", latestEnd.toISOString());
+
+        const minTimeUnit = (latestEnd - earliestStart) / 500;
+
+        // console.log(timelineData);
+
+        // Adjust endTime if the duration is less than minTimeUnit
+        const dataRows = timelineData.map(item => {
+            const startTime = new Date(item.startTime);
+            let endTime = new Date(item.endTime);
+
+            const duration = endTime - startTime;
+            if (duration < minTimeUnit) {
+                endTime = new Date(startTime.getTime() + minTimeUnit);
+            }
+
+            return [
+                item.committer || item.name,
+                item.name,
+                startTime,
+                endTime
+            ];
+        });
+
+        // const dataRows = timelineData.map(item => [
+        //     item.committer || item.name,
+        //     item.name,
+        //     new Date(item.startTime),
+        //     new Date(item.endTime)
+        // ]);
 
         //調整資料以符合需求
         for (let i = 0; i < dataRows.length; i++) {
@@ -309,7 +347,8 @@ const BranchChart = (/*帳號跟repo名稱*/) => {
 
             window.google.visualization.events.addListener(tooltipChart, 'ready', function () {
                 let tooltipImg = '<img src="' + tooltipChart.getImageURI() + '">';
-                let commitDetail = '<p style="margin-left:50px">' + 'feat: initial commit' + '<p>';
+                console.log(timelineData)
+                let commitDetail = '<p style="margin-left:50px">' + tooltipDataArray[0][i+timelineData.length] + '<p>';
                 dataRows[i][2] = tooltipImg + commitDetail;
             });
             tooltipChart.draw(view, tooltipOptions);
