@@ -192,7 +192,7 @@ function initGraph(gitgraph, commitData) {
             branch.commit({
                 subject: commit.subject,
                 body: commit.body,
-                author: `${commit.author.name}, ${commit.date}`,
+                author: `${commit.author}, ${commit.date}`,
                 hash: commit.hash,
                 onMouseOver(commit) {
                     showTooltip(commit);
@@ -215,7 +215,7 @@ function showTooltip(commit) {
     tooltip.innerHTML = `
     <strong>${commit.subject}</strong><br>
     ${commit.body}<br>
-    <em>${commit.author}</em><br>
+    <em>${commit.author.name}</em><br>
     <span>Hash: ${commit.hash}</span>
   `;
     tooltip.classList.remove("hidden");
