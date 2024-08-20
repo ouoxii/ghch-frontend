@@ -255,4 +255,5 @@ function transformCommitData(data) {
         });
 }
 
+
 export default HorizontalGraph;
