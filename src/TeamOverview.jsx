@@ -71,8 +71,8 @@ const TeamOverview = () => {
     useEffect(() => {
         const fetchLocalGraphBranch = async () => {
             try {
-                // const chartDataResponse = await fetch(`http://localhost:8080/graph?owner=${username}&repo=${repoName}`);
-                const chartDataResponse = await fetch(`http://localhost:8080/graph?owner=ouoxii&repo=hello4`);//指定repo
+                const chartDataResponse = await fetch(`http://localhost:8080/graph?owner=${username}&repo=${repoName}`);
+                // const chartDataResponse = await fetch(`http://localhost:8080/graph?owner=ouoxii&repo=hello4`);//指定repo
                 if (!chartDataResponse.ok) {
                     if (chartDataResponse.status === 404) {
                         setTimelineData([]);
