@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
     Gitgraph,
     templateExtend,
@@ -21,21 +22,27 @@ const withoutAuthor = templateExtend(TemplateName.Metro, {
 const HorizontalGraph = () => {
     const [commitData, setCommitData] = useState([]);
     const [error, setError] = useState(null);
+    const [showForm, setShowForm] = useState(false);
+    const [inputData, setInputData] = useState({
+        title: "",
+        description: ""
+    });
+    const [errors, setErrors] = useState({});
+    const navigate = useNavigate();
 
     useEffect(() => {
         const fetchCommitData = async () => {
+            const queryParams = new URLSearchParams(window.location.search);
+            const branch = queryParams.get('branch');
+            const repo = queryParams.get('repo');
+            const owner = queryParams.get('owner');
             try {
-                const queryParams = new URLSearchParams(window.location.search);
-                const branch = queryParams.get('branch');
-                const repo = queryParams.get('repo');
-                const owner = queryParams.get('owner');
                 const response = await fetch(`http://localhost:8080/flow-commit/${owner}/${repo}?branch=${branch}`);
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 const data = await response.json();
                 const transformedData = transformCommitData(data);
-                // console.log("Transformed Commit Data:", transformedData);
                 setCommitData(transformedData);
             } catch (error) {
                 console.error("加載個人分支圖錯誤:", error);
@@ -63,11 +70,31 @@ const HorizontalGraph = () => {
         );
     }
 
+    const handleFormSubmit = (e) => {
+        e.preventDefault();
+
+        console.log("Input Data:", inputData);
+        setShowForm(false);
+        navigate('/PRDiscussion');
+    };
+
+    const handleInputChange = (e) => {
+        const { name, value } = e.target;
+        setInputData((prevState) => ({
+            ...prevState,
+            [name]: value
+        }));
+    };
+
     return (
         <div className="container mx-auto p-4">
             <div className="flex justify-between items-center p-4 border-b border-gray-300">
                 <h1 className="text-xl font-bold">個人分支圖</h1>
                 <button className="text-blue-500">個人分支圖設定</button>
+            </div>
+            <div className="flex justify-between items-center p-4 border-b">
+                分支最近有{commitData.length}次提交
+                <button className="ml-4 bg-blue-500 text-white px-4 py-2 rounded" onClick={() => setShowForm(true)}>Pull Request</button>
             </div>
             <div className="flex flex-col h-full p-4 relative">
                 {commitData.length > 0 && (
@@ -105,6 +132,46 @@ const HorizontalGraph = () => {
                     </tbody>
                 </table>
             </div>
+
+            {showForm && (
+                <div className="fixed inset-0 flex items-center justify-center bg-gray-500 bg-opacity-50">
+                    <div className="flex flex-col w-[35%] h-[80%] rounded-xl shadow-lg overflow-hidden bg-white">
+                        <div className='flex flex-col h-full relative'>
+                            <div className="p-3 m-3 flex border-b">
+                                <h2>創建拉取請求</h2>
+                                <button className='ml-auto' onClick={() => setShowForm(false)}>✕</button>
+                            </div>
+                            <form id="createPullRequestForm" onSubmit={handleFormSubmit}>
+                                <div className="p-3 form-group mb-2">
+                                    <input
+                                        type="text"
+                                        name="title"
+                                        value={inputData.title}
+                                        onChange={handleInputChange}
+                                        placeholder="標題"
+                                        className="w-full p-2 border rounded"
+                                    />
+                                    {errors.title && <span className="error text-red-500">{errors.title}</span>}
+                                </div>
+                                <div className="p-3 form-group mb-2">
+                                    <textarea
+                                        name="description"
+                                        value={inputData.description}
+                                        onChange={handleInputChange}
+                                        placeholder="描述"
+                                        className="w-full p-2 border rounded"
+                                    ></textarea>
+                                </div>
+                                <div className="p-3 form-group mb-2">
+                                    <button type="submit" className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded w-full">
+                                        創建拉取請求
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };
@@ -135,12 +202,10 @@ function initGraph(gitgraph, commitData) {
                 }
             });
         } else if (commit.type === "merge" && commit.branch !== "main") {
-            console.log("Merging branch:", commit.branch);
             branches[branchpram].merge(branches["main"]);
         }
         else if (commit.type === "merge" && commit.branch === "main") {
             branches["main"].merge(branches[branchpram]);
-
         }
     });
 }
@@ -162,6 +227,7 @@ function hideTooltip() {
     const tooltip = document.getElementById("tooltip");
     tooltip.classList.add("hidden");
 }
+
 function transformCommitData(data) {
     return data
         .sort((a, b) => new Date(a.commitTime) - new Date(b.commitTime))

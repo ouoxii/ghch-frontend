@@ -200,7 +200,7 @@ const TeamRepo = ({ onClose }) => {
         };
 
         try {
-            const inviteeResponse = await fetch(`http://localhost:8081/app-users/${inviteData.invitee}`, {});
+            const inviteeResponse = await fetch(`http://localhost:8081/app-users?username=${inviteData.invitee}`, {});
             if (!inviteeResponse.ok) throw new Error('此成員不存在');
 
             const inviteResponse = await fetch(`http://localhost:8081/invitations?token=${token}`, {
