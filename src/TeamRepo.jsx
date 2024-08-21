@@ -159,7 +159,7 @@ const TeamRepo = ({ onClose }) => {
                 }
             }));
 
-            //組長clone repo到本地端desktop/GHCH
+            //組長clone repo到本地端user/GHCH
             const cloneRepoResponse = await fetch(`http://localhost:8080/git-repo/clone?repoOwner=${teamData.owner}&repoName=${teamRepoRequestData.repoName}`,
                 {
                     method: 'POST',

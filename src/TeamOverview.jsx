@@ -21,6 +21,7 @@ const TeamOverview = () => {
     const [selectedBranch, setSelectedBranch] = useState('main');
     const [chartsLoaded, setChartsLoaded] = useState(false);
     const [branches, setBranches] = useState(['select Branch']);
+    const [repoExist, setRepoExist] = useState(null);
 
     useEffect(() => {
         const fetchTeamData = async () => {
@@ -66,7 +67,28 @@ const TeamOverview = () => {
                 document.body.removeChild(scriptElement);
             }
         };
-    }, [teamName, teamId, token, teamData.owner, teamRepoId]);
+    }, [teamName, teamId, token, teamRepoId]);
+
+    useEffect(() => {
+        const checkRepo = async () => {
+            try {
+                const repoResponse = await fetch(`http://localhost:8080/git-repo/check/${teamData.owner}/${repoName}`);
+                if (!repoResponse.ok) {
+                    throw new Error('確認Repo存在失敗');
+                }
+                const repoExist = await repoResponse.json();
+                setRepoExist(repoExist);
+            } catch (error) {
+                console.error(error);
+                alert(error);
+            }
+        }
+
+        if (teamData.owner != '') {
+            checkRepo();
+        }
+
+    }, [teamData]);
 
     useEffect(() => {
         const fetchLocalGraphBranch = async () => {
@@ -115,13 +137,36 @@ const TeamOverview = () => {
             }
         };
 
-        if (teamData.owner === username) {
-            fetchLocalGraphBranch();
-        } else {
-            fetchCloudGraphBranch();
+        const cloneRepo = async () => {
+            try {
+                const cloneRepoResponse = await fetch(`http://localhost:8080/git-repo/clone?repoOwner=${teamData.owner}&repoName=${repoName}`,
+                    {
+                        method: 'POST',
+                        haerders: { 'Content-Type': 'application/json' }
+                    }
+                );
+                if (!cloneRepoResponse.ok) {
+                    throw new Error('clone repo fail');
+                }
+                setRepoExist(true);
+            } catch (error) {
+                alert(error);
+            }
         }
 
-    }, [teamData, username, teamRepoId])
+        if (repoExist) {
+            if (teamData.owner === username) {
+                fetchLocalGraphBranch();
+            } else {
+                fetchCloudGraphBranch();
+            }
+        } else if(repoExist === false) {
+            alert('偵測到repo不存在本地端，將自動為您clone');
+            cloneRepo();
+
+        }
+
+    }, [repoExist])
 
     useEffect(() => {
         if (chartsLoaded && timelineData.length > 0) {
@@ -279,7 +324,7 @@ const TeamOverview = () => {
             </div>
             <div className="flex flex-col h-full">
                 <div className="flex-grow">
-                    {timelineData.length === 0 ? (
+                    {timelineData.length <= 1 ? (
                         <div>尚無分支資料</div>
                     ) : (
                         <div id="timeLineChart" className='p-3 h-80'>
@@ -287,7 +332,7 @@ const TeamOverview = () => {
                         </div>
                     )}
                 </div>
-                <div className="h-1/4 flex justify-between items-center">
+                <div className="h-1/4 flex mb-2 justify-between items-center">
                     <Link to={`/branchchart?teamId=${teamId}&teamName=${teamName}&repoId=${teamRepoId}&repoName=${repoName}`} className="max-w-xs p-3 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
                         分支進度圖
                     </Link>
