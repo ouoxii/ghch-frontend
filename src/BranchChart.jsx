@@ -224,7 +224,7 @@ const BranchChart = (/*帳號跟repo名稱*/) => {
         // console.log("Earliest Start Time:", earliestStart.toISOString());
         // console.log("Latest End Time:", latestEnd.toISOString());
 
-        const minTimeUnit = (latestEnd - earliestStart) / 500;
+        const minTimeUnit = (latestEnd - earliestStart) / 500 + 3600;
 
         // console.log(timelineData);
 
