@@ -20,7 +20,7 @@ const TeamOverview = () => {
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const [timelineData, setTimelineData] = useState([]);
     const [selectedBranch, setSelectedBranch] = useState('main');
-    const [selectedPR, setSelectedPR] = useState('select PR');
+    const [selectedPR, setSelectedPR] = useState('');
     const [chartsLoaded, setChartsLoaded] = useState(false);
     const [branches, setBranches] = useState(['select Branch']);
     const [repoExist, setRepoExist] = useState(null);
@@ -35,19 +35,21 @@ const TeamOverview = () => {
                 const teamData = await teamResponse.json();
                 setTeamData(teamData);
                 await compareAndAcceptInvitations(teamId, token);
-                const prResponse = await fetch(`http://localhost:3001/pr/list?owner=${teamData.owner}&repo=${repoName}`);
+
+                // Fetch PR data
+                const prResponse = await fetch(`http://localhost:3001/pr/list?owner=${teamData.owner}&repo=${repoName}&token=${token}`);
                 if (!prResponse.ok) {
-                    throw new Error('無法獲取pr資料');
+                    throw new Error('無法獲取PR資料');
                 }
                 const prData = await prResponse.json();
                 setPrData(prData);
+
             } catch (error) {
                 console.error('獲取團隊資料時出錯:', error);
                 alert('獲取團隊資料時出錯');
                 navigate('/');
             }
         };
-
 
         const loadCharts = () => {
             const script = document.createElement('script');
@@ -76,10 +78,12 @@ const TeamOverview = () => {
                 document.body.removeChild(scriptElement);
             }
         };
-    }, [teamName, teamId, token, teamRepoId]);
+    }, [teamId, token, repoName]);  // 只在這些值改變時重新執行 useEffect
 
     useEffect(() => {
         const checkRepo = async () => {
+            if (!teamData.owner) return;
+
             try {
                 const repoResponse = await fetch(`http://localhost:8080/git-repo/check/${teamData.owner}/${repoName}`);
                 if (!repoResponse.ok) {
@@ -91,19 +95,15 @@ const TeamOverview = () => {
                 console.error(error);
                 alert(error);
             }
-        }
+        };
 
-        if (teamData.owner != '') {
-            checkRepo();
-        }
-
-    }, [teamData]);
+        checkRepo();
+    }, [teamData.owner, repoName]);
 
     useEffect(() => {
         const fetchLocalGraphBranch = async () => {
             try {
                 const chartDataResponse = await fetch(`http://localhost:8080/graph?owner=${username}&repo=${repoName}`);
-                // const chartDataResponse = await fetch(`http://localhost:8080/graph?owner=ouoxii&repo=hello4`);//指定repo
                 if (!chartDataResponse.ok) {
                     if (chartDataResponse.status === 404) {
                         setTimelineData([]);
@@ -114,26 +114,23 @@ const TeamOverview = () => {
                 }
 
                 const chartData = await chartDataResponse.json();
-
                 setTimelineData(chartData);
                 setBranches(['select Branch', ...chartData.filter(branch => branch.name !== 'HEAD').map(branch => branch.name)]);
             } catch (error) {
                 console.log(error);
             }
-        }
+        };
 
         const fetchCloudGraphBranch = async () => {
             try {
                 if (teamData.owner) {
-                    const cloudGraphBranchResponse = await fetch(`http://localhost:8081/cloud-graph-branch?owner=${teamData.owner}&repo=${repoName}`, {
-                        method: 'GET'
-                    });
+                    const cloudGraphBranchResponse = await fetch(`http://localhost:8081/cloud-graph-branch?owner=${teamData.owner}&repo=${repoName}`);
                     if (!cloudGraphBranchResponse.ok) {
                         if (cloudGraphBranchResponse.status === 404) {
                             setTimelineData([]);
                             throw new Error('沒有雲端分支資料');
                         } else {
-                            throw new Error('獲取雲端分支資料失敗')
+                            throw new Error('獲取雲端分支資料失敗');
                         }
                     }
                     const chartData = await cloudGraphBranchResponse.json();
@@ -148,12 +145,10 @@ const TeamOverview = () => {
 
         const cloneRepo = async () => {
             try {
-                const cloneRepoResponse = await fetch(`http://localhost:8080/git-repo/clone?repoOwner=${teamData.owner}&repoName=${repoName}`,
-                    {
-                        method: 'POST',
-                        haerders: { 'Content-Type': 'application/json' }
-                    }
-                );
+                const cloneRepoResponse = await fetch(`http://localhost:8080/git-repo/clone?repoOwner=${teamData.owner}&repoName=${repoName}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
                 if (!cloneRepoResponse.ok) {
                     throw new Error('clone repo fail');
                 }
@@ -161,7 +156,7 @@ const TeamOverview = () => {
             } catch (error) {
                 alert(error);
             }
-        }
+        };
 
         if (repoExist) {
             if (teamData.owner === username) {
@@ -172,10 +167,8 @@ const TeamOverview = () => {
         } else if (repoExist === false) {
             alert('偵測到repo不存在本地端，將自動為您clone');
             cloneRepo();
-
         }
-
-    }, [repoExist])
+    }, [repoExist, teamData.owner, repoName, username]);
 
     useEffect(() => {
         if (chartsLoaded && timelineData.length > 0) {
@@ -195,12 +188,12 @@ const TeamOverview = () => {
             } catch (error) {
                 console.log(error);
             }
-        }
+        };
 
         if (timelineData.length > 0 && teamData.owner === username) {
             postGraphBranch();
         }
-    }, [teamData, username, timelineData]);
+    }, [teamData.owner, username, timelineData, repoName]);
 
     const drawChart = async () => {
         const container = document.getElementById('timeLineChart');
@@ -220,22 +213,13 @@ const TeamOverview = () => {
             height: 300
         };
 
-        // Convert times to Date objects and then to timestamps (milliseconds)
         const startTimes = timelineData.map(item => new Date(item.startTime).getTime());
         const endTimes = timelineData.map(item => new Date(item.endTime).getTime());
 
-        // Find the earliest start time and the latest end time
         const earliestStart = new Date(Math.min(...startTimes));
         const latestEnd = new Date(Math.max(...endTimes));
-
-        // console.log("Earliest Start Time:", earliestStart.toISOString());
-        // console.log("Latest End Time:", latestEnd.toISOString());
-
         const minTimeUnit = (latestEnd - earliestStart) / 50;
 
-        // console.log(timelineData);
-
-        // Adjust endTime if the duration is less than minTimeUnit
         const dataRows = timelineData.map(item => {
             const startTime = new Date(item.startTime);
             let endTime = new Date(item.endTime);
@@ -279,23 +263,15 @@ const TeamOverview = () => {
             }
 
             alert('成功刪除儲存庫');
-
             navigate(`/teamRepo/?teamId=${teamId}`);
-
         } catch (error) {
             console.error('刪除過程中出錯:', error);
             alert(error);
         }
     };
 
-    const handleDeleteClick = () => {
-        setIsModalOpen(true);
-    };
-
-    const handleCloseModal = () => {
-        setIsModalOpen(false);
-    };
-
+    const handleDeleteClick = () => setIsModalOpen(true);
+    const handleCloseModal = () => setIsModalOpen(false);
     const handleConfirmDelete = () => {
         deleteTeam();
         setIsModalOpen(false);
@@ -306,14 +282,15 @@ const TeamOverview = () => {
         setSelectedBranch(branch);
         navigate(`/gitgraph?repo=${repoName}&branch=${branch}&owner=${teamData.owner}`);
     };
+
     const handlePRChange = (e) => {
-        const selectedPR = JSON.parse(e.target.value); // 解析選中的 PR
-        setSelectedPR(selectedPR.number); // 假設 selectedPR 只是 PR number
+        const selectedPR = JSON.parse(e.target.value);
+        setSelectedPR(selectedPR.number);
 
         console.log("Selected PR Number:", selectedPR.number);
         console.log("Selected PR Title:", selectedPR.title);
 
-        navigate(`/PRDiscussion?number=${selectedPR.number}&title=${encodeURIComponent(selectedPR.title)}`);
+        navigate(`/PRDiscussion?number=${selectedPR.number}&title=${encodeURIComponent(selectedPR.title)}`, { state: { owner: teamData.owner, repo: repoName } });
     };
 
     const handleSettingsClick = () => setIsSettingsOpen(!isSettingsOpen);
@@ -353,10 +330,7 @@ const TeamOverview = () => {
                             ))}
                         </select>
                     </div>
-
-
                 </div>
-
 
                 <button className="text-blue-500" onClick={handleSettingsClick}>儲存庫設定</button>
             </div>
@@ -371,7 +345,7 @@ const TeamOverview = () => {
                     )}
                 </div>
                 <div className="h-1/4 flex mb-2 justify-between items-center">
-                    <Link to={`/branchchart?teamId=${teamId}&teamName=${teamName}&repoId=${teamRepoId}&repoName=${repoName}`} className="max-w-xs p-3 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                    <Link to={`/branchchart?teamId=${teamId}&teamName={teamName}&repoId=${teamRepoId}&repoName=${repoName}`} className="max-w-xs p-3 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
                         分支進度圖
                     </Link>
                 </div>
@@ -388,6 +362,7 @@ const TeamOverview = () => {
                     </div>
                 </div>
             )}
+
             {isSettingsOpen && (
                 <div className="fixed inset-0 flex items-center justify-center bg-gray-500 bg-opacity-50">
                     <div className="flex flex-col w-[35%] h-[80%] rounded-xl shadow-lg overflow-hidden bg-white">
@@ -400,7 +375,8 @@ const TeamOverview = () => {
                                 {teamData.owner === username && (
                                     <button onClick={handleDeleteClick} className="w-full bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
                                         刪除儲存庫
-                                    </button>)}</div>
+                                    </button>)}
+                            </div>
                         </div>
                     </div>
                 </div>
