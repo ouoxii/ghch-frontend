@@ -16,9 +16,11 @@ const TeamOverview = () => {
     const { compareAndAcceptInvitations } = useContext(DataContext);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [teamData, setTeamData] = useState({ id: '', teamName: '', owner: '' });
+    const [prData, setPrData] = useState([]);
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const [timelineData, setTimelineData] = useState([]);
     const [selectedBranch, setSelectedBranch] = useState('main');
+    const [selectedPR, setSelectedPR] = useState('select PR');
     const [chartsLoaded, setChartsLoaded] = useState(false);
     const [branches, setBranches] = useState(['select Branch']);
     const [repoExist, setRepoExist] = useState(null);
@@ -33,12 +35,19 @@ const TeamOverview = () => {
                 const teamData = await teamResponse.json();
                 setTeamData(teamData);
                 await compareAndAcceptInvitations(teamId, token);
+                const prResponse = await fetch(`http://localhost:3001/pr/list?owner=${teamData.owner}&repo=${repoName}`);
+                if (!prResponse.ok) {
+                    throw new Error('無法獲取pr資料');
+                }
+                const prData = await prResponse.json();
+                setPrData(prData);
             } catch (error) {
                 console.error('獲取團隊資料時出錯:', error);
                 alert('獲取團隊資料時出錯');
                 navigate('/');
             }
         };
+
 
         const loadCharts = () => {
             const script = document.createElement('script');
@@ -160,7 +169,7 @@ const TeamOverview = () => {
             } else {
                 fetchCloudGraphBranch();
             }
-        } else if(repoExist === false) {
+        } else if (repoExist === false) {
             alert('偵測到repo不存在本地端，將自動為您clone');
             cloneRepo();
 
@@ -297,6 +306,15 @@ const TeamOverview = () => {
         setSelectedBranch(branch);
         navigate(`/gitgraph?repo=${repoName}&branch=${branch}&owner=${teamData.owner}`);
     };
+    const handlePRChange = (e) => {
+        const selectedPR = JSON.parse(e.target.value); // 解析選中的 PR
+        setSelectedPR(selectedPR.number); // 假設 selectedPR 只是 PR number
+
+        console.log("Selected PR Number:", selectedPR.number);
+        console.log("Selected PR Title:", selectedPR.title);
+
+        navigate(`/PRDiscussion?number=${selectedPR.number}&title=${encodeURIComponent(selectedPR.title)}`);
+    };
 
     const handleSettingsClick = () => setIsSettingsOpen(!isSettingsOpen);
     const handleCloseSettings = () => setIsSettingsOpen(false);
@@ -317,6 +335,26 @@ const TeamOverview = () => {
                             ))}
                         </select>
                     </div>
+
+                    <div className="relative mt-2">
+                        <select
+                            value={selectedPR}
+                            onChange={handlePRChange}
+                            className="block appearance-none bg-white border border-gray-400 hover:border-gray-500 px-4 py-2 pr-8 rounded shadow leading-tight focus:outline-none focus:shadow-outline"
+                        >
+                            {prData.map(prInfo => (
+                                <option
+                                    key={prInfo.id}
+                                    value={JSON.stringify({ number: prInfo.number, title: prInfo.title })}
+                                    className="flex items-center mb-2"
+                                >
+                                    {prInfo.title}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+
+
                 </div>
 
 
