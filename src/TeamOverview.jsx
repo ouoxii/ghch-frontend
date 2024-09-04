@@ -154,7 +154,7 @@ const TeamOverview = () => {
             }
         }
 
-        if (repoExist) {
+        if (repoExist === true) {
             if (teamData.owner === username) {
                 fetchLocalGraphBranch();
             } else {
