@@ -6,8 +6,10 @@ const PRDiscussion = () => {
     const location = useLocation();
     const queryParams = new URLSearchParams(location.search);
     const prNumber = queryParams.get('number');
+    const title = queryParams.get('title');
     const { owner, repo } = location.state || {};
     const [PRData, setPRData] = useState({ number: '', state: '', description: '', head: '', base: '' });
+    const [commentData, setCommentData] = useState({ id: '', user: '', created_at: '', body: '' });
     const token = Cookies.get('token');
     useEffect(() => {
         const fetchPRData = async () => {
@@ -23,6 +25,17 @@ const PRDiscussion = () => {
             } catch (error) {
                 alert(error.message);
             }
+
+            try {
+                const prComments = await fetch(`http://localhost:3001/pr/comments?owner=${owner}&repo=${repo}&pull_number=${prNumber}&token=${token}`);
+                if (!prComments.ok) {
+                    throw new Error('無法獲取PR comments資料');
+                }
+                const Comments = await prComments.json();
+                setCommentData(Comments);
+            } catch (error) {
+                alert(error.message);
+            }
         };
 
         fetchPRData();
@@ -32,7 +45,7 @@ const PRDiscussion = () => {
         <div className="container flex p-4">
             <div className="flex-grow p-4">
                 <h1 className="text-2xl font-bold">
-                    {repo} #{prNumber} {PRData.state}
+                    {title} #{prNumber} {PRData.state}
                     {PRData.state === 'open' && (
                         <span className="bg-green-500 text-white text-lg px-3 py-1 rounded ml-3">Open</span>
                     )}
@@ -43,28 +56,28 @@ const PRDiscussion = () => {
 
                 <div className="flex flex-col w-full mt-5">
                     <div className="flex flex-col h-80 overflow-auto">
-                        <div className="flex justify-between items-center mb-2">
-                            <div className="w-16 h-16 rounded-full overflow-hidden">
-                                <img src={avatar} alt="頭像" />
-                            </div>
-                            <div className="bg-gray-300 rounded-xl p-4 ml-3 flex-grow">
-                                {PRData.description || '（自動生成之PR描述）'}
-                            </div>
-                        </div>
-                        <div className="flex justify-between items-center mb-2">
-                            <div className="bg-gray-300 rounded-xl p-4 mr-3 flex-grow">
-                                我覺得...
-                            </div>
-                            <div className="w-16 h-16 rounded-full overflow-hidden">
-                                <img src={avatar} alt="頭像" />
-                            </div>
-                        </div>
+                        {commentData.length > 0 ? (
+                            commentData.map(comment => (
+                                <div key={comment.id} className="flex justify-between items-center mb-2">
+                                    <div className="w-12 h-12 rounded-full border-2 ml-1 border-white overflow-hidden">
+                                        <img src={`https://avatars.githubusercontent.com/${comment.user}`} alt="" />
+                                    </div>
+                                    <div className="bg-gray-300 rounded-xl p-4 ml-3 flex-grow">
+                                        <p><strong>{comment.user}</strong> <span className="text-sm text-gray-500">({new Date(comment.created_at).toLocaleString()})</span></p>
+                                        <p>{comment.body}</p>
+                                    </div>
+                                </div>
+                            ))
+                        ) : (
+                            <p>尚無評論</p>
+                        )}
                     </div>
                     <div className="flex flex-col mt-5 w-full">
                         <textarea className="w-full h-24 p-3 mb-3 border border-gray-300 rounded-md" placeholder="文字輸入區"></textarea>
                         <button className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded self-end w-24">Comment</button>
                     </div>
                 </div>
+
             </div>
             <div className="w-36 flex-shrink-0 flex flex-col items-center bg-gray-700 p-5 rounded-xl">
                 <h2 className="text-white mb-3">Reviewers</h2>
