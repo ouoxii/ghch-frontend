@@ -75,7 +75,7 @@ const HorizontalGraph = () => {
 
         console.log("Input Data:", inputData);
         setShowForm(false);
-        navigate('/PRDiscussion');
+        // navigate('/PRDiscussion');
     };
 
     const handleInputChange = (e) => {

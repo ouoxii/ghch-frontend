@@ -45,7 +45,7 @@ const PRDiscussion = () => {
         <div className="container flex p-4">
             <div className="flex-grow p-4">
                 <h1 className="text-2xl font-bold">
-                    {title} #{prNumber} {PRData.state}
+                    {title} #{prNumber}
                     {PRData.state === 'open' && (
                         <span className="bg-green-500 text-white text-lg px-3 py-1 rounded ml-3">Open</span>
                     )}
