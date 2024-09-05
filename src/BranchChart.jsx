@@ -19,8 +19,7 @@ const BranchChart = (/*帳號跟repo名稱*/) => {
     const [teamData, setTeamData] = useState({ id: '', teamName: '', owner: '' });
     const [timelineData, setTimelineData] = useState([]);
     const [chartsLoaded, setChartsLoaded] = useState(false);
-    const [tooltipData, setTooltipData] = useState([]);
-    const [localTimelineData, setLocalTimelineData] = useState([]);
+
 
     useEffect(() => {
         const fetchTeamData = async () => {
@@ -45,7 +44,6 @@ const BranchChart = (/*帳號跟repo名稱*/) => {
             script.async = true;
             script.onload = () => {
                 window.google.charts.load('current', { packages: ['timeline'] });
-                window.google.charts.load('current', { packages: ['corechart'] });
                 window.google.charts.setOnLoadCallback(() => {
                     setChartsLoaded(true);
                 });
@@ -116,357 +114,55 @@ const BranchChart = (/*帳號跟repo名稱*/) => {
             }
         };
 
-        const fetchUserLocalGraphBranch = async () => {
-            try {
-                const chartDataResponse = await fetch(`http://localhost:8080/graph?owner=${teamData.owner}&repo=${repoName}`);
-                // const chartDataResponse = await fetch(`http://localhost:8080/graph?owner=ouoxii&repo=hello4`);//指定repo
-                // const chartDataResponse = await fetch(`http://localhost:8080/graph?owner=ntou01057042&repo=github-flow-tutor`);//指定repo
-                if (!chartDataResponse.ok) {
-                    if (chartDataResponse.status === 404) {
-                        setLocalTimelineData([]);
-                        throw new Error('沒有使用者本地端分支資料');
-                    } else {
-                        throw new Error('獲取使用者本地端綜觀圖失敗');
-                    }
-                }
-                const chartData = await chartDataResponse.json();
-                const newChartData = chartData.filter(branch => branch.name !== 'HEAD');
-                setLocalTimelineData(newChartData);
-            } catch (error) {
-                console.log(error);
-            }
-        }
-
-        if (teamData.owner !== '') {
-            if (teamData.owner === username) {
-                fetchLocalGraphBranch();
-            } else {
-                fetchCloudGraphBranch();
-                fetchUserLocalGraphBranch();
-            }
+        if (teamData.owner === username) {
+            fetchLocalGraphBranch();
+        } else {
+            fetchCloudGraphBranch();
         }
 
     }, [teamData, username, teamRepoId, repoName]);
 
+    // useEffect(() => {
+    //     const postGraphBranch = async () => {
+    //         try {
+    //             const postGraphBranchResponse = await fetch(`http://localhost:8080/graph/upload?owner=${username}&repo=${repoName}`, {
+    //                 method: 'POST'
+    //             });
+    //             if (!postGraphBranchResponse.ok) {
+    //                 throw new Error('上傳分支圖失敗');
+    //             }
+    //         } catch (error) {
+    //             console.log(error);
+    //         }
+    //     }
+
+    //     if (timelineData.length > 0 && teamData.owner === username) {
+    //         postGraphBranch();
+    //     }
+    // }, [teamData, username, timelineData]);
     useEffect(() => {
-        if (chartsLoaded && timelineData.length > 0 && tooltipData.length > 0 && localTimelineData.length > 0) {
-            drawTooltipCharts();
+        if (chartsLoaded && timelineData.length > 0) {
+            drawChart();
         }
-    }, [timelineData, chartsLoaded, tooltipData, localTimelineData]);
+    }, [timelineData, chartsLoaded]);
 
-    useEffect(() => {
-        const postGraphBranch = async () => {
-            try {
-                const postGraphBranchResponse = await fetch(`http://localhost:8080/graph/upload?owner=${username}&repo=${repoName}`,
-                    {
-                        method: 'POST'
-                    }
-                );
-                if (!postGraphBranchResponse.ok) {
-                    throw new Error('上傳分支圖失敗');
-                }
-            } catch (error) {
-                console.log(error);
-            }
-        }
-
-        if (timelineData.length > 0 && teamData.owner === username) {
-            postGraphBranch();
-        }
-    }, [teamData, username, timelineData, repoName])
-
-    useEffect(() => {
-        const fetchLocalGraphCommit = async () => {
-            try {
-                const commitstDataResponse = await fetch(`http://localhost:8080/graph/commits?owner=${username}&repo=${repoName}`);
-                // const commitstDataResponse = await fetch(`http://localhost:8080/graph/commits?owner=ouoxii&repo=hello4`);//指定repo
-                // const commitstDataResponse = await fetch(`http://localhost:8080/graph/commits?owner=ntou01057042&repo=github-flow-tutor`);//指定repo
-                if (!commitstDataResponse.ok) {
-                    if (commitstDataResponse.status === 404) {
-                        setTimelineData([]);
-                        throw new Error('沒有本地端commits資料');
-                    } else {
-                        throw new Error('獲取本地端commits失敗');
-                    }
-                }
-                const commitsData = await commitstDataResponse.json();
-                const newCommitData = commitsData.filter(commit => commit.branchName !== 'HEAD')
-                setTooltipData(newCommitData);
-            } catch (error) {
-                console.log(error);
-            }
-        }
-
-        const fetchCloudGraphCommit = async () => {
-            try {
-                if (teamData.owner) {
-                    const clooudGraphBranchResponse = await fetch(`http://localhost:8081/cloud-graph-commit?owner=${teamData.owner}&repo=${repoName}`,
-                        {
-                            method: 'GET'
-                        }
-                    );
-                    if (!clooudGraphBranchResponse.ok) {
-                        if (clooudGraphBranchResponse.status === 404) {
-                            setTimelineData([]);
-                            throw new Error('沒有雲端commits資料');
-                        } else {
-                            throw new Error('獲取雲端commits資料失敗')
-                        }
-                    }
-                    const commitsData = await clooudGraphBranchResponse.json();
-                    const newCommitData = commitsData.filter(commit => commit.branchName !== 'HEAD')
-                    setTooltipData(newCommitData);
-                }
-            } catch (error) {
-                console.log(error);
-            }
-        };
-
-        if (teamData.owner === username) {
-            fetchLocalGraphCommit();
-        } else {
-            fetchCloudGraphCommit();
-        }
-
-    }, [teamData, username, teamRepoId, repoName])
-
-    const drawTooltipCharts = () => {
-
-        console.log(timelineData)
-        console.log(tooltipData)
-        console.log(localTimelineData)
-        const tooltipOptions = {
-            title: 'Commit frequency',
-            legend: 'none',
-            hAxis: {
-                format: 'M/d',
-            }
-        };
-
-        // Convert times to Date objects and then to timestamps (milliseconds)
-        const startTimes = timelineData.map(item => new Date(item.startTime).getTime());
-        const endTimes = timelineData.map(item => new Date(item.endTime).getTime());
-
-        // Find the earliest start time and the latest end time
-        const earliestStart = new Date(Math.min(...startTimes));
-        const latestEnd = new Date(Math.max(...endTimes));
-
-        const minTimeUnit = (latestEnd - earliestStart) / 500 + 43200000;
-        console.log(minTimeUnit)
-
-        // console.log(timelineData);
-        const localBranch = [];
-        // Adjust endTime if the duration is less than minTimeUnit
-        const dataRows = localTimelineData.flatMap(item => {
-            let localStartTime = new Date(item.startTime);
-            let localEndTime = new Date(item.endTime);
-
-            let endTime = timelineData.find(cloud => cloud.name === item.name)?.endTime;
-            endTime = endTime ? new Date(endTime) : null;
-
-            const rows = [];
-            const localColor = '#A2A4B0';
-
-            let startTime
-            if (!endTime) { //本地端才有的分支
-                let localBranchName = item.name + "(not push yet)"
-                localBranch.push(localBranchName);
-                const duration = localEndTime - localStartTime;
-                console.log(item.name + duration);
-                let adjEndTime = localEndTime;
-                if (duration < minTimeUnit) {
-                    adjEndTime = new Date(localStartTime.getTime() + minTimeUnit);
-                }
-
-                rows.push([
-                    item.committer || item.name,
-                    localBranchName,
-                    localColor,
-                    localStartTime,
-                    adjEndTime
-                ]);
-            }
-            else if (localEndTime > endTime && endTime !== 0) { //本地端進度超前的分支
-                let localBranchName = item.name + "(not push yet)"
-                localBranch.push(localBranchName);
-
-                startTime = localStartTime;
-                localStartTime = endTime;
-                const duration = endTime - startTime;
-                let localDuration = localEndTime - endTime;
-                let adjEndTime = endTime;
-                if (duration < minTimeUnit) {
-                    adjEndTime = new Date(startTime.getTime() + minTimeUnit);
-                    localStartTime = adjEndTime;
-                    localDuration = localEndTime - localStartTime;
-                }
-                if (localDuration < minTimeUnit) {
-                    localEndTime = new Date(localStartTime.getTime() + minTimeUnit);
-                }
-                rows.push([
-                    item.committer || item.name,
-                    item.name,
-                     '',
-                    startTime,
-                    adjEndTime
-                ]);
-                rows.push([
-                    item.committer || item.name,
-                    localBranchName,
-                    localColor,
-                    localStartTime,
-                    localEndTime
-                ])
-            } else { //本地端沒有超前的分支
-                const duration = endTime - localStartTime;
-                let adjEndTime;
-                if (duration < minTimeUnit) {
-                    adjEndTime = new Date(localStartTime.getTime() + minTimeUnit);
-                }
-
-                rows.push([
-                    item.committer || item.name,
-                    item.name,
-                     '',
-                    localStartTime,
-                    adjEndTime
-                ]);
-            }
-
-            return rows;
-        });
-
-        //調整資料以符合需求
-        for (let i = 0; i < dataRows.length; i++) {
-            dataRows[i].splice(2, 0, null);
-        }
-
-        // Group commits by branch
-        const branches = {};
-        tooltipData.forEach(commit => {
-            if (!branches[commit.branchName]) {
-                branches[commit.branchName] = [];
-            }
-            branches[commit.branchName].push(new Date(commit.commitTime));
-        });
-
-        // Find the end time for each branch (last commit time)
-        const branchEndTimes = {};
-        for (const branch in branches) {
-            branchEndTimes[branch] = new Date(Math.max(...branches[branch]));
-        }
-
-        // Calculate the range (end time - 2 weeks)
-        const MS_PER_DAY = 24 * 60 * 60 * 1000;
-        const TWO_WEEKS_MS = 13 * MS_PER_DAY;
-
-        // initial
-        const branchCommitCounts = {};
-        for (const branch in branches) {
-            const dailyCounts = {};
-            for (let d = new Date(branchEndTimes[branch].getTime() - TWO_WEEKS_MS); d <= branchEndTimes[branch]; d.setDate(d.getDate() + 1)) {
-                const day = d.toISOString().split('T')[0];
-                dailyCounts[day] = 0;
-                branchCommitCounts[branch] = dailyCounts;
-            }
-        }
-
-        for (const branch in branches) {
-            const endTime = branchEndTimes[branch];
-            const startTime = new Date(endTime.getTime() - TWO_WEEKS_MS);
-            branches[branch].forEach(commitTime => {
-                if (commitTime >= startTime && commitTime <= endTime) {
-                    const day = commitTime.toISOString().split('T')[0];
-                    branchCommitCounts[branch][day]++;
-                }
-            });
-        }
-
-        // Output the commit counts for each branch
-
-        let tooltipDataArray = [];
-        for (let i = 0; i < 15; i++) {
-            tooltipDataArray[i] = [];
-        }
-
-        for (let i = 0; i < dataRows.length - 1; i++) {
-            tooltipDataArray[0][i] = 'date';
-            tooltipDataArray[0][dataRows.length - 1 + i] = dataRows[i + 1][1];
-        }
-
-        let j = 0;
-        for (const branch in branchCommitCounts) {
-
-            const day = Object.keys(branchCommitCounts[branch]);
-            for (let i = 1; i < 15; i++) {
-                tooltipDataArray[i][j] = new Date(day[i - 1]);
-                const num = branchCommitCounts[branch][day[i - 1]];
-                tooltipDataArray[i][j + dataRows.length - 1] = num;
-            }
-            j++;
-        }
-
-        //調整資料以符合需求
-        console.log(dataRows)
-        for (let i = 0; i < tooltipDataArray.length; i++) {
-            if (i === 0) {
-                tooltipDataArray[i].splice(0, 0, 'date');
-                tooltipDataArray[i].splice(dataRows.length, 0, 'main');
-            } else {
-                tooltipDataArray[i].splice(0, 0, "");
-                tooltipDataArray[i].splice(dataRows.length, 0, null);
-            }
-        }
-
-        // 找localbranch對應的位址
-        const localBranchInd = localBranch.map(name => {
-            return tooltipDataArray[0].indexOf(name);
-        });
-
-        console.log(localBranchInd);
-        localBranchInd.forEach(index => {
-            for (let i = 1; i < tooltipDataArray.length; i++) {
-                tooltipDataArray[i][index-dataRows.length] = '';
-                tooltipDataArray[i][index] = '';
-            }
-        });
-
-        console.log(tooltipDataArray);
-
-        const data = new window.google.visualization.arrayToDataTable(tooltipDataArray);
-        const view = new window.google.visualization.DataView(data);
-
-        for (let i = 0; i < dataRows.length; i++) {
-            view.setColumns([i, i + dataRows.length]);
-            const hiddenDiv = document.getElementById('hidden_div');
-            const tooltipChart = new window.google.visualization.ColumnChart(hiddenDiv);
-
-            window.google.visualization.events.addListener(tooltipChart, 'ready', function () {
-                let tooltipImg = '<img src="' + tooltipChart.getImageURI() + '">';
-                // console.log(timelineData)
-                let commitDetail = '<p style="margin-left:50px; margin-bottom:5px; font-size:18px">' + tooltipDataArray[0][i + dataRows.length] + '<p>';
-                dataRows[i][2] = tooltipImg + commitDetail;
-            });
-            tooltipChart.draw(view, tooltipOptions);
-        }
-        drawPrimaryChart(dataRows);
-    }
-
-    const drawPrimaryChart = (dataRows) => {
-        const visibleDiv = document.getElementById('branch_chart');
-        const PrimaryChart = new window.google.visualization.Timeline(visibleDiv);
+    const drawChart = async () => {
+        const container = document.getElementById('timeLineChart');
+        const chart = new window.google.visualization.Timeline(container);
         const dataTable = new window.google.visualization.DataTable();
-        dataTable.addColumn({ type: 'string', id: 'branch-type' });
-        dataTable.addColumn({ type: 'string', id: 'branch-name' });
-        dataTable.addColumn({
-            type: 'string',
-            label: 'Tooltip Chart',
-            role: 'tooltip',
-            'p': { 'html': true }
-        });
+        dataTable.addColumn({ type: 'string', id: 'Branch' });
+        dataTable.addColumn({ type: 'string', id: 'Author' });
         dataTable.addColumn({ type: 'string', id: 'style', role: 'style' });
         dataTable.addColumn({ type: 'date', id: 'Start' });
         dataTable.addColumn({ type: 'date', id: 'End' });
+
+        const options = {
+            timeline: { showRowLabels: false },
+            avoidOverlappingGridLines: false,
+            alternatingRowStyle: false,
+            width: 1200,
+            height: 300
+        };
 
         // Convert times to Date objects and then to timestamps (milliseconds)
         const startTimes = timelineData.map(item => new Date(item.startTime).getTime());
@@ -479,36 +175,39 @@ const BranchChart = (/*帳號跟repo名稱*/) => {
         // console.log("Earliest Start Time:", earliestStart.toISOString());
         // console.log("Latest End Time:", latestEnd.toISOString());
 
-        const scaleFactor = 2 / 10000000;
-        const chartWidth = (latestEnd - earliestStart) * scaleFactor + 1000;
+        const minTimeUnit = (latestEnd - earliestStart) / 50;
 
-        const primaryOptions = {
-            title: 'Team branch chart',
-            // colors: ['#475468', '#365f9b', '#c6cfdc'],
-            allowHtml: true,
-            explorer: { axis: 'horizontal' },
-            width: chartWidth,
-            // height: 200
-        };
+        // console.log(timelineData);
 
+        // Adjust endTime if the duration is less than minTimeUnit
+        const dataRows = timelineData.map(item => {
+            const startTime = new Date(item.startTime);
+            let endTime = new Date(item.endTime);
+
+            const duration = endTime - startTime;
+            if (duration < minTimeUnit) {
+                endTime = new Date(startTime.getTime() + minTimeUnit);
+            }
+
+            return [
+                item.committer,
+                item.committer,
+                item.style || '',
+                startTime,
+                endTime
+            ];
+        });
         dataTable.addRows(dataRows);
-        PrimaryChart.draw(dataTable, primaryOptions);
-    }
+        chart.draw(dataTable, options);
+    };
 
-    const scrollRef = useRef(null);
 
-    //
-    useEffect(() => {
-        if (scrollRef.current) {
-            scrollRef.current.scrollLeft = scrollRef.current.scrollWidth;
-        }
-    }, [timelineData, chartsLoaded]);
+
 
     return (
-        <>
-            <div id='hidden_div' className='hidden'></div>
-            <div id='branch_chart' ref={scrollRef} className="w-screen h-96 p-4 ml-0 mr-4 my-4 shadow-lg bg-slate-50 overflow-auto"></div>
-        </>
+        <div id="timeLineChart" className='p-3 h-80'>
+            {/* 在這裡渲染時間線圖表的內容 */}
+        </div>
     );
 };
 
