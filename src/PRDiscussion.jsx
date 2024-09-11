@@ -10,6 +10,7 @@ const PRDiscussion = () => {
     const { owner, repo } = location.state || {};
     const [PRData, setPRData] = useState({ number: '', state: '', description: '', head: '', base: '' });
     const [commentData, setCommentData] = useState([]);
+    const [newComment, setNewComment] = useState(''); // 新增用於儲存新評論的狀態
     const [reviewers, setReviewers] = useState([
         // 假資料
         { user: 'fakeReviewer1', state: 'APPROVED' },
@@ -71,6 +72,44 @@ const PRDiscussion = () => {
         fetchPRData();
     }, [owner, repo, prNumber]);
 
+    // 處理提交評論
+    const handleCommentSubmit = async () => {
+        if (!newComment) {
+            alert("評論內容不能為空");
+            return;
+        }
+
+        try {
+            const response = await fetch(`http://localhost:3001/pr/comment`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    Authorization: `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                    owner,
+                    repo,
+                    pull_number: prNumber,
+                    body: newComment,  // 發送的評論內容
+                }),
+            });
+
+            if (!response.ok) {
+                throw new Error('無法提交評論');
+            }
+
+            const newCommentData = await response.json();
+
+            // 更新評論列表
+            setCommentData([...commentData, newCommentData]);
+
+            // 清空輸入框
+            setNewComment('');
+        } catch (error) {
+            alert(error.message);
+        }
+    };
+
     return (
         <div className="container flex p-4">
             {loading ? (
@@ -112,8 +151,18 @@ const PRDiscussion = () => {
                             )}
                         </div>
                         <div className="flex flex-col mt-5 w-full">
-                            <textarea className="w-full h-24 p-3 mb-3 border border-gray-300 rounded-md" placeholder="文字輸入區"></textarea>
-                            <button className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded self-end w-24">Comment</button>
+                            <textarea
+                                className="w-full h-24 p-3 mb-3 border border-gray-300 rounded-md"
+                                placeholder="輸入評論"
+                                value={newComment}
+                                onChange={(e) => setNewComment(e.target.value)} // 綁定輸入框的值
+                            />
+                            <button
+                                className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded self-end w-24"
+                            // onClick={handleCommentSubmit} // 綁定提交評論功能
+                            >
+                                Comment
+                            </button>
                         </div>
                     </div>
                 </div>
