@@ -16,18 +16,20 @@ const TeamOverview = () => {
     const { compareAndAcceptInvitations } = useContext(DataContext);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [teamData, setTeamData] = useState({ id: '', teamName: '', owner: '' });
-    const [prData, setPrData] = useState(['']);
+    const [prData, setPrData] = useState([]);
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
     const [timelineData, setTimelineData] = useState([]);
     const [selectedBranch, setSelectedBranch] = useState('main');
     const [selectedPR, setSelectedPR] = useState("default");
     const [chartsLoaded, setChartsLoaded] = useState(false);
-    const [branches, setBranches] = useState(['select Branch']);
+    const [branches, setBranches] = useState([]);
     const [repoExist, setRepoExist] = useState(null);
+    const [loading, setLoading] = useState(true);  // 新增 loading 狀態
 
     useEffect(() => {
         const fetchTeamData = async () => {
             try {
+                setLoading(true);  // 資料加載前設置 loading 為 true
                 const teamResponse = await fetch(`http://localhost:8081/teams/${teamId}`);
                 if (!teamResponse.ok) {
                     throw new Error('無法獲取團隊資料');
@@ -43,11 +45,12 @@ const TeamOverview = () => {
                 }
                 const prData = await prResponse.json();
                 setPrData(prData);
-
             } catch (error) {
                 console.error('獲取團隊資料時出錯:', error);
                 alert('獲取團隊資料時出錯');
                 navigate('/');
+            } finally {
+                setLoading(false);  // 資料加載完成後設置 loading 為 false
             }
         };
 
@@ -115,7 +118,7 @@ const TeamOverview = () => {
 
                 const chartData = await chartDataResponse.json();
                 setTimelineData(chartData);
-                setBranches(['select Branch', ...chartData.filter(branch => branch.name !== 'HEAD').map(branch => branch.name)]);
+                setBranches([...chartData.filter(branch => branch.name !== 'HEAD').map(branch => branch.name)]);
             } catch (error) {
                 console.log(error);
             }
@@ -136,7 +139,7 @@ const TeamOverview = () => {
                     const chartData = await cloudGraphBranchResponse.json();
                     setTimelineData(chartData);
                     const uniqueBranches = [...new Set(chartData.filter(branch => branch.name !== 'HEAD').map(branch => branch.name))];
-                    setBranches(['select Branch', ...uniqueBranches]);
+                    setBranches([...uniqueBranches]);
                 }
             } catch (error) {
                 console.log(error);
@@ -237,10 +240,7 @@ const TeamOverview = () => {
                 endTime
             ];
         });
-        // const dataRows = [[
-        //     'test', 'vvvvss', , new Date('2024-07-23T19:15:57.000+00:00'), new Date('2024-07-24T19:15:57.000+00:00')
-        // ]];
-        // console.log(dataRows);
+
         dataTable.addRows(dataRows);
         chart.draw(dataTable, options);
     };
@@ -278,6 +278,7 @@ const TeamOverview = () => {
     };
 
     const handleBranchChange = (e) => {
+        if (e.target.value === "main") return;
         const branch = e.target.value;
         setSelectedBranch(branch);
         navigate(`/gitgraph?repo=${repoName}&branch=${branch}&owner=${teamData.owner}`);
@@ -295,67 +296,79 @@ const TeamOverview = () => {
         navigate(`/PRDiscussion?number=${selectedPR.number}&title=${encodeURIComponent(selectedPR.title)}`, { state: { owner: teamData.owner, repo: repoName } });
     };
 
-
     const handleSettingsClick = () => setIsSettingsOpen(!isSettingsOpen);
     const handleCloseSettings = () => setIsSettingsOpen(false);
 
     return (
         <div className="container mx-auto p-4">
-            <div className="flex justify-between items-center p-4 border-b border-gray-300">
-                <div className='inline-flex items-center whitespace-nowrap'>
-                    <h1 className="text-xl font-bold mr-4">{teamName} / {repoName}</h1>
-                    <div className="relative mt-2">
-                        <select
-                            value={selectedBranch}
-                            onChange={handleBranchChange}
+            {loading ? (
+                // 顯示轉圈圈動畫
+                <div role="status" className="flex justify-center items-center w-full h-full">
+                    <svg aria-hidden="true" className="w-16 h-16 text-gray-200 animate-spin dark:text-gray-600 fill-blue-600" viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z" fill="currentColor" />
+                        <path d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z" fill="currentFill" />
+                    </svg>
+                    <span className="sr-only">Loading...</span>
+                </div>
+            ) : (
+                <>
+                    <div className="flex justify-between items-center p-4 border-b border-gray-300">
+                        <div className='inline-flex items-center whitespace-nowrap'>
+                            <h1 className="text-xl font-bold mr-4">{teamName} / {repoName}</h1>
+                            <div className="relative mt-2">
+                                <select
+                                    value={selectedBranch}
+                                    onChange={handleBranchChange}
 
-                            className="block appearance-none bg-white border border-gray-400 hover:border-gray-500 px-4 py-2 pr-8 rounded shadow leading-tight focus:outline-none focus:shadow-outline"
-                        >
-                            {branches.map((branch) => (
-                                <option key={branch} value={branch}>{branch}</option>
-                            ))}
-                        </select>
-                    </div>
-
-                    <div className="relative mt-2">
-                        <select
-                            value={selectedPR}
-                            onChange={handlePRChange}
-                            className="block appearance-none bg-white border border-gray-400 hover:border-gray-500 px-4 py-2 pr-8 rounded shadow leading-tight focus:outline-none focus:shadow-outline"
-                        >
-                            <option value="default" disabled>select PR</option> {/* 默認選項 */}
-                            {prData.map(prInfo => (
-                                <option
-                                    key={prInfo.id}
-                                    value={JSON.stringify({ number: prInfo.number, title: prInfo.title })}
-                                    className="flex items-center mb-2"
+                                    className="block appearance-none bg-white border border-gray-400 hover:border-gray-500 px-4 py-2 pr-8 rounded shadow leading-tight focus:outline-none focus:shadow-outline"
                                 >
-                                    {prInfo.title}
-                                </option>
-                            ))}
-                        </select>
-                    </div>
+                                    {branches.map((branch) => (
+                                        <option key={branch} value={branch}>{branch}</option>
+                                    ))}
+                                </select>
+                            </div>
 
-                </div>
+                            <div className="relative mt-2">
+                                <select
+                                    value={selectedPR}
+                                    onChange={handlePRChange}
+                                    className="block appearance-none bg-white border border-gray-400 hover:border-gray-500 px-4 py-2 pr-8 rounded shadow leading-tight focus:outline-none focus:shadow-outline"
+                                >
+                                    <option value="default" disabled>select PR</option> {/* 默認選項 */}
+                                    {prData.map(prInfo => (
+                                        <option
+                                            key={prInfo.id}
+                                            value={JSON.stringify({ number: prInfo.number, title: prInfo.title })}
+                                            className="flex items-center mb-2"
+                                        >
+                                            {prInfo.title}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
 
-                <button className="text-blue-500" onClick={handleSettingsClick}>儲存庫設定</button>
-            </div>
-            <div className="flex flex-col h-full">
-                <div className="flex-grow">
-                    {timelineData.length <= 1 ? (
-                        <div>尚無分支資料</div>
-                    ) : (
-                        <div id="timeLineChart" className='p-3 h-80'>
-                            {/* 在這裡渲染時間線圖表的內容 */}
                         </div>
-                    )}
-                </div>
-                <div className="h-1/4 flex mb-2 justify-between items-center">
-                    <Link to={`/branchchart?teamId=${teamId}&teamName={teamName}&repoId=${teamRepoId}&repoName=${repoName}`} className="max-w-xs p-3 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-                        分支進度圖
-                    </Link>
-                </div>
-            </div>
+
+                        <button className="text-blue-500" onClick={handleSettingsClick}>儲存庫設定</button>
+                    </div>
+                    <div className="flex flex-col h-full">
+                        <div className="flex-grow">
+                            {timelineData.length <= 1 ? (
+                                <div>尚無分支資料</div>
+                            ) : (
+                                <div id="timeLineChart" className='p-3 h-80'>
+                                    {/* 在這裡渲染時間線圖表的內容 */}
+                                </div>
+                            )}
+                        </div>
+                        <div className="h-1/4 flex mb-2 justify-between items-center">
+                            <Link to={`/branchchart?teamId=${teamId}&teamName={teamName}&repoId=${teamRepoId}&repoName=${repoName}`} className="max-w-xs p-3 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                                分支進度圖
+                            </Link>
+                        </div>
+                    </div>
+                </>
+            )}
 
             {isModalOpen && (
                 <div className="modal fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-40">

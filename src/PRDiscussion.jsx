@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import avatar from './img/avatar.jpg';
 import Cookies from 'js-cookie';
+
 const PRDiscussion = () => {
     const location = useLocation();
     const queryParams = new URLSearchParams(location.search);
@@ -9,11 +9,15 @@ const PRDiscussion = () => {
     const title = queryParams.get('title');
     const { owner, repo } = location.state || {};
     const [PRData, setPRData] = useState({ number: '', state: '', description: '', head: '', base: '' });
-    const [commentData, setCommentData] = useState({ id: '', user: '', created_at: '', body: '' });
+    const [commentData, setCommentData] = useState([]);
+    const [loading, setLoading] = useState(true);
     const token = Cookies.get('token');
+
     useEffect(() => {
         const fetchPRData = async () => {
             if (!owner || !repo || !prNumber) return;
+
+            setLoading(true);
 
             try {
                 const prResponse = await fetch(`http://localhost:3001/pr/get?owner=${owner}&repo=${repo}&pull_number=${prNumber}&token=${token}`);
@@ -35,6 +39,8 @@ const PRDiscussion = () => {
                 setCommentData(Comments);
             } catch (error) {
                 alert(error.message);
+            } finally {
+                setLoading(false);
             }
         };
 
@@ -43,42 +49,51 @@ const PRDiscussion = () => {
 
     return (
         <div className="container flex p-4">
-            <div className="flex-grow p-4">
-                <h1 className="text-2xl font-bold">
-                    {title} #{prNumber}
-                    {PRData.state === 'open' && (
-                        <span className="bg-green-500 text-white text-lg px-3 py-1 rounded ml-3">Open</span>
-                    )}
-                    {PRData.state === 'closed' && (
-                        <span className="bg-gray-500 text-white text-lg px-3 py-1 rounded ml-3">Closed</span>
-                    )}
-                </h1>
-
-                <div className="flex flex-col w-full mt-5">
-                    <div className="flex flex-col h-80 overflow-auto">
-                        {commentData.length > 0 ? (
-                            commentData.map(comment => (
-                                <div key={comment.id} className="flex justify-between items-center mb-2">
-                                    <div className="w-12 h-12 rounded-full border-2 ml-1 border-white overflow-hidden">
-                                        <img src={`https://avatars.githubusercontent.com/${comment.user}`} alt="" />
-                                    </div>
-                                    <div className="bg-gray-300 rounded-xl p-4 ml-3 flex-grow">
-                                        <p><strong>{comment.user}</strong> <span className="text-sm text-gray-500">({new Date(comment.created_at).toLocaleString()})</span></p>
-                                        <p>{comment.body}</p>
-                                    </div>
-                                </div>
-                            ))
-                        ) : (
-                            <p>尚無評論</p>
+            {loading ? (
+                <div role="status" className="flex justify-center items-center w-full h-full">
+                    <svg aria-hidden="true" className="w-16 h-16 text-gray-200 animate-spin dark:text-gray-600 fill-blue-600" viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M100 50.5908C100 78.2051 77.6142 100.591 50 100.591C22.3858 100.591 0 78.2051 0 50.5908C0 22.9766 22.3858 0.59082 50 0.59082C77.6142 0.59082 100 22.9766 100 50.5908ZM9.08144 50.5908C9.08144 73.1895 27.4013 91.5094 50 91.5094C72.5987 91.5094 90.9186 73.1895 90.9186 50.5908C90.9186 27.9921 72.5987 9.67226 50 9.67226C27.4013 9.67226 9.08144 27.9921 9.08144 50.5908Z" fill="currentColor" />
+                        <path d="M93.9676 39.0409C96.393 38.4038 97.8624 35.9116 97.0079 33.5539C95.2932 28.8227 92.871 24.3692 89.8167 20.348C85.8452 15.1192 80.8826 10.7238 75.2124 7.41289C69.5422 4.10194 63.2754 1.94025 56.7698 1.05124C51.7666 0.367541 46.6976 0.446843 41.7345 1.27873C39.2613 1.69328 37.813 4.19778 38.4501 6.62326C39.0873 9.04874 41.5694 10.4717 44.0505 10.1071C47.8511 9.54855 51.7191 9.52689 55.5402 10.0491C60.8642 10.7766 65.9928 12.5457 70.6331 15.2552C75.2735 17.9648 79.3347 21.5619 82.5849 25.841C84.9175 28.9121 86.7997 32.2913 88.1811 35.8758C89.083 38.2158 91.5421 39.6781 93.9676 39.0409Z" fill="currentFill" />
+                    </svg>
+                    <span className="sr-only">Loading...</span>
+                </div>
+            ) : (
+                <div className="flex-grow p-4">
+                    <h1 className="text-2xl font-bold">
+                        {title} #{prNumber}
+                        {PRData.state === 'open' && (
+                            <span className="bg-green-500 text-white text-lg px-3 py-1 rounded ml-3">Open</span>
                         )}
-                    </div>
-                    <div className="flex flex-col mt-5 w-full">
-                        <textarea className="w-full h-24 p-3 mb-3 border border-gray-300 rounded-md" placeholder="文字輸入區"></textarea>
-                        <button className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded self-end w-24">Comment</button>
+                        {PRData.state === 'closed' && (
+                            <span className="bg-gray-500 text-white text-lg px-3 py-1 rounded ml-3">Closed</span>
+                        )}
+                    </h1>
+
+                    <div className="flex flex-col w-full mt-5">
+                        <div className="flex flex-col h-80 overflow-auto">
+                            {commentData.length > 0 ? (
+                                commentData.map(comment => (
+                                    <div key={comment.id} className="flex justify-between items-center mb-2">
+                                        <div className="w-12 h-12 rounded-full border-2 ml-1 border-white overflow-hidden">
+                                            <img src={`https://avatars.githubusercontent.com/${comment.user}`} alt="" />
+                                        </div>
+                                        <div className="bg-gray-300 rounded-xl p-4 ml-3 flex-grow">
+                                            <p><strong>{comment.user}</strong> <span className="text-sm text-gray-500">({new Date(comment.created_at).toLocaleString()})</span></p>
+                                            <p>{comment.body}</p>
+                                        </div>
+                                    </div>
+                                ))
+                            ) : (
+                                <p>尚無評論</p>
+                            )}
+                        </div>
+                        <div className="flex flex-col mt-5 w-full">
+                            <textarea className="w-full h-24 p-3 mb-3 border border-gray-300 rounded-md" placeholder="文字輸入區"></textarea>
+                            <button className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded self-end w-24">Comment</button>
+                        </div>
                     </div>
                 </div>
-
-            </div>
+            )}
             <div className="w-36 flex-shrink-0 flex flex-col items-center bg-gray-700 p-5 rounded-xl">
                 <h2 className="text-white mb-3">Reviewers</h2>
                 <ul className="list-none p-0 w-full flex flex-col items-center">
