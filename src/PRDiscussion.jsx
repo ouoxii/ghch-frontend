@@ -10,6 +10,12 @@ const PRDiscussion = () => {
     const { owner, repo } = location.state || {};
     const [PRData, setPRData] = useState({ number: '', state: '', description: '', head: '', base: '' });
     const [commentData, setCommentData] = useState([]);
+    const [reviewers, setReviewers] = useState([
+        // 假資料
+        { user: 'fakeReviewer1', state: 'APPROVED' },
+        { user: 'fakeReviewer2', state: 'CHANGES_REQUESTED' },
+        { user: 'fakeReviewer3', state: 'COMMENTED' },
+    ]);
     const [loading, setLoading] = useState(true);
     const token = Cookies.get('token');
 
@@ -35,8 +41,26 @@ const PRDiscussion = () => {
                 if (!prComments.ok) {
                     throw new Error('無法獲取PR comments資料');
                 }
-                const Comments = await prComments.json();
-                setCommentData(Comments);
+                const comments = await prComments.json();
+                setCommentData(comments);
+            } catch (error) {
+                alert(error.message);
+            }
+
+            try {
+                // Fetch PR reviewers and their review status
+                const prReviews = await fetch(`http://localhost:3001/pr/reviews?owner=${owner}&repo=${repo}&pull_number=${prNumber}&token=${token}`);
+                if (!prReviews.ok) {
+                    throw new Error('無法獲取PR reviewers資料');
+                }
+                const reviewsData = await prReviews.json();
+
+                // Parse and set reviewers and their states
+                const reviewersStatus = reviewsData.map((review) => ({
+                    user: review.user.login,
+                    state: review.state,
+                }));
+                setReviewers(reviewersStatus);
             } catch (error) {
                 alert(error.message);
             } finally {
@@ -97,9 +121,19 @@ const PRDiscussion = () => {
             <div className="w-36 flex-shrink-0 flex flex-col items-center bg-gray-700 p-5 rounded-xl">
                 <h2 className="text-white mb-3">Reviewers</h2>
                 <ul className="list-none p-0 w-full flex flex-col items-center">
-                    <li className="bg-green-500 flex items-center justify-center w-12 h-12 rounded-full mb-2 text-white">reviewers1</li>
-                    <li className="bg-green-500 flex items-center justify-center w-12 h-12 rounded-full mb-2 text-white">reviewers2</li>
-                    <li className="bg-red-600 flex items-center justify-center w-12 h-12 rounded-full mb-2 text-white">reviewers3</li>
+                    {reviewers.length > 0 ? (
+                        reviewers.map((reviewer, index) => (
+                            <li
+                                key={index}
+                                className={`w-12 h-12 rounded-full mb-2 flex items-center justify-center text-white ${reviewer.state === 'APPROVED' ? 'bg-green-500' : reviewer.state === 'CHANGES_REQUESTED' ? 'bg-red-600' : 'bg-yellow-400'
+                                    }`}
+                            >
+                                {reviewer.user}
+                            </li>
+                        ))
+                    ) : (
+                        <p>尚無 reviewer</p>
+                    )}
                     <li className="bg-gray-300 flex items-center justify-center w-12 h-12 rounded-full cursor-pointer text-black text-2xl">+</li>
                 </ul>
             </div>
