@@ -205,6 +205,8 @@ const TeamOverview = () => {
 
     useEffect(() => {
         const postGraphBranch = async () => {
+            console.log(timelineData)
+            console.log(tooltipData)
             try {
                 const postGraphBranchResponse = await fetch(`http://localhost:8080/graph/upload?owner=${username}&repo=${repoName}`,
                     {

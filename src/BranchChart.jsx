@@ -18,7 +18,21 @@ const BranchChart = (/*帳號跟repo名稱*/) => {
     const teamId = queryParams.get('teamId');
     const [teamData, setTeamData] = useState({ id: '', teamName: '', owner: '' });
     const [timelineData, setTimelineData] = useState([]);
+    const [tooltipData, setTooltipData] = useState([]);
     const [chartsLoaded, setChartsLoaded] = useState(false);
+
+    const colors = [
+        ["#00C896", "#4DEBBE", "#A8FDE5"],  // 薄荷綠
+        ["#A200FF", "#C266FF", "#E6BFFF"],  // 螢光紫
+        ["#FF6D3D", "#FF9C73", "#FFCEB8"],  // 亮珊瑚橙
+        ["#00B8D4", "#48D7E6", "#B2EEF3"],  // 電光青
+        ["#FFD600", "#FFE135", "#FFF59D"],  // 檸檬黃
+        ["#2962FF", "#5C8AFF", "#A3C9FF"],  // 星空藍
+        ["#FF5C8D", "#FF8DA7", "#FFD4E1"],  // 霧桃紅
+        ["#43A047", "#66BB6A", "#B9F6CA"],  // 翠綠
+        ["#00ACC1", "#26C6DA", "#E0F7FA"],  // 亮青藍
+        ["#D500F9", "#EA80FC", "#F8E1FF"]   // 霓虹紫
+    ];
 
 
     useEffect(() => {
@@ -71,9 +85,9 @@ const BranchChart = (/*帳號跟repo名稱*/) => {
     useEffect(() => {
         const fetchLocalGraphBranch = async () => {
             try {
-                const chartDataResponse = await fetch(`http://localhost:8080/graph?owner=${username}&repo=${repoName}`);
+                // const chartDataResponse = await fetch(`http://localhost:8080/graph?owner=${username}&repo=${repoName}`);
                 // const chartDataResponse = await fetch(`http://localhost:8080/graph?owner=ouoxii&repo=hello4`);//指定repo
-                // const chartDataResponse = await fetch(`http://localhost:8080/graph?owner=ntou01057042&repo=github-flow-tutor`);//指定repo
+                const chartDataResponse = await fetch(`http://localhost:8080/graph?owner=ntou01057042&repo=github-flow-tutor`);//指定repo
                 if (!chartDataResponse.ok) {
                     if (chartDataResponse.status === 404) {
                         setTimelineData([]);
@@ -121,6 +135,61 @@ const BranchChart = (/*帳號跟repo名稱*/) => {
         }
 
     }, [teamData, username, teamRepoId, repoName]);
+
+    useEffect(() => {
+        const fetchLocalGraphCommit = async () => {
+            try {
+                // const commitstDataResponse = await fetch(`http://localhost:8080/graph/commits?owner=${username}&repo=${repoName}`);
+                // const commitstDataResponse = await fetch(`http://localhost:8080/graph/commits?owner=ouoxii&repo=hello4`);//指定repo
+                const commitstDataResponse = await fetch(`http://localhost:8080/graph/commits?owner=ntou01057042&repo=github-flow-tutor`);//指定repo
+                if (!commitstDataResponse.ok) {
+                    if (commitstDataResponse.status === 404) {
+                        setTimelineData([]);
+                        throw new Error('沒有本地端commits資料');
+                    } else {
+                        throw new Error('獲取本地端commits失敗');
+                    }
+                }
+                const commitsData = await commitstDataResponse.json();
+                const newCommitData = commitsData.filter(commit => commit.branchName !== 'HEAD')
+                setTooltipData(newCommitData);
+            } catch (error) {
+                console.log(error);
+            }
+        }
+
+        const fetchCloudGraphCommit = async () => {
+            try {
+                if (teamData.owner) {
+                    const clooudGraphBranchResponse = await fetch(`http://localhost:8081/cloud-graph-commit?owner=${teamData.owner}&repo=${repoName}`,
+                        {
+                            method: 'GET'
+                        }
+                    );
+                    if (!clooudGraphBranchResponse.ok) {
+                        if (clooudGraphBranchResponse.status === 404) {
+                            setTimelineData([]);
+                            throw new Error('沒有雲端commits資料');
+                        } else {
+                            throw new Error('獲取雲端commits資料失敗')
+                        }
+                    }
+                    const commitsData = await clooudGraphBranchResponse.json();
+                    const newCommitData = commitsData.filter(commit => commit.branchName !== 'HEAD')
+                    setTooltipData(newCommitData);
+                }
+            } catch (error) {
+                console.log(error);
+            }
+        };
+
+        if (teamData.owner === username) {
+            fetchLocalGraphCommit();
+        } else {
+            fetchCloudGraphCommit();
+        }
+
+    }, [teamData, username, teamRepoId, repoName])
 
     // useEffect(() => {
     //     const postGraphBranch = async () => {
@@ -172,15 +241,31 @@ const BranchChart = (/*帳號跟repo名稱*/) => {
         const earliestStart = new Date(Math.min(...startTimes));
         const latestEnd = new Date(Math.max(...endTimes));
 
-        // console.log("Earliest Start Time:", earliestStart.toISOString());
-        // console.log("Latest End Time:", latestEnd.toISOString());
-
         const minTimeUnit = (latestEnd - earliestStart) / 50;
 
-        // console.log(timelineData);
+        // Group commits by branch
+        const branches = {};
+        let totalCommit = 0;
+        tooltipData.forEach(commit => {
+            if (!branches[commit.branchName]) {
+                branches[commit.branchName] = 0;
+            }
+            branches[commit.branchName]++;
+            totalCommit++;
+        });
+
+        const branchCount = Object.keys(branches).length;
+        const avgCommit = totalCommit / branchCount;
 
         // Adjust endTime if the duration is less than minTimeUnit
+        let counter = 0;
+        const committers = {};
         const dataRows = timelineData.map(item => {
+
+            if (!committers[item.committer]) {
+                committers[item.committer] = counter++;
+            }
+
             const startTime = new Date(item.startTime);
             let endTime = new Date(item.endTime);
 
@@ -189,20 +274,34 @@ const BranchChart = (/*帳號跟repo名稱*/) => {
                 endTime = new Date(startTime.getTime() + minTimeUnit);
             }
 
-            return [
-                item.committer,
-                item.committer,
-                item.style || '',
-                startTime,
-                endTime
-            ];
+            if (branches[item.name] > avgCommit * 1.2)
+                return [
+                    item.committer,
+                    item.committer,
+                    colors[committers[item.committer] % 10][0],
+                    startTime,
+                    endTime
+                ];
+            else if (branches[item.name] < avgCommit * 0.8)
+                return [
+                    item.committer,
+                    item.committer,
+                    colors[committers[item.committer] % 10][2],
+                    startTime,
+                    endTime
+                ];
+            else
+                return [
+                    item.committer,
+                    item.committer,
+                    colors[committers[item.committer] % 10][1],
+                    startTime,
+                    endTime
+                ];
         });
         dataTable.addRows(dataRows);
         chart.draw(dataTable, options);
     };
-
-
-
 
     return (
         <div id="timeLineChart" className='p-3 h-80'>
