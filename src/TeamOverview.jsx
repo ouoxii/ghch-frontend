@@ -293,7 +293,7 @@ const TeamOverview = () => {
         console.log("Selected PR Number:", selectedPR.number);
         console.log("Selected PR Title:", selectedPR.title);
 
-        navigate(`/PRDiscussion?number=${selectedPR.number}&title=${encodeURIComponent(selectedPR.title)}`, { state: { owner: teamData.owner, repo: repoName } });
+        navigate(`/PRDiscussion?number=${selectedPR.number}&title=${encodeURIComponent(selectedPR.title)}`, { state: { owner: teamData.owner, repo: repoName, teamName: teamData.teamName } });
     };
 
     const handleSettingsClick = () => setIsSettingsOpen(!isSettingsOpen);

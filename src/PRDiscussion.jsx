@@ -7,17 +7,19 @@ const PRDiscussion = () => {
     const queryParams = new URLSearchParams(location.search);
     const prNumber = queryParams.get('number');
     const title = queryParams.get('title');
-    const { owner, repo } = location.state || {};
+    const { owner, repo, teamName } = location.state || {};
     const [PRData, setPRData] = useState({ number: '', state: '', description: '', head: '', base: '' });
     const [commentData, setCommentData] = useState([]);
-    const [newComment, setNewComment] = useState(''); // 新增用於儲存新評論的狀態
+    const [newComment, setNewComment] = useState('');
     const [reviewers, setReviewers] = useState([
-        // 假資料
         { user: 'fakeReviewer1', state: 'APPROVED' },
         { user: 'fakeReviewer2', state: 'CHANGES_REQUESTED' },
         { user: 'fakeReviewer3', state: 'COMMENTED' },
     ]);
     const [loading, setLoading] = useState(true);
+    const [teamMembers, setTeamMembers] = useState([]);
+    const [showNewBlock, setShowNewBlock] = useState(false);
+    const [selectedReviewers, setSelectedReviewers] = useState([]);
     const token = Cookies.get('token');
 
     useEffect(() => {
@@ -49,19 +51,24 @@ const PRDiscussion = () => {
             }
 
             try {
-                // Fetch PR reviewers and their review status
-                const prReviews = await fetch(`http://localhost:3001/pr/reviews?owner=${owner}&repo=${repo}&pull_number=${prNumber}&token=${token}`);
+                const prReviews = await fetch(`http://localhost:3001/pr/reviewers?owner=${owner}&repo=${repo}&pull_number=${prNumber}&token=${token}`);
                 if (!prReviews.ok) {
                     throw new Error('無法獲取PR reviewers資料');
                 }
                 const reviewsData = await prReviews.json();
 
-                // Parse and set reviewers and their states
                 const reviewersStatus = reviewsData.map((review) => ({
                     user: review.user.login,
                     state: review.state,
                 }));
                 setReviewers(reviewersStatus);
+            } catch (error) {
+                alert(error.message);
+            }
+
+            try {
+                const teamMembersResponse = await fetch(`http://localhost:8081/team-members?teamName=${teamName}`, {});
+                setTeamMembers(teamMembersResponse.ok ? await teamMembersResponse.json() : []);
             } catch (error) {
                 alert(error.message);
             } finally {
@@ -72,7 +79,6 @@ const PRDiscussion = () => {
         fetchPRData();
     }, [owner, repo, prNumber]);
 
-    // 處理提交評論
     const handleCommentSubmit = async () => {
         if (!newComment) {
             alert("評論內容不能為空");
@@ -80,17 +86,16 @@ const PRDiscussion = () => {
         }
 
         try {
-            const response = await fetch(`http://localhost:3001/pr/comment`, {
+            const response = await fetch(`http://localhost:3001/pr/comment?token=${token}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
-                    Authorization: `Bearer ${token}`,
                 },
                 body: JSON.stringify({
                     owner,
                     repo,
                     pull_number: prNumber,
-                    body: newComment,  // 發送的評論內容
+                    body: newComment,
                 }),
             });
 
@@ -99,12 +104,48 @@ const PRDiscussion = () => {
             }
 
             const newCommentData = await response.json();
-
-            // 更新評論列表
             setCommentData([...commentData, newCommentData]);
-
-            // 清空輸入框
             setNewComment('');
+        } catch (error) {
+            alert(error.message);
+        }
+    };
+
+    const handleAddReviewerClick = () => {
+        setShowNewBlock(!showNewBlock);
+    };
+
+    // 選中 reviewer 的處理函數
+    const handleSelectReviewer = (username) => {
+        setSelectedReviewers((prevSelected) =>
+            prevSelected.includes(username)
+                ? prevSelected.filter((reviewer) => reviewer !== username)
+                : [...prevSelected, username]
+        );
+    };
+
+    // 發送邀請請求的處理函數
+    const handleRequestReviewers = async () => {
+        try {
+            const response = await fetch(`http://localhost:3001/pr/invite-reviewer?token=${token}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    owner,
+                    repo,
+                    pull_number: prNumber,
+                    reviewers: selectedReviewers,
+                }),
+            });
+
+            if (!response.ok) {
+                throw new Error('無法邀請 reviewers');
+            }
+
+            alert('成功邀請 reviewers！');
+            setSelectedReviewers([]);  // 邀請成功後清空選中的 reviewers
         } catch (error) {
             alert(error.message);
         }
@@ -155,11 +196,11 @@ const PRDiscussion = () => {
                                 className="w-full h-24 p-3 mb-3 border border-gray-300 rounded-md"
                                 placeholder="輸入評論"
                                 value={newComment}
-                                onChange={(e) => setNewComment(e.target.value)} // 綁定輸入框的值
+                                onChange={(e) => setNewComment(e.target.value)}
                             />
                             <button
                                 className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded self-end w-24"
-                            // onClick={handleCommentSubmit} // 綁定提交評論功能
+                                onClick={handleCommentSubmit}
                             >
                                 Comment
                             </button>
@@ -167,6 +208,7 @@ const PRDiscussion = () => {
                     </div>
                 </div>
             )}
+
             <div className="w-36 flex-shrink-0 flex flex-col items-center bg-gray-700 p-5 rounded-xl">
                 <h2 className="text-white mb-3">Reviewers</h2>
                 <ul className="list-none p-0 w-full flex flex-col items-center">
@@ -183,9 +225,41 @@ const PRDiscussion = () => {
                     ) : (
                         <p>尚無 reviewer</p>
                     )}
-                    <li className="bg-gray-300 flex items-center justify-center w-12 h-12 rounded-full cursor-pointer text-black text-2xl">+</li>
+                    <li className="bg-gray-300 flex items-center justify-center w-12 h-12 rounded-full cursor-pointer text-black text-2xl" onClick={handleAddReviewerClick}>+</li>
                 </ul>
             </div>
+
+            {showNewBlock && (
+                <div className="flex-shrink-0 bg-blue-100 p-5 rounded-xl mt-4" style={{ width: '20%' }}>
+                    <h3 className="text-xl font-bold">邀請 reviewer</h3>
+                    <ul>
+                        {teamMembers.map((teamMember) => (
+                            <li
+                                key={teamMember.id}
+                                className={`flex items-center mb-2 p-2 rounded ${selectedReviewers.includes(teamMember.username) ? 'bg-green-200' : ''}`}
+                            >
+                                <div className="w-12 h-12 rounded-full border-2 ml-1 border-white overflow-hidden">
+                                    <img src={`https://avatars.githubusercontent.com/${teamMember.username}`} alt="" />
+                                </div>
+                                <span className="p-3 ml-2">{teamMember.username}</span>
+                                <button
+                                    className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-3 ml-2 rounded"
+                                    onClick={() => handleSelectReviewer(teamMember.username)}
+                                >
+                                    {selectedReviewers.includes(teamMember.username) ? '✔' : '+'}
+                                </button>
+                            </li>
+                        ))}
+                    </ul>
+                    <button
+                        className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded mt-4"
+                        onClick={handleRequestReviewers}
+                        disabled={selectedReviewers.length === 0}  // 如果沒有選中 reviewers，按鈕禁用
+                    >
+                        REQUEST
+                    </button>
+                </div>
+            )}
         </div>
     );
 };
