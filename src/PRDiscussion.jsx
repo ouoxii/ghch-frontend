@@ -15,8 +15,10 @@ const PRDiscussion = () => {
     const [loading, setLoading] = useState(true);
     const [teamMembers, setTeamMembers] = useState([]);
     const [showNewBlock, setShowNewBlock] = useState(false);
-    const [userVote, setUserVote] = useState(null); // 新增狀態來追蹤投票
+    const [userVote, setUserVote] = useState(null);
     const [selectedReviewers, setSelectedReviewers] = useState([]);
+    const [userRole, setUserRole] = useState(null);
+    const [reviewerState, setReviewerState] = useState(null);
     const token = Cookies.get('token');
 
     useEffect(() => {
@@ -56,11 +58,19 @@ const PRDiscussion = () => {
                 const reviewsData = await prReviews.json();
 
                 const reviewersStatus = reviewsData.map((review) => ({
-                    user: review.user.login,
+                    user: review.user,
                     state: review.state,
                 }));
                 console.log('Reviewers:', reviewersStatus);
                 setReviewers(reviewersStatus);
+
+
+                const currentReviewer = reviewersStatus.find(
+                    (reviewer) => reviewer.user === Cookies.get('username')
+                );
+                if (currentReviewer) {
+                    setReviewerState(currentReviewer.state);
+                }
             } catch (error) {
                 alert(error.message);
             }
@@ -77,6 +87,23 @@ const PRDiscussion = () => {
 
         fetchPRData();
     }, [owner, repo, prNumber]);
+
+    useEffect(() => {
+        const getUserRole = () => {
+
+
+            if (PRData.creator === Cookies.get('username')) return 'Contributor';
+            if (owner === Cookies.get('username')) return 'Admin';
+
+            if (reviewers.some(reviewer => reviewer.user === Cookies.get('username'))) return 'Reviewer';
+
+            return 'Commenter';
+        };
+
+        const role = getUserRole();
+        setUserRole(role);
+        console.log('User Role:', role);
+    }, [reviewers, PRData]);
 
     const handleCommentSubmit = async () => {
         if (!newComment) {
@@ -114,7 +141,6 @@ const PRDiscussion = () => {
         setShowNewBlock(!showNewBlock);
     };
 
-    // 選中 reviewer 的處理函數
     const handleSelectReviewer = (username) => {
         setSelectedReviewers((prevSelected) =>
             prevSelected.includes(username)
@@ -122,8 +148,10 @@ const PRDiscussion = () => {
                 : [...prevSelected, username]
         );
     };
+    const isReviewerOrAuthor = (username) => {
+        return username === PRData.creator || reviewers.some(reviewer => reviewer.user === username);
+    };
 
-    // 發送邀請請求的處理函數
     const handleRequestReviewers = async () => {
         try {
             const response = await fetch(`http://localhost:3001/pr/invite-reviewer?token=${token}`, {
@@ -150,11 +178,6 @@ const PRDiscussion = () => {
         }
     };
 
-    const isReviewerOrAuthor = (username) => {
-        return username === PRData.creator || reviewers.some(reviewer => reviewer.user === username);
-    };
-
-    // 新增 handleVote 函數來處理投票
     const handleVote = async (vote) => {
         try {
             // 提交投票請求
@@ -200,6 +223,7 @@ const PRDiscussion = () => {
 
             alert(`您已${vote ? '同意' : '拒絕'}此 PR 並提交了審查！`);
             setUserVote(vote);  // 記錄用戶的投票狀態
+            setReviewerState(vote ? 'APPROVED' : 'CHANGES_REQUESTED');  // 更新 reviewer 狀態
         } catch (error) {
             alert(error.message);
         }
@@ -227,22 +251,28 @@ const PRDiscussion = () => {
                         )}
                     </h1>
                     {/* 新增投票按鈕 */}
-                    <div className="flex mt-5">
-                        <button
-                            className={`bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded mr-3 ${userVote === 'approve' ? 'opacity-50 cursor-not-allowed' : ''}`}
-                            onClick={() => handleVote(true)}
-                            disabled={userVote === 'approve'}
-                        >
-                            同意
-                        </button>
-                        <button
-                            className={`bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded ${userVote === 'reject' ? 'opacity-50 cursor-not-allowed' : ''}`}
-                            onClick={() => handleVote(false)}
-                            disabled={userVote === 'reject'}
-                        >
-                            拒絕
-                        </button>
-                    </div>
+                    {reviewerState == 'PENDING' ? (userRole === 'Reviewer' && PRData.state === 'open' && (
+                        < div className="flex mt-5">
+                            <button
+                                className={`bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded mr-3 `}
+                                onClick={() => handleVote(true)}
+                                disabled={reviewerState != 'PENDING'}
+                            >
+                                同意
+                            </button>
+                            <button
+                                className={`bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded mr-3`}
+                                onClick={() => handleVote(false)}
+                                disabled={reviewerState != 'PENDING'}
+                            >
+                                拒絕
+                            </button>
+                        </div>
+                    )) : (
+                        < div className="flex mt-5">
+                            {reviewerState}
+                        </div>
+                    )}
                     <div className="flex flex-col w-full mt-5">
                         <div className="flex flex-col h-80 overflow-auto">
                             {commentData.length > 0 ? (
@@ -279,59 +309,79 @@ const PRDiscussion = () => {
                 </div>
             )}
 
-            <div className="w-36 flex-shrink-0 flex flex-col items-center bg-gray-700 p-5 rounded-xl">
+            <div className="w-45 flex-shrink-0 flex flex-col items-center bg-gray-700 p-5 rounded-xl">
                 <h2 className="text-white mb-3">Reviewers</h2>
                 <ul className="list-none p-0 w-full flex flex-col items-center">
                     {reviewers.length > 0 ? (
                         reviewers.map((reviewer, index) => (
                             <li
                                 key={index}
-                                className={`w-12 h-12 rounded-full mb-2 flex items-center justify-center text-white ${reviewer.state === 'APPROVED' ? 'bg-green-500' : reviewer.state === 'CHANGES_REQUESTED' ? 'bg-red-600' : 'bg-yellow-400'
-                                    }`}
+                                className="flex items-center mb-2"
                             >
-                                {reviewer.user}
+                                {/* 左側審查者頭像 */}
+                                <div className="w-12 h-12 rounded-full border-2 ml-1 border-white overflow-hidden">
+                                    <img src={`https://avatars.githubusercontent.com/${reviewer.user}`} alt={reviewer.user} />
+                                </div>
+
+                                {/* 審查者名稱與狀態 */}
+                                <div className="flex items-center ml-3">
+                                    <span className="font-bold">{reviewer.user}</span>
+                                    <div
+                                        className={`ml-2 w-4 h-4 rounded-full ${reviewer.state === 'APPROVED'
+                                            ? 'bg-green-500'
+                                            : reviewer.state === 'CHANGES_REQUESTED'
+                                                ? 'bg-red-600'
+                                                : 'bg-yellow-400'}`}
+                                    >
+                                    </div>
+                                </div>
                             </li>
                         ))
                     ) : (
                         <p>尚無 reviewer</p>
                     )}
-                    <li className="bg-gray-300 flex items-center justify-center w-12 h-12 rounded-full cursor-pointer text-black text-2xl" onClick={handleAddReviewerClick}>+</li>
+                    {userRole === 'Contributor' && (
+                        <li className="bg-gray-300 flex items-center justify-center w-12 h-12 rounded-full cursor-pointer text-black text-2xl" onClick={handleAddReviewerClick}>+</li>)}
                 </ul>
             </div>
 
-            {showNewBlock && (
-                <div className="flex-shrink-0 bg-blue-100 p-5 rounded-xl mt-4" style={{ width: '20%' }}>
-                    <h3 className="text-xl font-bold">邀請 reviewer</h3>
-                    <ul>
-                        {teamMembers.map((teamMember) => (
-                            <li
-                                key={teamMember.id}
-                                className={`flex items-center mb-2 p-2 rounded ${isReviewerOrAuthor(teamMember.username) || selectedReviewers.includes(teamMember.username) ? 'bg-green-200' : ''}`}
+            {
+                showNewBlock && (
+                    <div className="flex-shrink-0 bg-blue-100 p-5 rounded-xl mt-4" style={{ width: '20%' }}>
+                        <h3 className="text-xl font-bold">邀請 reviewer</h3>
+                        <ul>
+                            {teamMembers
+                                .filter((teamMember) => teamMember.username !== PRData.creator) // 過濾掉創建者
+                                .filter((teamMember) => !reviewers.some(reviewer => reviewer.user === teamMember.username)) // 過濾掉已經是 reviewer 的成員
+                                .map((teamMember) => (
+                                    <li
+                                        key={teamMember.id}
+                                        className={`flex items-center mb-2 p-2 rounded cursor-pointer ${isReviewerOrAuthor(teamMember.username) || selectedReviewers.includes(teamMember.username) ? 'bg-green-200' : ''}`}
+                                        onClick={() => handleSelectReviewer(teamMember.username)}  // 將選取功能移到整個 li
+                                        disabled={isReviewerOrAuthor(teamMember.username)} // 若為創建者或已是 reviewer 則不觸發事件
+                                    >
+                                        <div className="w-12 h-12 rounded-full border-2 ml-1 border-white overflow-hidden">
+                                            <img src={`https://avatars.githubusercontent.com/${teamMember.username}`} alt="" />
+                                        </div>
+                                        <span className="p-3 ml-2">{teamMember.username}</span>
+
+                                    </li>
+
+                                ))}
+                        </ul>
+                        {userRole === 'Contributor' && selectedReviewers.length > 0 && (
+                            <button
+                                className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded mt-4"
+                                onClick={handleRequestReviewers}
                             >
-                                <div className="w-12 h-12 rounded-full border-2 ml-1 border-white overflow-hidden">
-                                    <img src={`https://avatars.githubusercontent.com/${teamMember.username}`} alt="" />
-                                </div>
-                                <span className="p-3 ml-2">{teamMember.username}</span>
-                                <button
-                                    className={`bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-3 ml-2 rounded ${isReviewerOrAuthor(teamMember.username) ? 'opacity-50 cursor-not-allowed' : ''}`}
-                                    onClick={() => handleSelectReviewer(teamMember.username)}
-                                    disabled={isReviewerOrAuthor(teamMember.username)}
-                                >
-                                    {isReviewerOrAuthor(teamMember.username) ? '✔' : selectedReviewers.includes(teamMember.username) ? '✔' : '+'}
-                                </button>
-                            </li>
-                        ))}
-                    </ul>
-                    <button
-                        className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded mt-4"
-                        onClick={handleRequestReviewers}
-                        disabled={selectedReviewers.length === 0}
-                    >
-                        REQUEST
-                    </button>
-                </div>
-            )}
-        </div>
+                                REQUEST
+                            </button>
+                        )}
+                    </div>
+
+                )
+            }
+        </div >
     );
 };
 
