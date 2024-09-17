@@ -8,14 +8,10 @@ const PRDiscussion = () => {
     const prNumber = queryParams.get('number');
     const title = queryParams.get('title');
     const { owner, repo, teamName } = location.state || {};
-    const [PRData, setPRData] = useState({ number: '', state: '', description: '', head: '', base: '' });
+    const [PRData, setPRData] = useState({ number: '', state: '', description: '', head: '', base: '', creator: '' });
     const [commentData, setCommentData] = useState([]);
     const [newComment, setNewComment] = useState('');
-    const [reviewers, setReviewers] = useState([
-        { user: 'fakeReviewer1', state: 'APPROVED' },
-        { user: 'fakeReviewer2', state: 'CHANGES_REQUESTED' },
-        { user: 'fakeReviewer3', state: 'COMMENTED' },
-    ]);
+    const [reviewers, setReviewers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [teamMembers, setTeamMembers] = useState([]);
     const [showNewBlock, setShowNewBlock] = useState(false);
@@ -34,6 +30,7 @@ const PRDiscussion = () => {
                     throw new Error('無法獲取PR資料');
                 }
                 const prData = await prResponse.json();
+                console.log('PR Creator:', prData.creator);
                 setPRData(prData);
             } catch (error) {
                 alert(error.message);
@@ -61,6 +58,7 @@ const PRDiscussion = () => {
                     user: review.user.login,
                     state: review.state,
                 }));
+                console.log('Reviewers:', reviewersStatus);
                 setReviewers(reviewersStatus);
             } catch (error) {
                 alert(error.message);
@@ -145,10 +143,14 @@ const PRDiscussion = () => {
             }
 
             alert('成功邀請 reviewers！');
-            setSelectedReviewers([]);  // 邀請成功後清空選中的 reviewers
+            setSelectedReviewers([]);
         } catch (error) {
             alert(error.message);
         }
+    };
+
+    const isReviewerOrAuthor = (username) => {
+        return username === PRData.creator || reviewers.some(reviewer => reviewer.user === username);
     };
 
     return (
@@ -236,17 +238,18 @@ const PRDiscussion = () => {
                         {teamMembers.map((teamMember) => (
                             <li
                                 key={teamMember.id}
-                                className={`flex items-center mb-2 p-2 rounded ${selectedReviewers.includes(teamMember.username) ? 'bg-green-200' : ''}`}
+                                className={`flex items-center mb-2 p-2 rounded ${isReviewerOrAuthor(teamMember.username) || selectedReviewers.includes(teamMember.username) ? 'bg-green-200' : ''}`}
                             >
                                 <div className="w-12 h-12 rounded-full border-2 ml-1 border-white overflow-hidden">
                                     <img src={`https://avatars.githubusercontent.com/${teamMember.username}`} alt="" />
                                 </div>
                                 <span className="p-3 ml-2">{teamMember.username}</span>
                                 <button
-                                    className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-3 ml-2 rounded"
+                                    className={`bg-blue-500 hover:bg-blue-700 text-white font-bold py-1 px-3 ml-2 rounded ${isReviewerOrAuthor(teamMember.username) ? 'opacity-50 cursor-not-allowed' : ''}`}
                                     onClick={() => handleSelectReviewer(teamMember.username)}
+                                    disabled={isReviewerOrAuthor(teamMember.username)}
                                 >
-                                    {selectedReviewers.includes(teamMember.username) ? '✔' : '+'}
+                                    {isReviewerOrAuthor(teamMember.username) ? '✔' : selectedReviewers.includes(teamMember.username) ? '✔' : '+'}
                                 </button>
                             </li>
                         ))}
@@ -254,7 +257,7 @@ const PRDiscussion = () => {
                     <button
                         className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded mt-4"
                         onClick={handleRequestReviewers}
-                        disabled={selectedReviewers.length === 0}  // 如果沒有選中 reviewers，按鈕禁用
+                        disabled={selectedReviewers.length === 0}
                     >
                         REQUEST
                     </button>
