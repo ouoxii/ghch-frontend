@@ -24,7 +24,7 @@ const TeamOverview = () => {
     const [repoExist, setRepoExist] = useState(null);
     const [tooltipData, setTooltipData] = useState([]);
     const [localTimelineData, setLocalTimelineData] = useState([]);
-    const [chartFinish, setChartsfinish] =  useState(false);
+    const [chartFinish, setChartsfinish] = useState(false);
 
     useEffect(() => {
         const fetchTeamData = async () => {
@@ -205,8 +205,8 @@ const TeamOverview = () => {
 
     useEffect(() => {
         const postGraphBranch = async () => {
-            console.log(timelineData)
-            console.log(tooltipData)
+            // console.log(timelineData)
+            // console.log(tooltipData)
             try {
                 const postGraphBranchResponse = await fetch(`http://localhost:8080/graph/upload?owner=${username}&repo=${repoName}`,
                     {
@@ -224,7 +224,7 @@ const TeamOverview = () => {
         if (timelineData.length > 0 && teamData.owner === username && tooltipData.length > 0) {
             postGraphBranch();
         }
-    }, [teamData, username, timelineData, tooltipData, repoName])
+    }, [teamData, username, tooltipData, repoName, localTimelineData])
 
     useEffect(() => {
         const fetchLocalGraphCommit = async () => {
@@ -604,8 +604,91 @@ const TeamOverview = () => {
     const handleSettingsClick = () => setIsSettingsOpen(!isSettingsOpen);
     const handleCloseSettings = () => setIsSettingsOpen(false);
 
+    const gitHubPush = async () => {
+        try {
+            const gitHubPushRes = await fetch(`http://localhost:8080/branch/push/${teamData.owner}/${repoName}`, {
+                method: 'POST'
+            });
+            if (!gitHubPushRes.ok) {
+                throw new Error('Push GitHub時出錯');
+            }
+
+            const getCurBranchRes = await fetch(`http://localhost:8080/branch/${teamData.owner}/${repoName}`, {
+                method: 'GET'
+            });
+            if (!getCurBranchRes.ok) {
+                throw new Error('獲取當前分支時出錯');
+            }
+            const curBranch = await getCurBranchRes.text();
+            console.log(curBranch);
+
+            const uploadBranchRes = await fetch(`http://localhost:8080/branch/upload/${teamData.owner}/${repoName}?branch=${curBranch}`, {
+                method: 'POST'
+            });
+            if (!uploadBranchRes.ok) {
+                throw new Error('更新分支到雲端資料時出錯');
+            }
+            window.alert("Push成功");
+        } catch (error) {
+            window.alert(error);
+        }
+    }
+
+    const gitHubPull = async () => {
+        try {
+            const gitHubPullRes = await fetch(`http://localhost:8080/branch/pull/${teamData.owner}/${repoName}`, {
+                method: 'POST'
+            });
+            if (!gitHubPullRes.ok) {
+                throw new Error('Pull GitHub時出錯');
+            }
+
+            const chartDataResponse = await fetch(`http://localhost:8080/graph?owner=${username}&repo=${repoName}`);
+            // const chartDataResponse = await fetch(`http://localhost:8080/graph?owner=ntou01057042&repo=github-flow-tutor`);//指定repo
+            if (!chartDataResponse.ok) {
+                if (chartDataResponse.status === 404) {
+                    setTimelineData([]);
+                    throw new Error('沒有本地端分支資料');
+                } else {
+                    throw new Error('獲取本地端分支資料失敗');
+                }
+            }
+
+            const chartData = await chartDataResponse.json();
+
+            setTimelineData(chartData);
+            setBranches(['select Branch', ...chartData.filter(branch => branch.name !== 'HEAD').map(branch => branch.name)]);
+
+            const commitstDataResponse = await fetch(`http://localhost:8080/graph/commits?owner=${username}&repo=${repoName}`);
+            // const commitstDataResponse = await fetch(`http://localhost:8080/graph/commits?owner=ntou01057042&repo=github-flow-tutor`);//指定repo
+            if (!commitstDataResponse.ok) {
+                if (commitstDataResponse.status === 404) {
+                    setTimelineData([]);
+                    throw new Error('沒有本地端commits資料');
+                } else {
+                    throw new Error('獲取本地端commits失敗');
+                }
+            }
+            const commitsData = await commitstDataResponse.json();
+            const newCommitData = commitsData.filter(commit => commit.branchName !== 'HEAD')
+            setTooltipData(newCommitData);
+            window.alert("Pull成功");
+        } catch (error) {
+            window.alert(error);
+        }
+    }
+
+    const handlePush = () => {
+        gitHubPush();
+    };
+
+    const handlePull = () => {
+        gitHubPull();
+    };
+
+
     return (
-        <div className="container mx-auto p-4 h-full">
+        <div className="container mx-auto p-4 h-full flex flex-col">
             <div className="flex justify-between items-center p-4 border-b border-gray-300">
                 <div className='inline-flex items-center whitespace-nowrap'>
                     <h1 className="text-xl font-bold mr-4">{teamName} / {repoName}</h1>
@@ -625,20 +708,27 @@ const TeamOverview = () => {
 
                 <button className="text-blue-500" onClick={handleSettingsClick}>儲存庫設定</button>
             </div>
-            <div className="flex flex-col justify-between">
+            <div className="flex flex-col flex-1">
                 {timelineData.length <= 1 ? (
                     <div>尚無分支資料</div>
                 ) : (
                     <>
                         <div id='hidden_div' className='hidden'></div>
-                        <div id='branch_chart' ref={scrollRef} className="w-full h-96 p-4 ml-0 mr-4 my-4 shadow-lg bg-slate-50 overflow-auto"></div>
+                        <div id='branch_chart' ref={scrollRef} className="w-full h-1/2 p-4 ml-0 mr-4 my-4 shadow-lg bg-slate-50 overflow-auto"></div>
                     </>
                 )}
-                <div className="h-10 flex mb-2 justify-between items-center">
-                    <Link to={`/branchchart?teamId=${teamId}&teamName=${teamName}&repoId=${teamRepoId}&repoName=${repoName}`} className="max-w-xs p-3 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-                        分支進度圖
-                    </Link>
+                <div className='flex flex-col justify-between flex-1'>
+                    <div className='flex justify-between'>
+                        <button className="h-10 max-w-48 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={handlePush}>push (上傳到GitHub)</button>
+                        <button className="h-10 max-w-48 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={handlePull}>pull (從GitHub更新)</button>
+                    </div>
+                    <div className="h-10 flex my-2 justify-between items-center">
+                        <Link to={`/branchchart?teamId=${teamId}&teamName=${teamName}&repoId=${teamRepoId}&repoName=${repoName}`} className="max-w-xs p-3 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                            團隊綜觀圖
+                        </Link>
+                    </div>
                 </div>
+
             </div>
 
             {isModalOpen && (

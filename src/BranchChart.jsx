@@ -85,9 +85,9 @@ const BranchChart = (/*帳號跟repo名稱*/) => {
     useEffect(() => {
         const fetchLocalGraphBranch = async () => {
             try {
-                // const chartDataResponse = await fetch(`http://localhost:8080/graph?owner=${username}&repo=${repoName}`);
+                const chartDataResponse = await fetch(`http://localhost:8080/graph?owner=${username}&repo=${repoName}`);
                 // const chartDataResponse = await fetch(`http://localhost:8080/graph?owner=ouoxii&repo=hello4`);//指定repo
-                const chartDataResponse = await fetch(`http://localhost:8080/graph?owner=ntou01057042&repo=github-flow-tutor`);//指定repo
+                // const chartDataResponse = await fetch(`http://localhost:8080/graph?owner=ntou01057042&repo=github-flow-tutor`);//指定repo
                 if (!chartDataResponse.ok) {
                     if (chartDataResponse.status === 404) {
                         setTimelineData([]);
@@ -139,9 +139,9 @@ const BranchChart = (/*帳號跟repo名稱*/) => {
     useEffect(() => {
         const fetchLocalGraphCommit = async () => {
             try {
-                // const commitstDataResponse = await fetch(`http://localhost:8080/graph/commits?owner=${username}&repo=${repoName}`);
+                const commitstDataResponse = await fetch(`http://localhost:8080/graph/commits?owner=${username}&repo=${repoName}`);
                 // const commitstDataResponse = await fetch(`http://localhost:8080/graph/commits?owner=ouoxii&repo=hello4`);//指定repo
-                const commitstDataResponse = await fetch(`http://localhost:8080/graph/commits?owner=ntou01057042&repo=github-flow-tutor`);//指定repo
+                // const commitstDataResponse = await fetch(`http://localhost:8080/graph/commits?owner=ntou01057042&repo=github-flow-tutor`);//指定repo
                 if (!commitstDataResponse.ok) {
                     if (commitstDataResponse.status === 404) {
                         setTimelineData([]);
@@ -191,24 +191,6 @@ const BranchChart = (/*帳號跟repo名稱*/) => {
 
     }, [teamData, username, teamRepoId, repoName])
 
-    // useEffect(() => {
-    //     const postGraphBranch = async () => {
-    //         try {
-    //             const postGraphBranchResponse = await fetch(`http://localhost:8080/graph/upload?owner=${username}&repo=${repoName}`, {
-    //                 method: 'POST'
-    //             });
-    //             if (!postGraphBranchResponse.ok) {
-    //                 throw new Error('上傳分支圖失敗');
-    //             }
-    //         } catch (error) {
-    //             console.log(error);
-    //         }
-    //     }
-
-    //     if (timelineData.length > 0 && teamData.owner === username) {
-    //         postGraphBranch();
-    //     }
-    // }, [teamData, username, timelineData]);
     useEffect(() => {
         if (chartsLoaded && timelineData.length > 0) {
             drawChart();
@@ -229,7 +211,7 @@ const BranchChart = (/*帳號跟repo名稱*/) => {
             timeline: { showRowLabels: false },
             avoidOverlappingGridLines: false,
             alternatingRowStyle: false,
-            width: 1200,
+            width: 1250,
             height: 300
         };
 
@@ -304,8 +286,16 @@ const BranchChart = (/*帳號跟repo名稱*/) => {
     };
 
     return (
-        <div id="timeLineChart" className='p-3 h-80'>
-            {/* 在這裡渲染時間線圖表的內容 */}
+
+        <div className='flex flex-col justify-between p-4'>
+            <div id="timeLineChart" className='h-1/2'>
+                {/* 在這裡渲染時間線圖表的內容 */}
+            </div>
+            <div className="h-10 flex mb-2 justify-between items-center">
+                <Link to={`/team-overview?teamId=${teamId}&teamName=${teamName}&repoId=${teamRepoId}&repoName=${repoName}`} className="max-w-xs p-3 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                    分支進度圖
+                </Link>
+            </div>
         </div>
     );
 };
