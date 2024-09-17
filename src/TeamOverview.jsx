@@ -186,8 +186,10 @@ const TeamOverview = () => {
         if (repoExist) {
             if (teamData.owner === username) {
                 fetchLocalGraphBranch();
+                fetchUserLocalGraphBranch();
             } else {
                 fetchCloudGraphBranch();
+                fetchUserLocalGraphBranch();
             }
         } else if (repoExist === false) {
             alert('偵測到repo不存在本地端，將自動為您clone');
@@ -536,7 +538,7 @@ const TeamOverview = () => {
 
         const primaryOptions = {
             title: 'Team branch chart',
-            // colors: ['#475468', '#365f9b', '#c6cfdc'],
+            colors: ["#4DEBBE", "#C266FF", "#FF9C73", "#48D7E6", "#FFE135", "#5C8AFF", "#FF8DA7", "#66BB6A", "#26C6DA", "#EA80FC"],
             allowHtml: true,
             explorer: { axis: 'horizontal' },
             width: chartWidth,

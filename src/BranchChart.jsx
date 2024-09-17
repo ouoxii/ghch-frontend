@@ -211,7 +211,7 @@ const BranchChart = (/*帳號跟repo名稱*/) => {
             timeline: { showRowLabels: false },
             avoidOverlappingGridLines: false,
             alternatingRowStyle: false,
-            width: 1250,
+            width: 1230,
             height: 300
         };
 
@@ -288,7 +288,7 @@ const BranchChart = (/*帳號跟repo名稱*/) => {
     return (
 
         <div className='flex flex-col justify-between p-4'>
-            <div id="timeLineChart" className='h-1/2'>
+            <div id="timeLineChart" className='pt-32 h-1/2'>
                 {/* 在這裡渲染時間線圖表的內容 */}
             </div>
             <div className="h-10 flex mb-2 justify-between items-center">
