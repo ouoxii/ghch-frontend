@@ -15,6 +15,7 @@ const PRDiscussion = () => {
     const [loading, setLoading] = useState(true);
     const [teamMembers, setTeamMembers] = useState([]);
     const [showNewBlock, setShowNewBlock] = useState(false);
+    const [userVote, setUserVote] = useState(null); // 新增狀態來追蹤投票
     const [selectedReviewers, setSelectedReviewers] = useState([]);
     const token = Cookies.get('token');
 
@@ -153,6 +154,57 @@ const PRDiscussion = () => {
         return username === PRData.creator || reviewers.some(reviewer => reviewer.user === username);
     };
 
+    // 新增 handleVote 函數來處理投票
+    const handleVote = async (vote) => {
+        try {
+            // 提交投票請求
+            const voteResponse = await fetch(`http://localhost:8081/pr-votes`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    repoOwner: owner,
+                    repoName: repo,
+                    pullNumber: prNumber,
+                    reviewer: Cookies.get('username'),  // 用戶名稱
+                    accept: vote,
+                }),
+            });
+
+            if (!voteResponse.ok) {
+                throw new Error('無法提交投票');
+            }
+
+            // 如果投票成功，接著創建審查 (Review)
+            const reviewResponse = await fetch(`http://localhost:3001/pr/create-review?token=${token}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    owner,
+                    repo,
+                    pull_number: prNumber,  // PR 編號
+                    body: vote ? "Approved the changes" : "Requested changes", // 根據投票結果提交不同的審查內容
+                    event: vote ? "APPROVE" : "REQUEST_CHANGES" // 審查類型 (APPROVE 或 REQUEST_CHANGES)
+                }),
+            });
+
+            if (!reviewResponse.ok) {
+                throw new Error('無法創建審查');
+            }
+
+            const reviewResult = await reviewResponse.json();
+            console.log('審查已創建成功:', reviewResult);
+
+            alert(`您已${vote ? '同意' : '拒絕'}此 PR 並提交了審查！`);
+            setUserVote(vote);  // 記錄用戶的投票狀態
+        } catch (error) {
+            alert(error.message);
+        }
+    };
+
     return (
         <div className="container flex p-4">
             {loading ? (
@@ -174,7 +226,23 @@ const PRDiscussion = () => {
                             <span className="bg-gray-500 text-white text-lg px-3 py-1 rounded ml-3">Closed</span>
                         )}
                     </h1>
-
+                    {/* 新增投票按鈕 */}
+                    <div className="flex mt-5">
+                        <button
+                            className={`bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded mr-3 ${userVote === 'approve' ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            onClick={() => handleVote(true)}
+                            disabled={userVote === 'approve'}
+                        >
+                            同意
+                        </button>
+                        <button
+                            className={`bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded ${userVote === 'reject' ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            onClick={() => handleVote(false)}
+                            disabled={userVote === 'reject'}
+                        >
+                            拒絕
+                        </button>
+                    </div>
                     <div className="flex flex-col w-full mt-5">
                         <div className="flex flex-col h-80 overflow-auto">
                             {commentData.length > 0 ? (
