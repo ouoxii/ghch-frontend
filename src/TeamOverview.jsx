@@ -293,6 +293,24 @@ const TeamOverview = () => {
             legend: 'none',
             hAxis: {
                 format: 'M/d',
+            },
+            vAxis: {
+                // Y 軸顯示數字
+                title: 'Commit Count',
+                minValue: 0,
+                format: '0', // 確保顯示數值而不是百分比或其他格式
+                viewWindow: {
+                    min: 0
+                }
+            },
+            annotations: {
+                // 顯示每個柱狀圖的數值
+                alwaysOutside: true,  // 確保數字顯示在柱狀圖外部
+                textStyle: {
+                    fontSize: 12,
+                    bold: true,
+                    color: '#000',  // 可以自定義文字顏色
+                }
             }
         };
 
@@ -447,7 +465,7 @@ const TeamOverview = () => {
         }
 
         let j = 0;
-        console.log(branchCommitCounts);
+        // console.log(branchCommitCounts);
         for (const branch in branchCommitCounts) {
 
             const day = Object.keys(branchCommitCounts[branch]);
@@ -497,8 +515,8 @@ const TeamOverview = () => {
             window.google.visualization.events.addListener(tooltipChart, 'ready', function () {
                 let tooltipImg = '<img src="' + tooltipChart.getImageURI() + '">';
                 // console.log(timelineData)
-                let commitDetail = '<p style="margin-left:50px; margin-bottom:5px; font-size:18px">' + tooltipDataArray[0][i + dataRows.length] + '<p>';
-                dataRows[i][2] = tooltipImg + commitDetail;
+                let branchName = '<p style="margin-left:50px; margin-bottom:5px; font-size:18px">' + tooltipDataArray[0][i + dataRows.length] + '<p>';
+                dataRows[i][2] = tooltipImg + branchName;
             });
             tooltipChart.draw(view, tooltipOptions);
         }
