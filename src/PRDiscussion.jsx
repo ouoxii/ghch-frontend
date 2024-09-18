@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import Cookies from 'js-cookie';
+import merge from './img/merge.png';
 
 const PRDiscussion = () => {
     const location = useLocation();
@@ -68,7 +69,7 @@ const PRDiscussion = () => {
                 const currentReviewer = reviewersStatus.find(
                     (reviewer) => reviewer.user === Cookies.get('username')
                 );
-                if (currentReviewer) {
+                if (currentReviewer) {//紀錄此用戶的投票狀態
                     setReviewerState(currentReviewer.state);
                 }
             } catch (error) {
@@ -241,27 +242,33 @@ const PRDiscussion = () => {
                 </div>
             ) : (
                 <div className="flex-grow p-4">
-                    <h1 className="text-2xl font-bold">
+                    <h1 className="text-2xl font-bold flex">
                         {title} #{prNumber}
                         {PRData.state === 'open' && (
-                            <span className="bg-green-500 text-white text-lg px-3 py-1 rounded ml-3">Open</span>
+                            <span className="flex items-center bg-green-500 text-white text-lg px-3 py-1 rounded-2xl ml-3 max-w-max">
+                                <img className="w-4 h-4 mr-2" src={merge} alt="Merge icon" />
+                                Open
+                            </span>
                         )}
                         {PRData.state === 'closed' && (
-                            <span className="bg-gray-500 text-white text-lg px-3 py-1 rounded ml-3">Closed</span>
+                            <span className="bg-gray-500 text-white text-lg px-3 py-1 rounded-2xl ml-3 max-w-max">
+                                Closed
+                            </span>
                         )}
                     </h1>
+                    <p className="text-gray-500 mt-2"> {PRData.creator} 希望將 {PRData.head} 合併到 {PRData.base} </p>
                     {/* 新增投票按鈕 */}
                     {reviewerState == 'PENDING' ? (userRole === 'Reviewer' && PRData.state === 'open' && (
                         < div className="flex mt-5">
                             <button
-                                className={`bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded mr-3 `}
+                                className={`bg-green-700 hover:bg-green-800 text-white font-bold py-2 px-4 rounded mr-3 `}
                                 onClick={() => handleVote(true)}
                                 disabled={reviewerState != 'PENDING'}
                             >
                                 同意
                             </button>
                             <button
-                                className={`bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded mr-3`}
+                                className={`bg-red-700 hover:bg-red-800 text-white font-bold py-2 px-4 rounded mr-3`}
                                 onClick={() => handleVote(false)}
                                 disabled={reviewerState != 'PENDING'}
                             >
@@ -270,11 +277,12 @@ const PRDiscussion = () => {
                         </div>
                     )) : (
                         < div className="flex mt-5">
-                            {reviewerState}
+                            {reviewerState === "CHANGES_REQUESTED" ? "您已經拒絕了" : ""}
+                            {reviewerState === "APPROVED" ? "您已經同意了" : ""}
                         </div>
                     )}
                     <div className="flex flex-col w-full mt-5">
-                        <div className="flex flex-col h-80 overflow-auto">
+                        <div className="flex flex-col h-full overflow-auto">
                             {commentData.length > 0 ? (
                                 commentData.map(comment => (
                                     <div key={comment.id} className="flex justify-between items-center mb-2">
@@ -290,21 +298,22 @@ const PRDiscussion = () => {
                             ) : (
                                 <p>尚無評論</p>
                             )}
+                            <div className="flex flex-col mt-5 w-full">
+                                <textarea
+                                    className="w-full h-24 p-3 mb-3 border border-gray-300 rounded-md"
+                                    placeholder="輸入評論"
+                                    value={newComment}
+                                    onChange={(e) => setNewComment(e.target.value)}
+                                />
+                                <button
+                                    className="bg-green-700 hover:bg-green-800 text-white font-bold text-sm px-5 py-2.5 text-center me-2 mb-2 rounded-md self-end "
+                                    onClick={handleCommentSubmit}
+                                >
+                                    Comment
+                                </button>
+                            </div>
                         </div>
-                        <div className="flex flex-col mt-5 w-full">
-                            <textarea
-                                className="w-full h-24 p-3 mb-3 border border-gray-300 rounded-md"
-                                placeholder="輸入評論"
-                                value={newComment}
-                                onChange={(e) => setNewComment(e.target.value)}
-                            />
-                            <button
-                                className="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded self-end w-24"
-                                onClick={handleCommentSubmit}
-                            >
-                                Comment
-                            </button>
-                        </div>
+
                     </div>
                 </div>
             )}
