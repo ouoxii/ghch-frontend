@@ -73,13 +73,63 @@ const HorizontalGraph = () => {
         );
     }
 
-    const handleFormSubmit = (e) => {
+    const handleFormSubmit = async (e) => {
         e.preventDefault();
 
-        console.log("Input Data:", inputData);
-        setShowForm(false);
-        // navigate('/PRDiscussion');
+        // 重置錯誤訊息
+        setErrors({});
+
+        // 前端表單驗證
+        const newErrors = {};
+        if (!inputData.title) newErrors.title = "標題是必填的";
+        if (!inputData.description) newErrors.description = "描述是必填的";
+
+        if (Object.keys(newErrors).length > 0) {
+            setErrors(newErrors);
+            return;
+        }
+
+        try {
+            // 透過 API 發送拉取請求資料
+            const queryParams = new URLSearchParams(window.location.search);
+            const branch = queryParams.get('branch');
+            const repo = queryParams.get('repo');
+            const owner = queryParams.get('owner');
+            const token = Cookies.get('token'); // 假設 token 存在 cookies 中
+
+            const response = await fetch(`http://localhost:3001/pr`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    owner: owner, // 擁有者
+                    repo: repo, // 儲存庫名稱
+                    title: inputData.title, // PR 標題
+                    body: inputData.description, // PR 描述
+                    head: branch, // 分支名稱
+                    base: 'main', // 基礎分支名稱
+                    token: token, // 授權 token
+                })
+            });
+
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+
+            const result = await response.json();
+            console.log("Pull Request創建成功:", result);
+
+            // 創建成功後導航到 PR 討論頁面或其他頁面
+            // navigate('/PRDiscussion');
+        } catch (error) {
+            console.error("創建拉取請求錯誤:", error);
+            setError(error);
+        } finally {
+            setShowForm(false);
+        }
     };
+
 
     const handleInputChange = (e) => {
         const { name, value } = e.target;
@@ -177,10 +227,11 @@ const HorizontalGraph = () => {
                                         placeholder="描述"
                                         className="w-full p-2 border rounded"
                                     ></textarea>
+                                    {errors.description && <span className="error text-red-500">{errors.description}</span>}
                                 </div>
                                 <div className="p-3 form-group mb-2">
                                     <button type="submit" className="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded w-full">
-                                        創建拉取請求
+                                        創建Pull Request
                                     </button>
                                 </div>
                             </form>
