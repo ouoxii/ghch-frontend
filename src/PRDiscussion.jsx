@@ -230,6 +230,39 @@ const PRDiscussion = () => {
         }
     };
 
+    // 新增合併 PR 的事件處理函數
+    const handleMergePR = async () => {
+        try {
+            const mergeResponse = await fetch(`http://localhost:3001/pr/merge`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    owner,
+                    repo,
+                    pull_number: prNumber,
+                    commit_title: `Merged PR #${prNumber}: ${PRData.title}`,  // Commit 標題
+                    commit_message: 'This merge was performed using the GHCH.',  // Commit 訊息
+                    token: token
+                }),
+            });
+
+            if (!mergeResponse.ok) {
+                throw new Error('無法合併 PR');
+            }
+
+            const mergeResult = await mergeResponse.json();
+            console.log('合併結果:', mergeResult);
+
+            alert(`成功合併 PR #${prNumber}！`);
+            setPRData({ ...PRData, state: 'closed' });  // 更新 PR 狀態為 closed
+        } catch (error) {
+            alert(error.message);
+        }
+    };
+
+
     return (
         <div className="container flex p-4">
             {loading ? (
@@ -257,20 +290,31 @@ const PRDiscussion = () => {
                         )}
                     </h1>
                     <p className="text-gray-500 mt-2"> {PRData.creator} 希望將 {PRData.head} 合併到 {PRData.base} </p>
+                    {/* 新增合併 PR 按鈕 */}
+                    {userRole === 'Contributor' && PRData.state === 'open' && reviewers.every(reviewer => reviewer.state === 'APPROVED') && (
+                        <div className="flex mt-5">
+                            <button
+                                className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mr-3"
+                                onClick={handleMergePR}
+                            >
+                                合併 PR
+                            </button>
+                        </div>
+                    )}
                     {/* 新增投票按鈕 */}
-                    {reviewerState == 'PENDING' ? (userRole === 'Reviewer' && PRData.state === 'open' && (
+                    {reviewerState === 'PENDING' ? (userRole === 'Reviewer' && PRData.state === 'open' && (
                         < div className="flex mt-5">
                             <button
-                                className={`bg-green-700 hover:bg-green-800 text-white font-bold py-2 px-4 rounded mr-3 `}
+                                className={`bg-green-700 hover:bg-green-800 text-white font-bold py-2 px-4 rounded mr-3`}
                                 onClick={() => handleVote(true)}
-                                disabled={reviewerState != 'PENDING'}
+                                disabled={reviewerState !== 'PENDING'}
                             >
                                 同意
                             </button>
                             <button
                                 className={`bg-red-700 hover:bg-red-800 text-white font-bold py-2 px-4 rounded mr-3`}
                                 onClick={() => handleVote(false)}
-                                disabled={reviewerState != 'PENDING'}
+                                disabled={reviewerState !== 'PENDING'}
                             >
                                 拒絕
                             </button>
