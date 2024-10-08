@@ -9,7 +9,7 @@ const PRDiscussion = () => {
     const prNumber = queryParams.get('number');
     const title = queryParams.get('title');
     const { owner, repo, teamName } = location.state || {};
-    const [PRData, setPRData] = useState({ number: '', state: '', description: '', head: '', base: '', creator: '' });
+    const [PRData, setPRData] = useState({ number: '', state: '', description: '', head: '', base: '', creator: '', created_at: '' });
     const [commentData, setCommentData] = useState([]);
     const [newComment, setNewComment] = useState('');
     const [reviewers, setReviewers] = useState([]);
@@ -65,11 +65,10 @@ const PRDiscussion = () => {
                 console.log('Reviewers:', reviewersStatus);
                 setReviewers(reviewersStatus);
 
-
                 const currentReviewer = reviewersStatus.find(
                     (reviewer) => reviewer.user === Cookies.get('username')
                 );
-                if (currentReviewer) {//紀錄此用戶的投票狀態
+                if (currentReviewer) {
                     setReviewerState(currentReviewer.state);
                 }
             } catch (error) {
@@ -81,14 +80,28 @@ const PRDiscussion = () => {
                 setTeamMembers(teamMembersResponse.ok ? await teamMembersResponse.json() : []);
             } catch (error) {
                 alert(error.message);
+            }
+
+            // 新增的 API 請求以檢查更新時間
+            try {
+                const updatedAtResponse = await fetch(`http://localhost:3001/pr/check-updated-at?owner=${owner}&repo=${repo}&pull_number=${prNumber}&token=${token}`);
+                if (!updatedAtResponse.ok) {
+                    throw new Error('無法檢查更新時間');
+                }
+                const updatedAtData = await updatedAtResponse.json();
+                // 檢查 PR 的更新時間
+                if (PRData.updated_at !== updatedAtData.updated_at) {
+                    alert('Contributor 已修改此分支，請重新投票！');
+                }
+            } catch (error) {
+                alert(error.message);
             } finally {
                 setLoading(false);
             }
         };
 
         fetchPRData();
-    }, [owner, repo, prNumber]);
-
+    }, [owner, repo, prNumber]); // 加入 checkUpdatedAtUrl 依賴
     useEffect(() => {
         const getUserRole = () => {
 
@@ -276,7 +289,7 @@ const PRDiscussion = () => {
             ) : (
                 <div className="flex-grow p-4">
                     <h1 className="text-2xl font-bold flex">
-                        {title} #{prNumber}
+                        {title} #{prNumber} created_at {new Date(PRData.created_at).toLocaleString()}
                         {PRData.state === 'open' && (
                             <span className="flex items-center bg-green-500 text-white text-lg px-3 py-1 rounded-2xl ml-3 max-w-max">
                                 <img className="w-4 h-4 mr-2" src={merge} alt="Merge icon" />
