@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import Cookies from 'js-cookie';
 import merge from './img/merge.png';
+import AssistnatBox from './AssistantBox';
 
 const PRDiscussion = () => {
     const location = useLocation();
@@ -241,7 +242,7 @@ const PRDiscussion = () => {
                     <span className="sr-only">Loading...</span>
                 </div>
             ) : (
-                <div className="flex-grow p-4">
+                <div className="flex-grow p-4 relative">
                     <h1 className="text-2xl font-bold flex">
                         {title} #{prNumber}
                         {PRData.state === 'open' && (
@@ -314,6 +315,9 @@ const PRDiscussion = () => {
                             </div>
                         </div>
 
+                    </div>
+                    <div className='absolute bottom-6 right-10'>
+                        <AssistnatBox text="PR討論區能協助進行檢視完PR後的討論，並提供投票系統以簡化合併過程。" />
                     </div>
                 </div>
             )}

@@ -8,6 +8,7 @@ import {
 } from "@gitgraph/react";
 import "tailwindcss/tailwind.css";
 import Cookies from "js-cookie";
+import AssistnatBox from './AssistantBox';
 
 const username = Cookies.get('username');
 
@@ -145,6 +146,9 @@ const HorizontalGraph = () => {
                                 ))}
                             </tbody>
                         </table>
+                    </div>
+                    <div className='absolute bottom-8 right-10'>
+                        <AssistnatBox text="個人分支圖能提供分支內有關 commit 的詳細資訊，並能透過 pull request 來提出合併分支請求。" />
                     </div>
                 </>
             )}

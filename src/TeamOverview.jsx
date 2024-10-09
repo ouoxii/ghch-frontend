@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
 import { DataContext } from './DataContext';
+import AssistnatBox from './AssistantBox';
 
 const TeamOverview = () => {
     const location = useLocation();
@@ -542,7 +543,7 @@ const TeamOverview = () => {
         dataTable.addColumn({ type: 'date', id: 'Start' });
         dataTable.addColumn({ type: 'date', id: 'End' });
 
-      
+
 
         // Convert times to Date objects and then to timestamps (milliseconds)
         const startTimes = timelineData.map(item => new Date(item.startTime).getTime());
@@ -559,7 +560,7 @@ const TeamOverview = () => {
 
         const primaryOptions = {
             title: 'Team branch chart',
-            colors: ["#4DEBBE", "#C266FF", "#FF9C73", "#48D7E6", "#FFE135", "#5C8AFF", "#FF8DA7", "#66BB6A", "#26C6DA", "#EA80FC"],
+            colors: ["#F0F0F0", "#C266FF", "#FF9C73", "#48D7E6", "#FFE135", "#5C8AFF", "#FF8DA7", "#66BB6A", "#26C6DA", "#EA80FC"],
             allowHtml: true,
             explorer: { axis: 'horizontal' },
             width: chartWidth,
@@ -719,7 +720,7 @@ const TeamOverview = () => {
     return (
 
         <div className="container mx-auto p-4 h-full flex flex-col">
-            {loading ? (
+            {loading && !chartFinish ? (
                 // 顯示轉圈圈動畫
                 <div role="status" className="flex justify-center items-center w-full h-full ">
                     <svg aria-hidden="true" className="w-16 h-16 text-gray-200 animate-spin dark:text-gray-600 fill-blue-600" viewBox="0 0 100 101" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -771,25 +772,29 @@ const TeamOverview = () => {
                         <button className="text-blue-500" onClick={handleSettingsClick}>儲存庫設定</button>
                     </div>
                     <div className="flex flex-col flex-1">
+                        <p className='font-extrabold text-2xl mt-2'>分支進度圖</p>
                         {timelineData.length <= 1 ? (
-                    <div>尚無分支資料</div>
-                ) : (
-                    <>
-                        <div id='hidden_div' className='hidden'></div>
-                        <div id='branch_chart' ref={scrollRef} className="w-full h-1/2 p-4 ml-0 mr-4 my-4 shadow-lg bg-slate-50 overflow-auto"></div>
-                    </>
-                )}
-                <div className='flex flex-col justify-between flex-1'>
-                    <div className='flex justify-between'>
-                        <button className="h-10 max-w-48 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={handlePush}>push (上傳到GitHub)</button>
-                        <button className="h-10 max-w-48 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={handlePull}>pull (從GitHub更新)</button>
-                    </div>
-                    <div className="h-10 flex my-2 justify-between items-center">
-                        <Link to={`/branchchart?teamId=${teamId}&teamName=${teamName}&repoId=${teamRepoId}&repoName=${repoName}`} className="max-w-xs p-3 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
-                            團隊綜觀圖
-                        </Link>
-                    </div>
-                </div>
+                            <div>尚無分支資料</div>
+                        ) : (
+                            <>
+                                <div id='hidden_div' className='hidden'></div>
+                                <div id='branch_chart' ref={scrollRef} className="w-full h-1/2 p-4 ml-0 mr-4 mb-4 shadow-lg bg-slate-50 overflow-auto"></div>
+                            </>
+                        )}
+                        <div className='flex flex-col justify-between flex-1'>
+                            <div className='flex justify-between'>
+                                <button className="h-10 max-w-48 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={handlePush}>push (上傳到GitHub)</button>
+                                <button className="h-10 max-w-48 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={handlePull}>pull (從GitHub更新)</button>
+                            </div>
+                            <div className="h-10 flex my-2 justify-between items-center">
+                                <Link to={`/branchchart?teamId=${teamId}&teamName=${teamName}&repoId=${teamRepoId}&repoName=${repoName}`} className="max-w-xs p-3 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                                    團隊綜觀圖
+                                </Link>
+                            </div>
+                        </div>
+                        <div className='absolute bottom-10 right-14'>
+                            <AssistnatBox text="分支進度圖可以看到個別分支的開發狀況，善用push和pull可以幫助你隨時獲取最新的資訊。" />
+                        </div>
                     </div>
                 </>
             )}

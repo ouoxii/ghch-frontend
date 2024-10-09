@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useContext } from 'react';
 import Cookies from 'js-cookie';
 import { DataContext } from './DataContext';
+import AssistnatBox from './AssistantBox';
 
 const CreateTeamBlock = () => {
 
@@ -62,6 +63,10 @@ const CreateTeamBlock = () => {
                 </div>
                 <button type="submit" className="bg-buttonBlue text-white w-44 h-12 rounded-full text-2xl mt-4 hover:bg-buttonBlue-dark">創建團隊</button>
             </form>
+            <div className='absolute bottom-10 right-14'>
+                <AssistnatBox text="可在此新增團隊，團隊可共有多個儲存庫。"/>
+            </div>
+            
         </div>
     );
 };
