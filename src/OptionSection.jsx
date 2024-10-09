@@ -154,6 +154,7 @@ const OptionSection = ({ isVisible, onClose, toggleSettings, defaultActiveSectio
                                             <div>Username</div>
                                             <div className="mb-3 mt-1">
                                                 <input
+                                                    className='bg-gray-100 border px-2 rounded-lg'
                                                     type="text"
                                                     name="username"
                                                     value={inputData.username}
@@ -165,6 +166,7 @@ const OptionSection = ({ isVisible, onClose, toggleSettings, defaultActiveSectio
                                             <div>First Name</div>
                                             <div className="mb-3 mt-1">
                                                 <input
+                                                    className='bg-gray-100 border px-2 rounded-lg'
                                                     type="text"
                                                     name="firstName"
                                                     value={inputData.firstName}
@@ -175,6 +177,7 @@ const OptionSection = ({ isVisible, onClose, toggleSettings, defaultActiveSectio
                                             <div>Last Name</div>
                                             <div className="mb-3 mt-1">
                                                 <input
+                                                    className='bg-gray-100 border px-2 rounded-lg'
                                                     type="text"
                                                     name="lastName"
                                                     value={inputData.lastName}

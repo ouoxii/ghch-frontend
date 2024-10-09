@@ -28,7 +28,7 @@ const AssistantBox = ({ text }) => {
                 />
                 <button
                     onClick={handleSubmit}
-                    className="ml-1 w-8 h-8 bg-stone-50 p-2 rounded-full hover:bg-stone-200 hover:text-white"
+                    className="ml-2 w-8 h-8 bg-stone-50 p-2 rounded-full hover:bg-stone-200 hover:text-white"
                 ><img
                         src={arrow}
                         alt="submit"
