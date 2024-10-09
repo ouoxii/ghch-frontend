@@ -774,7 +774,7 @@ const TeamOverview = () => {
                     <div className="flex flex-col flex-1">
                         <p className='font-extrabold text-2xl mt-2'>分支進度圖</p>
                         {timelineData.length <= 1 ? (
-                            <div>尚無分支資料</div>
+                            <div className='p-4 mb-60'>尚無分支資料</div>
                         ) : (
                             <>
                                 <div id='hidden_div' className='hidden'></div>

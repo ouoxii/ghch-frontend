@@ -287,11 +287,14 @@ const BranchChart = (/*帳號跟repo名稱*/) => {
 
     return (
 
-        <div className='flex flex-col justify-start p-4 h-full relative'>
+        <div className='flex flex-col justify-start p-4 h-full'>
             <p className='font-extrabold text-2xl mt-6'>團隊綜觀圖</p>
-            <div id="timeLineChart" className='h-1/2 mt-8'>
-                {/* 在這裡渲染時間線圖表的內容 */}
-            </div>
+            {timelineData.length <= 1 ? (
+                <div className='p-4 mb-60'>尚無分支資料</div>
+            ) : (
+                <div id="timeLineChart" className='h-1/2 mt-8'>
+                    {/* 在這裡渲染時間線圖表的內容 */}
+                </div>)}
             <div className="h-10 flex mb-2 justify-between items-center absolute bottom-4">
                 <Link to={`/team-overview?teamId=${teamId}&teamName=${teamName}&repoId=${teamRepoId}&repoName=${repoName}`} className="max-w-xs p-3 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
                     分支進度圖
