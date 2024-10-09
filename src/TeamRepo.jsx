@@ -2,6 +2,7 @@ import React, { useState, useEffect, useContext } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
 import { DataContext } from './DataContext';
+import AssistnatBox from './AssistantBox';
 
 const TeamRepo = ({ onClose }) => {
     const location = useLocation();
@@ -323,7 +324,7 @@ const TeamRepo = ({ onClose }) => {
                 <button onClick={handleSettingsClick} className="text-blue-500">團隊設定</button>
             </div>
             <div className="flex h-full">
-                <div className="w-3/4 p-4 border-r border-gray-300">
+                <div className="relative w-3/4 p-4 border-r border-gray-300">
                     <div className="mb-4">
                         {repos.map(repo => (
                             <div key={repo.id} className="p-4 bg-blue-50 rounded-lg shadow-md mb-4 h-24">
@@ -338,6 +339,9 @@ const TeamRepo = ({ onClose }) => {
                             建立新儲存庫
                         </button>
                     )}
+                    <div className='absolute bottom-20 right-10'>
+                        <AssistnatBox text="團隊內可創建儲存庫，每個儲存庫單獨對應到一個GitHub儲存庫。" />
+                    </div>
                 </div>
                 <div className="w-1/4 p-4">
                     <h2 className="text-xl font-bold mb-4">成員列表</h2>

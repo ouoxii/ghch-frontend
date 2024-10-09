@@ -3,8 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import Cookies from 'js-cookie';
 import { DataContext } from './DataContext';
 import './input.css'; // 引入 Tailwind CSS
-
-
+import AssistnatBox from './AssistantBox';
 
 const BranchChart = (/*帳號跟repo名稱*/) => {
     const location = useLocation();
@@ -22,16 +21,16 @@ const BranchChart = (/*帳號跟repo名稱*/) => {
     const [chartsLoaded, setChartsLoaded] = useState(false);
 
     const colors = [
-        ["#00C896", "#4DEBBE", "#A8FDE5"],  // 薄荷綠
-        ["#A200FF", "#C266FF", "#E6BFFF"],  // 螢光紫
-        ["#FF6D3D", "#FF9C73", "#FFCEB8"],  // 亮珊瑚橙
-        ["#00B8D4", "#48D7E6", "#B2EEF3"],  // 電光青
-        ["#FFD600", "#FFE135", "#FFF59D"],  // 檸檬黃
-        ["#2962FF", "#5C8AFF", "#A3C9FF"],  // 星空藍
-        ["#FF5C8D", "#FF8DA7", "#FFD4E1"],  // 霧桃紅
-        ["#43A047", "#66BB6A", "#B9F6CA"],  // 翠綠
-        ["#00ACC1", "#26C6DA", "#E0F7FA"],  // 亮青藍
-        ["#D500F9", "#EA80FC", "#F8E1FF"]   // 霓虹紫
+        ["#F0F0F0", "#F0F0F0", "#F0F0F0"],  // 白
+        ["#8200CC", "#C266FF", "#FFCEFF"],  // 螢光紫
+        ["#CC582F", "#FF9C73", "#FFE4C9"],  // 亮珊瑚橙
+        ["#008EA2", "#48D7E6", "#D2F8FD"],  // 電光青
+        ["#CCAA00", "#FFE135", "#FFF9AD"],  // 檸檬黃
+        ["#204ECC", "#5C8AFF", "#B5DAFF"],  // 星空藍
+        ["#CC496E", "#FF8DA7", "#FFE8ED"],  // 霧桃紅
+        ["#347E38", "#66BB6A", "#D1FBDF"],  // 翠綠
+        ["#008B97", "#26C6DA", "#E9FBFD"],  // 亮青藍
+        ["#AA00C6", "#EA80FC", "#FFE7FF"]   // 霓虹紫
     ];
 
 
@@ -259,7 +258,7 @@ const BranchChart = (/*帳號跟repo名稱*/) => {
             if (branches[item.name] > avgCommit * 1.2)
                 return [
                     item.committer,
-                    item.committer,
+                    item.committer || item.name,
                     colors[committers[item.committer] % 10][0],
                     startTime,
                     endTime
@@ -267,7 +266,7 @@ const BranchChart = (/*帳號跟repo名稱*/) => {
             else if (branches[item.name] < avgCommit * 0.8)
                 return [
                     item.committer,
-                    item.committer,
+                    item.committer || item.name,
                     colors[committers[item.committer] % 10][2],
                     startTime,
                     endTime
@@ -275,26 +274,31 @@ const BranchChart = (/*帳號跟repo名稱*/) => {
             else
                 return [
                     item.committer,
-                    item.committer,
+                    item.committer || item.name,
                     colors[committers[item.committer] % 10][1],
                     startTime,
                     endTime
                 ];
         });
+        console.log(dataRows)
         dataTable.addRows(dataRows);
         chart.draw(dataTable, options);
     };
 
     return (
 
-        <div className='flex flex-col justify-between p-4'>
-            <div id="timeLineChart" className='pt-32 h-1/2'>
+        <div className='flex flex-col justify-start p-4 h-full relative'>
+            <p className='font-extrabold text-2xl mt-6'>團隊綜觀圖</p>
+            <div id="timeLineChart" className='h-1/2 mt-8'>
                 {/* 在這裡渲染時間線圖表的內容 */}
             </div>
-            <div className="h-10 flex mb-2 justify-between items-center">
+            <div className="h-10 flex mb-2 justify-between items-center absolute bottom-4">
                 <Link to={`/team-overview?teamId=${teamId}&teamName=${teamName}&repoId=${teamRepoId}&repoName=${repoName}`} className="max-w-xs p-3 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
                     分支進度圖
                 </Link>
+            </div>
+            <div className='absolute bottom-10 right-14'>
+                <AssistnatBox text="團隊綜觀圖可以看到整個專案開發歷程，是檢視貢獻度跟回顧專案開發過程的好幫手。" />
             </div>
         </div>
     );
