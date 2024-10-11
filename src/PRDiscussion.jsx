@@ -10,7 +10,7 @@ const PRDiscussion = () => {
     const prNumber = queryParams.get('number');
     const title = queryParams.get('title');
     const { owner, repo, teamName } = location.state || {};
-    const [PRData, setPRData] = useState({ number: '', state: '', description: '', head: '', base: '', creator: '' });
+    const [PRData, setPRData] = useState({ number: '', state: '', description: '', head: '', base: '', creator: '', created_at: '' });
     const [commentData, setCommentData] = useState([]);
     const [newComment, setNewComment] = useState('');
     const [reviewers, setReviewers] = useState([]);
@@ -66,11 +66,10 @@ const PRDiscussion = () => {
                 console.log('Reviewers:', reviewersStatus);
                 setReviewers(reviewersStatus);
 
-
                 const currentReviewer = reviewersStatus.find(
                     (reviewer) => reviewer.user === Cookies.get('username')
                 );
-                if (currentReviewer) {//紀錄此用戶的投票狀態
+                if (currentReviewer) {
                     setReviewerState(currentReviewer.state);
                 }
             } catch (error) {
@@ -82,14 +81,28 @@ const PRDiscussion = () => {
                 setTeamMembers(teamMembersResponse.ok ? await teamMembersResponse.json() : []);
             } catch (error) {
                 alert(error.message);
+            }
+
+            // 新增的 API 請求以檢查更新時間
+            try {
+                const updatedAtResponse = await fetch(`http://localhost:3001/pr/check-updated-at?owner=${owner}&repo=${repo}&pull_number=${prNumber}&token=${token}`);
+                if (!updatedAtResponse.ok) {
+                    throw new Error('無法檢查更新時間');
+                }
+                const updatedAtData = await updatedAtResponse.json();
+                // 檢查 PR 的更新時間
+                if (PRData.updated_at !== updatedAtData.updated_at) {
+                    alert('Contributor 已修改此分支，請重新投票！');
+                }
+            } catch (error) {
+                alert(error.message);
             } finally {
                 setLoading(false);
             }
         };
 
         fetchPRData();
-    }, [owner, repo, prNumber]);
-
+    }, [owner, repo, prNumber]); // 加入 checkUpdatedAtUrl 依賴
     useEffect(() => {
         const getUserRole = () => {
 
@@ -231,6 +244,39 @@ const PRDiscussion = () => {
         }
     };
 
+    // 新增合併 PR 的事件處理函數
+    const handleMergePR = async () => {
+        try {
+            const mergeResponse = await fetch(`http://localhost:3001/pr/merge`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    owner,
+                    repo,
+                    pull_number: prNumber,
+                    commit_title: `Merged PR #${prNumber}: ${PRData.title}`,  // Commit 標題
+                    commit_message: 'This merge was performed using the GHCH.',  // Commit 訊息
+                    token: token
+                }),
+            });
+
+            if (!mergeResponse.ok) {
+                throw new Error('無法合併 PR');
+            }
+
+            const mergeResult = await mergeResponse.json();
+            console.log('合併結果:', mergeResult);
+
+            alert(`成功合併 PR #${prNumber}！`);
+            setPRData({ ...PRData, state: 'closed' });  // 更新 PR 狀態為 closed
+        } catch (error) {
+            alert(error.message);
+        }
+    };
+
+
     return (
         <div className="container flex p-4">
             {loading ? (
@@ -244,7 +290,7 @@ const PRDiscussion = () => {
             ) : (
                 <div className="flex-grow p-4 relative">
                     <h1 className="text-2xl font-bold flex">
-                        {title} #{prNumber}
+                        {title} #{prNumber} created_at {new Date(PRData.created_at).toLocaleString()}
                         {PRData.state === 'open' && (
                             <span className="flex items-center bg-green-500 text-white text-lg px-3 py-1 rounded-2xl ml-3 max-w-max">
                                 <img className="w-4 h-4 mr-2" src={merge} alt="Merge icon" />
@@ -258,20 +304,31 @@ const PRDiscussion = () => {
                         )}
                     </h1>
                     <p className="text-gray-500 mt-2"> {PRData.creator} 希望將 {PRData.head} 合併到 {PRData.base} </p>
+                    {/* 新增合併 PR 按鈕 */}
+                    {userRole === 'Contributor' && PRData.state === 'open' && reviewers.every(reviewer => reviewer.state === 'APPROVED') && (
+                        <div className="flex mt-5">
+                            <button
+                                className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mr-3"
+                                onClick={handleMergePR}
+                            >
+                                合併 PR
+                            </button>
+                        </div>
+                    )}
                     {/* 新增投票按鈕 */}
-                    {reviewerState == 'PENDING' ? (userRole === 'Reviewer' && PRData.state === 'open' && (
+                    {reviewerState === 'PENDING' ? (userRole === 'Reviewer' && PRData.state === 'open' && (
                         < div className="flex mt-5">
                             <button
-                                className={`bg-green-700 hover:bg-green-800 text-white font-bold py-2 px-4 rounded mr-3 `}
+                                className={`bg-green-700 hover:bg-green-800 text-white font-bold py-2 px-4 rounded mr-3`}
                                 onClick={() => handleVote(true)}
-                                disabled={reviewerState != 'PENDING'}
+                                disabled={reviewerState !== 'PENDING'}
                             >
                                 同意
                             </button>
                             <button
                                 className={`bg-red-700 hover:bg-red-800 text-white font-bold py-2 px-4 rounded mr-3`}
                                 onClick={() => handleVote(false)}
-                                disabled={reviewerState != 'PENDING'}
+                                disabled={reviewerState !== 'PENDING'}
                             >
                                 拒絕
                             </button>
