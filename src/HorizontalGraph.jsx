@@ -30,13 +30,14 @@ const HorizontalGraph = () => {
     });
     const [errors, setErrors] = useState({});
     const navigate = useNavigate();
-
+    const queryParams = new URLSearchParams(window.location.search);
+    const branch = queryParams.get('branch');
+    const repo = queryParams.get('repo');
+    const owner = queryParams.get('owner');
     useEffect(() => {
         const fetchCommitData = async () => {
-            const queryParams = new URLSearchParams(window.location.search);
-            const branch = queryParams.get('branch');
-            const repo = queryParams.get('repo');
-            const owner = queryParams.get('owner');
+
+
             try {
                 const response = await fetch(`http://localhost:8080/flow-commit/${owner}/${repo}?branch=${branch}`);
                 if (!response.ok) {
@@ -50,6 +51,7 @@ const HorizontalGraph = () => {
                 setError(error);
             } finally {
                 setLoading(false);  // 加載完成
+                handlePRgenerate();
             }
         };
 
@@ -72,14 +74,63 @@ const HorizontalGraph = () => {
             </div>
         );
     }
+    const handlePRgenerate = async (e) => {
+        try {
+            const diffResponse = await fetch(`http://localhost:3001/pr/pr-diff?owner=${owner}&repo=${repo}&base=main&head=${branch}&token=${Cookies.get('token')}`);
+            if (!diffResponse.ok) {
+                throw new Error('無法獲取PR DIFF資料');
+            }
+
+            const diffData = await diffResponse.json();
+
+            // 檢查 status 是否為 'ahead'
+            if (diffData.status !== 'ahead') {
+                console.log('當前狀態不需要生成 PR 描述 (status:', diffData.status, ')');
+                return;
+            }
+
+            // 提取檔案變更的差異
+            const patch = diffData.files_changed.map(file => file.patch).join('\n\n');
+
+            const generateResponse = await fetch(`http://localhost:3001/pr/generate-pr`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    prompt: "請根據上述diff指令撰寫pull request的描述，保持格式良好，易於閱讀，使用空格和換行進行分段，並使用Markdown 格式使其看起來清晰易讀，至少100字描述。\n\n範本:\n\nPull Request: 標題\n概要\n- 簡要說明此pr中所做的變更。\n- 突顯這些變更的主要特點或重要部分。\n\n變更內容\n1. 檔案變更\n- 描述修改、添加或刪除的檔案\n- 總結更改添加或刪除的程式碼行數。\n2. 功能改進\n- 列出任何功能改進或修正\n- 說明這些變更的目的",
+                    diffMessage: patch,
+                })
+            });
+
+            if (!generateResponse.ok) {
+                throw new Error('無法生成PR描述');
+            }
+
+            const generateData = await generateResponse.json();
+            const formattedDescription = generateData.answer.replace(/\\n/g, '\n');
+
+            const titleMatch = formattedDescription.match(/^(Pull Request: .+?)(?=\n)/);
+            const title = titleMatch ? titleMatch[0] : '';
+
+            setInputData((prevState) => ({
+                ...prevState,
+                title: title,
+                description: formattedDescription
+            }));
+
+            console.log("PR描述生成成功:", generateData);
+        } catch (error) {
+            console.error("PR描述生成錯誤:", error);
+            setError(error);
+        }
+    };
 
     const handleFormSubmit = async (e) => {
         e.preventDefault();
 
-        // 重置錯誤訊息
         setErrors({});
 
-        // 前端表單驗證
         const newErrors = {};
         if (!inputData.title) newErrors.title = "標題是必填的";
         if (!inputData.description) newErrors.description = "描述是必填的";
@@ -103,13 +154,13 @@ const HorizontalGraph = () => {
                     "Content-Type": "application/json"
                 },
                 body: JSON.stringify({
-                    owner: owner, // 擁有者
-                    repo: repo, // 儲存庫名稱
-                    title: inputData.title, // PR 標題
-                    body: inputData.description, // PR 描述
-                    head: branch, // 分支名稱
-                    base: 'main', // 基礎分支名稱
-                    token: token, // 授權 token
+                    owner: owner,
+                    repo: repo,
+                    title: inputData.title,
+                    body: inputData.description,
+                    head: branch,
+                    base: 'main',
+                    token: token,
                 })
             });
 
@@ -208,7 +259,7 @@ const HorizontalGraph = () => {
                                 <button className='ml-auto' onClick={() => setShowForm(false)}>✕</button>
                             </div>
                             <form id="createPullRequestForm" onSubmit={handleFormSubmit}>
-                                <div className="p-3 form-group mb-2">
+                                <div className="p-3 form-group mb-2" >
                                     <input
                                         type="text"
                                         name="title"
