@@ -334,8 +334,8 @@ const TeamOverview = () => {
         };
 
         // Convert times to Date objects and then to timestamps (milliseconds)
-        const startTimes = timelineData.map(item => new Date(item.startTime).getTime());
-        const endTimes = timelineData.map(item => new Date(item.endTime).getTime());
+        const startTimes = localTimelineData.map(item => new Date(item.startTime).getTime());
+        const endTimes = localTimelineData.map(item => new Date(item.endTime).getTime());
 
         // Find the earliest start time and the latest end time
         const earliestStart = new Date(Math.min(...startTimes));
@@ -561,8 +561,8 @@ const TeamOverview = () => {
 
 
         // Convert times to Date objects and then to timestamps (milliseconds)
-        const startTimes = timelineData.map(item => new Date(item.startTime).getTime());
-        const endTimes = timelineData.map(item => new Date(item.endTime).getTime());
+        const startTimes = localTimelineData.map(item => new Date(item.startTime).getTime());
+        const endTimes = localTimelineData.map(item => new Date(item.endTime).getTime());
 
         const earliestStart = new Date(Math.min(...startTimes));
         const latestEnd = new Date(Math.max(...endTimes));
