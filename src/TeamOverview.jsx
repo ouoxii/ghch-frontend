@@ -187,9 +187,23 @@ const TeamOverview = () => {
             }
         }
 
+        const pullRepo = async () => {
+            try {
+                const gitHubPullRes = await fetch(`http://localhost:8080/branch/pull/${teamData.owner}/${repoName}`, {
+                    method: 'POST'
+                });
+                if (!gitHubPullRes.ok) {
+                    throw new Error('Pull GitHub時出錯');
+                }
+            } catch (error) {
+                window.alert(error)
+            }
+        }
+
         if (repoExist) {
+            pullRepo();
             if (teamData.owner === username) {
-                fetchLocalGraphBranch();
+                fetchCloudGraphBranch(); //原本為fetchLocalGraphBranch
                 fetchUserLocalGraphBranch();
             } else {
                 fetchCloudGraphBranch();

@@ -52,7 +52,7 @@ const HorizontalGraph = () => {
                 setError(error);
             } finally {
                 setLoading(false);  // 加載完成
-                handlePRgenerate();
+                // handlePRgenerate();
             }
         };
 
