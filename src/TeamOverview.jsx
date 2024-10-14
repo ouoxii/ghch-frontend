@@ -295,7 +295,7 @@ const TeamOverview = () => {
         };
 
         if (teamData.owner === username) {
-            fetchLocalGraphCommit();
+            fetchCloudGraphCommit();
         } else {
             fetchCloudGraphCommit();
         }
@@ -424,6 +424,7 @@ const TeamOverview = () => {
 
             return rows;
         });
+
 
         //調整資料以符合需求
         for (let i = 0; i < dataRows.length; i++) {
