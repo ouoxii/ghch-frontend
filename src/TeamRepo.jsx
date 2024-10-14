@@ -121,6 +121,7 @@ const TeamRepo = ({ onClose }) => {
         };
 
         try {
+            console.log("test")
             const repoResponse = await fetch(`http://localhost:3001/repo/create?token=${token}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -173,7 +174,26 @@ const TeamRepo = ({ onClose }) => {
                 const locationHeader = cloneRepoResponse.headers.get('Location');
                 console.log(locationHeader);
             }
-
+            //獲取main分支資料
+            const chartDataResponse = await fetch(`http://localhost:8080/graph?owner=${username}&repo=${teamRepoRequestData.repoName}`);
+            // const chartDataResponse = await fetch(`http://localhost:8080/graph?owner=ntou01057042&repo=github-flow-tutor`);//指定repo
+            if (!chartDataResponse.ok) {
+                if (chartDataResponse.status === 404) {
+                    throw new Error('沒有本地端分支資料');
+                } else {
+                    throw new Error('獲取本地端分支資料失敗');
+                }
+            }
+            //上傳雲端
+            const postGraphBranchResponse = await fetch(`http://localhost:8080/graph/upload?owner=${username}&repo=${teamRepoRequestData.repoName}`,
+                {
+                    method: 'POST'
+                }
+            );
+            if (!postGraphBranchResponse.ok) {
+                throw new Error('上傳分支圖失敗');
+            }
+            
             const location = teamRepoResponse.headers.get('Location');
             const repoId = location.split('/').pop();
             alert('成功創建儲存庫');
