@@ -300,7 +300,7 @@ const TeamOverview = () => {
             fetchCloudGraphCommit();
         }
 
-    }, [teamData, username, teamRepoId, repoName, timelineData])
+    }, [teamData, username, teamRepoId, repoName, localTimelineData])
 
     const drawTooltipCharts = () => {
 
