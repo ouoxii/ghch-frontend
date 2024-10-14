@@ -218,7 +218,7 @@ const TeamOverview = () => {
     }, [repoExist, teamData.owner, repoName, username]);
 
     useEffect(() => {
-        if (chartsLoaded && tooltipData.length > 0 && localTimelineData.length > 0) {
+        if (chartsLoaded && timelineData && tooltipData.length > 0 && localTimelineData.length > 0) {
             drawTooltipCharts();
             setChartsfinish(true);
         }
