@@ -195,6 +195,7 @@ const TeamOverview = () => {
                 if (!gitHubPullRes.ok) {
                     throw new Error('Pull GitHub時出錯');
                 }
+                window.alert('pull成功')
             } catch (error) {
                 window.alert(error)
             }
