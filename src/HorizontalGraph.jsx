@@ -37,8 +37,6 @@ const HorizontalGraph = () => {
     const owner = queryParams.get('owner');
     useEffect(() => {
         const fetchCommitData = async () => {
-
-
             try {
                 const response = await fetch(`http://localhost:8080/flow-commit/${owner}/${repo}?branch=${branch}`);
                 if (!response.ok) {
@@ -47,12 +45,26 @@ const HorizontalGraph = () => {
                 const data = await response.json();
                 const transformedData = transformCommitData(data);
                 setCommitData(transformedData);
+
+                // 在這裡檢查 status 是否為 ahead
+                const diffResponse = await fetch(`http://localhost:3001/pr/pr-diff?owner=${owner}&repo=${repo}&base=main&head=${branch}&token=${Cookies.get('token')}`);
+                if (!diffResponse.ok) {
+                    throw new Error('無法獲取PR DIFF資料');
+                }
+
+                const diffData = await diffResponse.json();
+
+                // 根據 status 決定是否生成 PR
+                if (diffData.status === 'ahead') {
+                    handlePRgenerate(diffData);
+                } else {
+                    console.log('當前狀態不需要生成 PR 描述 (status:', diffData.status, ')');
+                }
             } catch (error) {
                 console.error("加載個人分支圖錯誤:", error);
                 setError(error);
             } finally {
-                setLoading(false);  // 加載完成
-                handlePRgenerate();
+                setLoading(false);
             }
         };
 
@@ -75,21 +87,9 @@ const HorizontalGraph = () => {
             </div>
         );
     }
-    const handlePRgenerate = async (e) => {
+
+    const handlePRgenerate = async (diffData) => {
         try {
-            const diffResponse = await fetch(`http://localhost:3001/pr/pr-diff?owner=${owner}&repo=${repo}&base=main&head=${branch}&token=${Cookies.get('token')}`);
-            if (!diffResponse.ok) {
-                throw new Error('無法獲取PR DIFF資料');
-            }
-
-            const diffData = await diffResponse.json();
-
-            // 檢查 status 是否為 'ahead'
-            if (diffData.status !== 'ahead') {
-                console.log('當前狀態不需要生成 PR 描述 (status:', diffData.status, ')');
-                return;
-            }
-
             // 提取檔案變更的差異
             const patch = diffData.files_changed.map(file => file.patch).join('\n\n');
 
@@ -127,6 +127,7 @@ const HorizontalGraph = () => {
         }
     };
 
+
     const handleFormSubmit = async (e) => {
         e.preventDefault();
 
@@ -142,12 +143,12 @@ const HorizontalGraph = () => {
         }
 
         try {
-            // 透過 API 發送拉取請求資料
+
             const queryParams = new URLSearchParams(window.location.search);
             const branch = queryParams.get('branch');
             const repo = queryParams.get('repo');
             const owner = queryParams.get('owner');
-            const token = Cookies.get('token'); // 假設 token 存在 cookies 中
+            const token = Cookies.get('token');
 
             const response = await fetch(`http://localhost:3001/pr`, {
                 method: "POST",
