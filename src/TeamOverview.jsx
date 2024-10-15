@@ -220,7 +220,7 @@ const TeamOverview = () => {
     }, [repoExist, teamData.owner, repoName, username]);
 
     useEffect(() => {
-        if (chartsLoaded && timelineData && tooltipData.length > 0 && localTimelineData.length > 0) {
+        if (chartsLoaded && timelineData.length > 0 && tooltipData && localTimelineData.length > 0) {
             drawTooltipCharts();
             setChartsfinish(true);
         }
@@ -659,7 +659,7 @@ const TeamOverview = () => {
     const handleCloseeCreat = () => setIsCreateOpen(false);
     const handleCreatInputChange = (e) => {
         const value = e.target.value;
-        const regex = /^[A-Za-z]*$/;
+        const regex =  /^(?!\.)(?!.*\/$)(?!.*\.\.)(?!.*[@{}:^~?*[\]\\])(?!.*\s)(?!.*\/\.\/)(?!.*\/\.\.$)[A-Za-z0-9/_-]+$/;
     
         if (regex.test(value)) {
           setNewBranchName(value);
@@ -876,7 +876,7 @@ const TeamOverview = () => {
                                     value={newBranchName}
                                     onChange={handleCreatInputChange}
                                     className="m-4 p-2 border border-gray-300 rounded w-full"
-                                    placeholder="Enter English letters only and no space"
+                                    placeholder="e.g., feature/new-feature, bugfix/issue-123"
                                 />
                             </div>
                             <div className='p-5'>
