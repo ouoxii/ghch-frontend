@@ -19,6 +19,7 @@ const TeamOverview = () => {
     const [teamData, setTeamData] = useState({ id: '', teamName: '', owner: '' });
     const [prData, setPrData] = useState([]);
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+    const [isCreatBranchOpen, setIsCreateOpen] = useState(false);
     const [timelineData, setTimelineData] = useState([]);
     const [selectedBranch, setSelectedBranch] = useState('main');
     const [selectedPR, setSelectedPR] = useState("default");
@@ -29,6 +30,7 @@ const TeamOverview = () => {
     const [localTimelineData, setLocalTimelineData] = useState([]);
     const [chartFinish, setChartsfinish] = useState(false);
     const [loading, setLoading] = useState(true);  // 新增 loading 狀態
+    const [newBranchName, setNewBranchName] = useState('');
 
     useEffect(() => {
         const fetchTeamData = async () => {
@@ -440,6 +442,7 @@ const TeamOverview = () => {
             branches[commit.branchName].push(new Date(commit.commitTime));
         });
 
+
         // Find the end time for each branch (last commit time)
         const branchEndTimes = {};
         for (const branch in branches) {
@@ -481,11 +484,13 @@ const TeamOverview = () => {
 
         for (let i = 0; i < dataRows.length - 1; i++) {
             tooltipDataArray[0][i] = 'date';
-            tooltipDataArray[0][dataRows.length - 1 + i] = dataRows[i + 1][1];
+            if (dataRows[i + 1][1])
+                tooltipDataArray[0][dataRows.length - 1 + i] = dataRows[i + 1][1];
         }
+        console.log(dataRows.length)
+        console.log(tooltipDataArray)
 
         let j = 0;
-        // console.log(branchCommitCounts);
         for (const branch in branchCommitCounts) {
 
             const day = Object.keys(branchCommitCounts[branch]);
@@ -505,7 +510,7 @@ const TeamOverview = () => {
                 tooltipDataArray[i].splice(dataRows.length, 0, 'main');
             } else {
                 tooltipDataArray[i].splice(0, 0, "");
-                tooltipDataArray[i].splice(dataRows.length, 0, null);
+                tooltipDataArray[i].splice(dataRows.length, 1, null);
             }
         }
 
@@ -650,6 +655,17 @@ const TeamOverview = () => {
     const handleSettingsClick = () => setIsSettingsOpen(!isSettingsOpen);
     const handleCloseSettings = () => setIsSettingsOpen(false);
 
+    const handleCreatBranchClick = () => setIsCreateOpen(true);
+    const handleCloseeCreat = () => setIsCreateOpen(false);
+    const handleCreatInputChange = (e) => {
+        const value = e.target.value;
+        const regex = /^[A-Za-z]*$/;
+    
+        if (regex.test(value)) {
+          setNewBranchName(value);
+        }
+      };
+
     const gitHubPush = async () => {
         try {
             const gitHubPushRes = await fetch(`http://localhost:8080/branch/push/${teamData.owner}/${repoName}`, {
@@ -789,7 +805,7 @@ const TeamOverview = () => {
                     </div>
                     <div className="flex flex-col flex-1">
                         <p className='font-extrabold text-2xl mt-2'>分支進度圖</p>
-                        {localTimelineData.length <= 1 ? (
+                        {localTimelineData.length < 1 ? (
                             <div className='p-4 mb-60'>尚無分支資料</div>
                         ) : (
                             <>
@@ -800,6 +816,7 @@ const TeamOverview = () => {
                         <div className='flex flex-col justify-between flex-1'>
                             <div className='flex justify-between'>
                                 <button className="h-10 max-w-48 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={handlePush}>push (上傳到GitHub)</button>
+                                <button className="h-10 max-w-48 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={handleCreatBranchClick}>建立分支</button>
                                 <button className="h-10 max-w-48 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={handlePull}>pull (從GitHub更新)</button>
                             </div>
                             <div className="h-10 flex my-2 justify-between items-center">
@@ -840,6 +857,32 @@ const TeamOverview = () => {
                                     <button onClick={handleDeleteClick} className="w-full bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
                                         刪除儲存庫
                                     </button>)}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {isCreatBranchOpen && (
+                <div className="fixed inset-0 flex items-center justify-center bg-gray-500 bg-opacity-50">
+                    <div className="flex flex-col w-[35%] h-[40%] rounded-xl shadow-lg overflow-hidden bg-white">
+                        <div className='flex flex-col h-full relative'>
+                            <div className="p-3 m-3 flex border-b">
+                                <h2>建立分支</h2>
+                                <button className='ml-auto' onClick={handleCloseeCreat}>✕</button>
+                            </div>
+                            <div className='flex justify-center w-full'>
+                                <input
+                                    type="text"
+                                    value={newBranchName}
+                                    onChange={handleCreatInputChange}
+                                    className="m-4 p-2 border border-gray-300 rounded w-full"
+                                    placeholder="Enter English letters only and no space"
+                                />
+                            </div>
+                            <div className='p-5'>
+                                <button onClick={handleDeleteClick} className="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                                    建立
+                                </button>
                             </div>
                         </div>
                     </div>
