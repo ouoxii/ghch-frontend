@@ -224,28 +224,28 @@ const TeamOverview = () => {
         }
     }, [timelineData, chartsLoaded, tooltipData, localTimelineData]);
 
-    useEffect(() => {
-        const postGraphBranch = async () => {
-            // console.log(timelineData)
-            // console.log(tooltipData)
-            try {
-                const postGraphBranchResponse = await fetch(`http://localhost:8080/graph/upload?owner=${username}&repo=${repoName}`,
-                    {
-                        method: 'POST'
-                    }
-                );
-                if (!postGraphBranchResponse.ok) {
-                    throw new Error('上傳分支圖失敗');
-                }
-            } catch (error) {
-                console.log(error);
-            }
-        };
+    // useEffect(() => {
+    //     const postGraphBranch = async () => {
+    //         // console.log(timelineData)
+    //         // console.log(tooltipData)
+    //         try {
+    //             const postGraphBranchResponse = await fetch(`http://localhost:8080/graph/upload?owner=${username}&repo=${repoName}`,
+    //                 {
+    //                     method: 'POST'
+    //                 }
+    //             );
+    //             if (!postGraphBranchResponse.ok) {
+    //                 throw new Error('上傳分支圖失敗');
+    //             }
+    //         } catch (error) {
+    //             console.log(error);
+    //         }
+    //     };
 
-        if (timelineData.length > 0 && teamData.owner === username && tooltipData.length > 0) {
-            postGraphBranch();
-        }
-    }, [teamData, username, tooltipData, repoName, localTimelineData])
+    //     if (timelineData.length > 0 && teamData.owner === username && tooltipData.length > 0) {
+    //         postGraphBranch();
+    //     }
+    // }, [teamData, username, tooltipData, repoName, localTimelineData])
 
     useEffect(() => {
         const fetchLocalGraphCommit = async () => {
