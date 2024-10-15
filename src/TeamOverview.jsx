@@ -187,9 +187,24 @@ const TeamOverview = () => {
             }
         }
 
+        const pullRepo = async () => {
+            try {
+                const gitHubPullRes = await fetch(`http://localhost:8080/branch/pull/${teamData.owner}/${repoName}`, {
+                    method: 'POST'
+                });
+                if (!gitHubPullRes.ok) {
+                    throw new Error('Pull GitHub時出錯');
+                }
+                window.alert('pull成功')
+            } catch (error) {
+                window.alert(error)
+            }
+        }
+
         if (repoExist) {
+            pullRepo();
             if (teamData.owner === username) {
-                fetchLocalGraphBranch();
+                fetchCloudGraphBranch(); //原本為fetchLocalGraphBranch
                 fetchUserLocalGraphBranch();
             } else {
                 fetchCloudGraphBranch();
@@ -203,34 +218,34 @@ const TeamOverview = () => {
     }, [repoExist, teamData.owner, repoName, username]);
 
     useEffect(() => {
-        if (chartsLoaded && timelineData.length > 0 && tooltipData.length > 0 && localTimelineData.length > 0) {
+        if (chartsLoaded && timelineData && tooltipData.length > 0 && localTimelineData.length > 0) {
             drawTooltipCharts();
             setChartsfinish(true);
         }
     }, [timelineData, chartsLoaded, tooltipData, localTimelineData]);
 
-    useEffect(() => {
-        const postGraphBranch = async () => {
-            // console.log(timelineData)
-            // console.log(tooltipData)
-            try {
-                const postGraphBranchResponse = await fetch(`http://localhost:8080/graph/upload?owner=${username}&repo=${repoName}`,
-                    {
-                        method: 'POST'
-                    }
-                );
-                if (!postGraphBranchResponse.ok) {
-                    throw new Error('上傳分支圖失敗');
-                }
-            } catch (error) {
-                console.log(error);
-            }
-        };
+    // useEffect(() => {
+    //     const postGraphBranch = async () => {
+    //         // console.log(timelineData)
+    //         // console.log(tooltipData)
+    //         try {
+    //             const postGraphBranchResponse = await fetch(`http://localhost:8080/graph/upload?owner=${username}&repo=${repoName}`,
+    //                 {
+    //                     method: 'POST'
+    //                 }
+    //             );
+    //             if (!postGraphBranchResponse.ok) {
+    //                 throw new Error('上傳分支圖失敗');
+    //             }
+    //         } catch (error) {
+    //             console.log(error);
+    //         }
+    //     };
 
-        if (timelineData.length > 0 && teamData.owner === username && tooltipData.length > 0) {
-            postGraphBranch();
-        }
-    }, [teamData, username, tooltipData, repoName, localTimelineData])
+    //     if (timelineData.length > 0 && teamData.owner === username && tooltipData.length > 0) {
+    //         postGraphBranch();
+    //     }
+    // }, [teamData, username, tooltipData, repoName, localTimelineData])
 
     useEffect(() => {
         const fetchLocalGraphCommit = async () => {
@@ -280,12 +295,12 @@ const TeamOverview = () => {
         };
 
         if (teamData.owner === username) {
-            fetchLocalGraphCommit();
+            fetchCloudGraphCommit();
         } else {
             fetchCloudGraphCommit();
         }
 
-    }, [teamData, username, teamRepoId, repoName])
+    }, [teamData, username, teamRepoId, repoName, localTimelineData])
 
     const drawTooltipCharts = () => {
 
@@ -319,8 +334,8 @@ const TeamOverview = () => {
         };
 
         // Convert times to Date objects and then to timestamps (milliseconds)
-        const startTimes = timelineData.map(item => new Date(item.startTime).getTime());
-        const endTimes = timelineData.map(item => new Date(item.endTime).getTime());
+        const startTimes = localTimelineData.map(item => new Date(item.startTime).getTime());
+        const endTimes = localTimelineData.map(item => new Date(item.endTime).getTime());
 
         // Find the earliest start time and the latest end time
         const earliestStart = new Date(Math.min(...startTimes));
@@ -409,6 +424,7 @@ const TeamOverview = () => {
 
             return rows;
         });
+
 
         //調整資料以符合需求
         for (let i = 0; i < dataRows.length; i++) {
@@ -546,8 +562,8 @@ const TeamOverview = () => {
 
 
         // Convert times to Date objects and then to timestamps (milliseconds)
-        const startTimes = timelineData.map(item => new Date(item.startTime).getTime());
-        const endTimes = timelineData.map(item => new Date(item.endTime).getTime());
+        const startTimes = localTimelineData.map(item => new Date(item.startTime).getTime());
+        const endTimes = localTimelineData.map(item => new Date(item.endTime).getTime());
 
         const earliestStart = new Date(Math.min(...startTimes));
         const latestEnd = new Date(Math.max(...endTimes));
@@ -773,7 +789,7 @@ const TeamOverview = () => {
                     </div>
                     <div className="flex flex-col flex-1">
                         <p className='font-extrabold text-2xl mt-2'>分支進度圖</p>
-                        {timelineData.length <= 1 ? (
+                        {localTimelineData.length <= 1 ? (
                             <div className='p-4 mb-60'>尚無分支資料</div>
                         ) : (
                             <>
