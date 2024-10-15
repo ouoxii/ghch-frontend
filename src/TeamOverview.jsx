@@ -31,6 +31,7 @@ const TeamOverview = () => {
     const [chartFinish, setChartsfinish] = useState(false);
     const [loading, setLoading] = useState(true);  // 新增 loading 狀態
     const [newBranchName, setNewBranchName] = useState('');
+    const [iniPullFinish, setIniPullFinish] = useState(false);
 
     useEffect(() => {
         const fetchTeamData = async () => {
@@ -197,6 +198,7 @@ const TeamOverview = () => {
                 if (!gitHubPullRes.ok) {
                     throw new Error('Pull GitHub時出錯');
                 }
+                setIniPullFinish(true);
                 window.alert('pull成功')
             } catch (error) {
                 window.alert(error)
@@ -219,7 +221,7 @@ const TeamOverview = () => {
             drawTooltipCharts();
             setChartsfinish(true);
         }
-    }, [timelineData, chartsLoaded, tooltipData, localTimelineData]);
+    }, [timelineData, chartsLoaded, tooltipData, localTimelineData, iniPullFinish]);
 
     // useEffect(() => {
     //     const postGraphBranch = async () => {
