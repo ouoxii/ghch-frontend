@@ -201,17 +201,12 @@ const TeamOverview = () => {
             } catch (error) {
                 window.alert(error)
             }
+            fetchCloudGraphBranch();
+            fetchUserLocalGraphBranch();
         }
 
         if (repoExist) {
             pullRepo();
-            if (teamData.owner === username) {
-                fetchCloudGraphBranch(); //原本為fetchLocalGraphBranch
-                fetchUserLocalGraphBranch();
-            } else {
-                fetchCloudGraphBranch();
-                fetchUserLocalGraphBranch();
-            }
         } else if (repoExist === false) {
             alert('偵測到repo不存在本地端，將自動為您clone');
             cloneRepo();
@@ -659,12 +654,12 @@ const TeamOverview = () => {
     const handleCloseeCreat = () => setIsCreateOpen(false);
     const handleCreatInputChange = (e) => {
         const value = e.target.value;
-        const regex =  /^(?!\.)(?!.*\/$)(?!.*\.\.)(?!.*[@{}:^~?*[\]\\])(?!.*\s)(?!.*\/\.\/)(?!.*\/\.\.$)[A-Za-z0-9/_-]+$/;
-    
+        const regex = /^(?!\.)(?!.*\/$)(?!.*\.\.)(?!.*[@{}:^~?*[\]\\])(?!.*\s)(?!.*\/\.\/)(?!.*\/\.\.$)[A-Za-z0-9/_-]+$/;
+
         if (regex.test(value)) {
-          setNewBranchName(value);
+            setNewBranchName(value);
         }
-      };
+    };
 
     const gitHubPush = async () => {
         try {
