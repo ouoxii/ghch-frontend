@@ -102,7 +102,7 @@ const PRDiscussion = () => {
         };
 
         fetchPRData();
-    }, [owner, repo, prNumber]); // 加入 checkUpdatedAtUrl 依賴
+    }, [owner, repo, prNumber]);
     useEffect(() => {
         const getUserRole = () => {
 

@@ -111,8 +111,8 @@ const HorizontalGraph = () => {
             const generateData = await generateResponse.json();
             const formattedDescription = generateData.answer.replace(/\\n/g, '\n');
 
-            const titleMatch = formattedDescription.match(/^(Pull Request: .+?)(?=\n)/);
-            const title = titleMatch ? titleMatch[0] : '';
+            const titleMatch = formattedDescription.match(/"title":\s*"([^"]+)"/);
+            const title = titleMatch ? titleMatch[1] : '';
 
             setInputData((prevState) => ({
                 ...prevState,
