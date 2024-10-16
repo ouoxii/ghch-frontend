@@ -192,6 +192,20 @@ const HorizontalGraph = () => {
         }));
     };
 
+    const mergeMain = async () => {
+        try {
+            const mergeMainRes = await fetch(`http://localhost:8080/branch/sync-main/${owner}/${repo}`, {
+                method: 'POST'
+            });
+            if(!mergeMainRes.ok){
+                throw new Error('Merge main 失敗');
+            }
+            window.alert('Merge main 成功');
+        } catch (error) {
+            window.alert(error);
+        }
+    }
+
     return (
         <div className="container mx-auto p-4">
             <div className="flex justify-between items-center p-4 border-b border-gray-300">
@@ -211,7 +225,10 @@ const HorizontalGraph = () => {
                 <>
                     <div className="flex justify-between items-center p-4 border-b">
                         分支最近有{commitData.length}次提交
-                        <button className="ml-4 bg-blue-500 text-white px-4 py-2 rounded" onClick={() => setShowForm(true)}>Pull Request</button>
+                        <div>
+                            <button className="ml-4 bg-blue-500 text-white px-4 py-2 rounded" onClick={mergeMain}>Merge main</button>
+                            <button className="ml-4 bg-blue-500 text-white px-4 py-2 rounded" onClick={() => setShowForm(true)}>Pull Request</button>
+                        </div>
                     </div>
                     <div className="flex flex-col h-full p-4 relative">
                         {commitData.length > 0 && (

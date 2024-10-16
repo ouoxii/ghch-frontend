@@ -19,7 +19,7 @@ const TeamOverview = () => {
     const [teamData, setTeamData] = useState({ id: '', teamName: '', owner: '' });
     const [prData, setPrData] = useState([]);
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-    const [isCreatBranchOpen, setIsCreateOpen] = useState(false);
+    const [isCreateBranchOpen, setIsCreateOpen] = useState(false);
     const [timelineData, setTimelineData] = useState([]);
     const [selectedBranch, setSelectedBranch] = useState('main');
     const [selectedPR, setSelectedPR] = useState("default");
@@ -170,6 +170,7 @@ const TeamOverview = () => {
                 const chartData = await chartDataResponse.json();
                 const newChartData = chartData.filter(branch => branch.name !== 'HEAD');
                 setLocalTimelineData(newChartData);
+                setBranches([...chartData.filter(branch => branch.name !== 'HEAD').map(branch => branch.name)]);
             } catch (error) {
                 console.log(error);
             }
@@ -652,16 +653,31 @@ const TeamOverview = () => {
     const handleSettingsClick = () => setIsSettingsOpen(!isSettingsOpen);
     const handleCloseSettings = () => setIsSettingsOpen(false);
 
-    const handleCreatBranchClick = () => setIsCreateOpen(true);
-    const handleCloseeCreat = () => setIsCreateOpen(false);
-    const handleCreatInputChange = (e) => {
-        const value = e.target.value;
-        const regex = /^(?!\.)(?!.*\/$)(?!.*\.\.)(?!.*[@{}:^~?*[\]\\])(?!.*\s)(?!.*\/\.\/)(?!.*\/\.\.$)[A-Za-z0-9/_-]+$/;
-
-        if (regex.test(value)) {
-            setNewBranchName(value);
-        }
+    const handleCreateBranchClick = () => setIsCreateOpen(true);
+    const handleCloseeCreate = () => setIsCreateOpen(false);
+    const handleCreateInputChange = (e) => {
+        setNewBranchName(e.target.value);
     };
+
+    const handleCreateBranch = async () => {
+        try {
+            const regex = /^(?!\.)(?!.*\/$)(?!.*\.\.)(?!.*[@{}:^~?*[\]\\])(?!.*\s)(?!.*\/\.\/)(?!.*\/\.\.$)[A-Za-z0-9/_-]+$/;
+            if(!regex.test(newBranchName)){
+                setNewBranchName('');
+                throw new Error('分支名稱格式錯誤：名稱應符合 Git 分支命名規則，不包含空格或特殊字符，且不能以 . 或 / 結尾');
+            }
+            const createBranchRes = await fetch(`http://localhost:8080/branch/create/${teamData.owner}/${repoName}?newBranchName=${encodeURIComponent(newBranchName)}`, {
+                method: 'POST'
+            });
+            if(!createBranchRes.ok){
+                throw new Error('創建分支失敗');
+            }
+            window.alert('創建分支成功');
+            setIsCreateOpen(false);
+        } catch (error) {
+            window.alert(error);
+        }
+    }
 
     const gitHubPush = async () => {
         try {
@@ -734,6 +750,7 @@ const TeamOverview = () => {
             window.alert("Pull成功");
         } catch (error) {
             window.alert(error);
+            window.location.reload();
         }
     }
 
@@ -813,7 +830,7 @@ const TeamOverview = () => {
                         <div className='flex flex-col justify-between flex-1'>
                             <div className='flex justify-between'>
                                 <button className="h-10 max-w-48 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={handlePush}>push (上傳到GitHub)</button>
-                                <button className="h-10 max-w-48 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={handleCreatBranchClick}>建立分支</button>
+                                <button className="h-10 max-w-48 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={handleCreateBranchClick}>建立分支</button>
                                 <button className="h-10 max-w-48 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={handlePull}>pull (從GitHub更新)</button>
                             </div>
                             <div className="h-10 flex my-2 justify-between items-center">
@@ -859,25 +876,25 @@ const TeamOverview = () => {
                     </div>
                 </div>
             )}
-            {isCreatBranchOpen && (
+            {isCreateBranchOpen && (
                 <div className="fixed inset-0 flex items-center justify-center bg-gray-500 bg-opacity-50">
                     <div className="flex flex-col w-[35%] h-[40%] rounded-xl shadow-lg overflow-hidden bg-white">
                         <div className='flex flex-col h-full relative'>
                             <div className="p-3 m-3 flex border-b">
                                 <h2>建立分支</h2>
-                                <button className='ml-auto' onClick={handleCloseeCreat}>✕</button>
+                                <button className='ml-auto' onClick={handleCloseeCreate}>✕</button>
                             </div>
                             <div className='flex justify-center w-full'>
                                 <input
                                     type="text"
                                     value={newBranchName}
-                                    onChange={handleCreatInputChange}
+                                    onChange={handleCreateInputChange}
                                     className="m-4 p-2 border border-gray-300 rounded w-full"
-                                    placeholder="e.g., feature/new-feature, bugfix/issue-123"
+                                    placeholder="e.g. feature/new-feature, bugfix/issue-123"
                                 />
                             </div>
                             <div className='p-5'>
-                                <button onClick={handleDeleteClick} className="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                                <button onClick={handleCreateBranch} className="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
                                     建立
                                 </button>
                             </div>
