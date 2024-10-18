@@ -36,12 +36,23 @@ const PRDiscussion = () => {
                 }
                 const prData = await prResponse.json();
                 console.log('PR Creator:', prData.creator);
-                setPRData(prData);
+                setPRData(prData); // 設置狀態
+
+                // 檢查更新時間
+                const updatedAtResponse = await fetch(`http://localhost:3001/pr/check-updated-at?owner=${owner}&repo=${repo}&pull_number=${prNumber}&token=${token}`);
+                if (!updatedAtResponse.ok) {
+                    throw new Error('無法檢查更新時間');
+                }
+                const updatedAtData = await updatedAtResponse.json();
+
+                // 使用prData來進行更新時間的比較
+                if (prData.created_at !== updatedAtData.updated_at) {
+                    alert('Contributor 已修改此分支，請重新投票！');
+                }
+
             } catch (error) {
                 alert(error.message);
             }
-
-
 
             try {
                 const prReviews = await fetch(`http://localhost:3001/pr/reviewers?owner=${owner}&repo=${repo}&pull_number=${prNumber}&token=${token}`);
@@ -67,7 +78,6 @@ const PRDiscussion = () => {
                 alert(error.message);
             }
 
-
             try {
                 // 獲取 PR 評論
                 const prComments = await fetch(`http://localhost:3001/pr/comments?owner=${owner}&repo=${repo}&pull_number=${prNumber}&token=${token}`);
@@ -85,7 +95,6 @@ const PRDiscussion = () => {
                 const combinedComments = [];
 
                 for (const comment of comments) {
-
                     combinedComments.push({
                         id: comment.id,
                         user: comment.user.login,
@@ -96,10 +105,16 @@ const PRDiscussion = () => {
 
                 if (aiComment) {
                     combinedComments.push({
-                        id: aiComment.id || "AI-001", // 如果沒有自定義 ID，使用預設 ID
-                        user: "AI Reviewer", // AI 評論者名稱
-                        created_at: aiComment.createdAt || new Date().toISOString(), // 當前時間戳
-                        body: aiComment.content, // AI 評論內容
+                        id: aiComment.id || "AI-001",
+                        user: "AI Reviewer",
+                        created_at: aiComment.createdAt || new Date().toISOString(),
+                        body: (aiComment.mergeApproval ? "Approved the changes" : "Requested changes"),
+                    });
+                    combinedComments.push({
+                        id: aiComment.id || "AI-001",
+                        user: "AI Reviewer",
+                        created_at: aiComment.createdAt || new Date().toISOString(),
+                        body: aiComment.content,
                     });
 
                     reviewers.push({ user: "AI Reviewer", state: aiComment.mergeApproval });
@@ -111,26 +126,9 @@ const PRDiscussion = () => {
                 alert(error.message);
             }
 
-
-
             try {
                 const teamMembersResponse = await fetch(`http://localhost:8081/team-members?teamName=${teamName}`, {});
                 setTeamMembers(teamMembersResponse.ok ? await teamMembersResponse.json() : []);
-            } catch (error) {
-                alert(error.message);
-            }
-
-            // 新增的 API 請求以檢查更新時間
-            try {
-                const updatedAtResponse = await fetch(`http://localhost:3001/pr/check-updated-at?owner=${owner}&repo=${repo}&pull_number=${prNumber}&token=${token}`);
-                if (!updatedAtResponse.ok) {
-                    throw new Error('無法檢查更新時間');
-                }
-                const updatedAtData = await updatedAtResponse.json();
-                // 檢查 PR 的更新時間
-                if (PRData.updated_at !== updatedAtData.updated_at) {
-                    alert('Contributor 已修改此分支，請重新投票！');
-                }
             } catch (error) {
                 alert(error.message);
             } finally {
@@ -139,6 +137,7 @@ const PRDiscussion = () => {
         };
 
         fetchPRData();
+
     }, [owner, repo, prNumber]);
     useEffect(() => {
         const getUserRole = () => {
