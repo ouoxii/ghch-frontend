@@ -87,7 +87,6 @@ const HorizontalGraph = () => {
             </div>
         );
     }
-
     const handlePRgenerate = async (diffData) => {
         try {
             // 提取檔案變更的差異
@@ -114,19 +113,28 @@ const HorizontalGraph = () => {
             const titleMatch = formattedDescription.match(/"title":\s*"([^"]+)"/);
             const title = titleMatch ? titleMatch[1] : '';
 
+            // 提取 AI Reviewer 的評論
+            const reviewCommentMatch = formattedDescription.match(/"aiReviewComment":\s*{\s*"reviewer":\s*"[^"]+",\s*"comment":\s*"([^"]+)"/);
+            const aiReviewComment = reviewCommentMatch ? reviewCommentMatch[1] : '';
+            // 提取 mergeApproval
+            const mergeApprovalMatch = formattedDescription.match(/"mergeApproval":\s*"([^"]+)"/);
+            const mergeApproval = mergeApprovalMatch ? mergeApprovalMatch[1] : '';
+            console.log("AI Review Comment:", aiReviewComment);
+
+            // 將生成的描述和評論更新到狀態
             setInputData((prevState) => ({
                 ...prevState,
                 title: title,
-                description: formattedDescription
+                description: formattedDescription,
+                aiReviewComment: aiReviewComment,
+                mergeApproval: mergeApproval
             }));
 
-            console.log("PR描述生成成功:", generateData);
         } catch (error) {
             console.error("PR描述生成錯誤:", error);
             setError(error);
         }
     };
-
 
     const handleFormSubmit = async (e) => {
         e.preventDefault();
@@ -143,7 +151,6 @@ const HorizontalGraph = () => {
         }
 
         try {
-
             const queryParams = new URLSearchParams(window.location.search);
             const branch = queryParams.get('branch');
             const repo = queryParams.get('repo');
@@ -173,6 +180,24 @@ const HorizontalGraph = () => {
             const result = await response.json();
             console.log("Pull Request創建成功:", result);
 
+            // 使用 aiReviewComment 進行 AI 評論的創建
+            const aiReviewResponse = await fetch(`http://localhost:8081/reviews`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({
+                    repoName: repo,
+                    pullNumber: result.pullNumber,
+                    content: inputData.aiReviewComment,
+                    mergeApproval: inputData.mergeApproval,
+                })
+            });
+
+            if (!aiReviewResponse.ok) {
+                throw new Error('無法創建ai review');
+            }
+
             // 創建成功後導航到 PR 討論頁面或其他頁面
             // navigate('/PRDiscussion');
         } catch (error) {
@@ -182,6 +207,7 @@ const HorizontalGraph = () => {
             setShowForm(false);
         }
     };
+
 
 
     const handleInputChange = (e) => {
