@@ -760,6 +760,7 @@ const TeamOverview = () => {
                                             value={JSON.stringify({ number: prInfo.number, title: prInfo.title })}
                                             className="flex items-center mb-2"
                                         >
+                                            #{prInfo.number}  :
                                             {prInfo.title}
                                         </option>
                                     ))}

@@ -41,50 +41,6 @@ const PRDiscussion = () => {
                 alert(error.message);
             }
 
-            try {
-                // 獲取 PR 評論
-                const prComments = await fetch(`http://localhost:3001/pr/comments?owner=${owner}&repo=${repo}&pull_number=${prNumber}&token=${token}`);
-                if (!prComments.ok) {
-                    throw new Error('無法獲取PR comments資料');
-                }
-                const comments = await prComments.json();
-
-                // 獲取 AI 評論
-                const aiCommentResponse = await fetch(`http://localhost:8081/reviews/search?&repoName=${repo}&pullNumber=${prNumber}`);
-                if (!aiCommentResponse.ok) {
-                    throw new Error('無法獲取AI PR comments資料');
-                }
-                const aiComment = await aiCommentResponse.json(); // 假設這裡只會返回一個 AI 評論
-
-                // 整合 PR 評論和 AI 評論
-                const combinedComments = [];
-
-                // 整理 PR comments
-                for (const comment of comments) {
-                    console.log(comment);
-                    combinedComments.push({
-                        id: comment.id,
-                        user: comment.user.login,
-                        created_at: comment.created_at,
-                        body: comment.body,
-                    });
-                }
-
-                // 整理 AI comment
-                if (aiComment) {
-                    combinedComments.push({
-                        id: aiComment.id || "AI-001", // 如果沒有自定義 ID，使用預設 ID
-                        user: "AI Reviewer", // AI 評論者名稱
-                        created_at: aiComment.createdAt || new Date().toISOString(), // 當前時間戳
-                        body: aiComment.comment || aiComment.content, // AI 評論內容
-                    });
-                }
-
-                // 更新狀態以顯示結合的評論資料
-                setCommentData(combinedComments);
-            } catch (error) {
-                alert(error.message);
-            }
 
 
             try {
@@ -110,6 +66,52 @@ const PRDiscussion = () => {
             } catch (error) {
                 alert(error.message);
             }
+
+
+            try {
+                // 獲取 PR 評論
+                const prComments = await fetch(`http://localhost:3001/pr/comments?owner=${owner}&repo=${repo}&pull_number=${prNumber}&token=${token}`);
+                if (!prComments.ok) {
+                    throw new Error('無法獲取PR comments資料');
+                }
+                const comments = await prComments.json();
+
+                const aiCommentResponse = await fetch(`http://localhost:8081/reviews/search?&repoName=${repo}&pullNumber=${prNumber}`);
+                if (!aiCommentResponse.ok) {
+                    throw new Error('無法獲取AI PR comments資料');
+                }
+                const aiComment = await aiCommentResponse.json();
+
+                const combinedComments = [];
+
+                for (const comment of comments) {
+
+                    combinedComments.push({
+                        id: comment.id,
+                        user: comment.user.login,
+                        created_at: comment.created_at,
+                        body: comment.body,
+                    });
+                }
+
+                if (aiComment) {
+                    combinedComments.push({
+                        id: aiComment.id || "AI-001", // 如果沒有自定義 ID，使用預設 ID
+                        user: "AI Reviewer", // AI 評論者名稱
+                        created_at: aiComment.createdAt || new Date().toISOString(), // 當前時間戳
+                        body: aiComment.content, // AI 評論內容
+                    });
+
+                    reviewers.push({ user: "AI Reviewer", state: aiComment.mergeApproval });
+                }
+
+                setReviewers(reviewers);
+                setCommentData(combinedComments);
+            } catch (error) {
+                alert(error.message);
+            }
+
+
 
             try {
                 const teamMembersResponse = await fetch(`http://localhost:8081/team-members?teamName=${teamName}`, {});
