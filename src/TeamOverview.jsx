@@ -491,7 +491,7 @@ const TeamOverview = () => {
 
         let j = 0;
         for (const branch in branchCommitCounts) {
-
+            if(branch == 'main') continue;
             const day = Object.keys(branchCommitCounts[branch]);
             for (let i = 1; i < 15; i++) {
                 tooltipDataArray[i][j] = new Date(day[i - 1]);
