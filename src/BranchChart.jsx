@@ -37,7 +37,7 @@ const BranchChart = (/*帳號跟repo名稱*/) => {
     useEffect(() => {
         const fetchTeamData = async () => {
             try {
-                const teamResponse = await fetch(`http://localhost:8081/teams/${teamId}`);
+                const teamResponse = await fetch(`https://ghch-cloud-server-b889208febef.herokuapp.com/teams/${teamId}`);
                 if (!teamResponse.ok) {
                     throw new Error('無法獲取團隊資料');
                 }
@@ -106,7 +106,7 @@ const BranchChart = (/*帳號跟repo名稱*/) => {
         const fetchCloudGraphBranch = async () => {
             try {
                 if (teamData.owner) {
-                    const clooudGraphBranchResponse = await fetch(`http://localhost:8081/cloud-graph-branch?owner=${teamData.owner}&repo=${repoName}`,
+                    const clooudGraphBranchResponse = await fetch(`https://ghch-cloud-server-b889208febef.herokuapp.com/cloud-graph-branch?owner=${teamData.owner}&repo=${repoName}`,
                         {
                             method: 'GET'
                         }
@@ -160,7 +160,7 @@ const BranchChart = (/*帳號跟repo名稱*/) => {
         const fetchCloudGraphCommit = async () => {
             try {
                 if (teamData.owner) {
-                    const clooudGraphBranchResponse = await fetch(`http://localhost:8081/cloud-graph-commit?owner=${teamData.owner}&repo=${repoName}`,
+                    const clooudGraphBranchResponse = await fetch(`https://ghch-cloud-server-b889208febef.herokuapp.com/cloud-graph-commit?owner=${teamData.owner}&repo=${repoName}`,
                         {
                             method: 'GET'
                         }
