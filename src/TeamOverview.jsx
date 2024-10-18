@@ -37,7 +37,7 @@ const TeamOverview = () => {
         const fetchTeamData = async () => {
             try {
                 setLoading(true);  // 資料加載前設置 loading 為 true
-                const teamResponse = await fetch(`http://localhost:8081/teams/${teamId}`);
+                const teamResponse = await fetch(`https://ghch-cloud-server-b889208febef.herokuapp.com/teams/${teamId}`);
                 if (!teamResponse.ok) {
                     throw new Error('無法獲取團隊資料');
                 }
@@ -135,7 +135,7 @@ const TeamOverview = () => {
         const fetchCloudGraphBranch = async () => {
             try {
                 if (teamData.owner) {
-                    const cloudGraphBranchResponse = await fetch(`http://localhost:8081/cloud-graph-branch?owner=${teamData.owner}&repo=${repoName}`);
+                    const cloudGraphBranchResponse = await fetch(`https://ghch-cloud-server-b889208febef.herokuapp.com/cloud-graph-branch?owner=${teamData.owner}&repo=${repoName}`);
                     if (!cloudGraphBranchResponse.ok) {
                         if (cloudGraphBranchResponse.status === 404) {
                             setTimelineData([]);
@@ -272,7 +272,7 @@ const TeamOverview = () => {
         const fetchCloudGraphCommit = async () => {
             try {
                 if (teamData.owner) {
-                    const clooudGraphBranchResponse = await fetch(`http://localhost:8081/cloud-graph-commit?owner=${teamData.owner}&repo=${repoName}`,
+                    const clooudGraphBranchResponse = await fetch(`https://ghch-cloud-server-b889208febef.herokuapp.com/cloud-graph-commit?owner=${teamData.owner}&repo=${repoName}`,
                         {
                             method: 'GET'
                         }
@@ -608,7 +608,7 @@ const TeamOverview = () => {
                 throw new Error('刪除git儲存庫時出錯');
             }
 
-            const deleteRepoResponse = await fetch(`http://localhost:8081/team-repos/${teamRepoId}`, {
+            const deleteRepoResponse = await fetch(`https://ghch-cloud-server-b889208febef.herokuapp.com/team-repos/${teamRepoId}`, {
                 method: 'DELETE'
             });
 
