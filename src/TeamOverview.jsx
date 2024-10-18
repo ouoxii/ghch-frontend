@@ -280,6 +280,7 @@ const TeamOverview = () => {
                     if (!clooudGraphBranchResponse.ok) {
                         if (clooudGraphBranchResponse.status === 404) {
                             setTimelineData([]);
+                            setTooltipData([]);
                             throw new Error('沒有雲端commits資料');
                         } else {
                             throw new Error('獲取雲端commits資料失敗')
@@ -430,6 +431,7 @@ const TeamOverview = () => {
         for (let i = 0; i < dataRows.length; i++) {
             dataRows[i].splice(2, 0, null);
         }
+        console.log(dataRows)
 
         // Group commits by branch
         const branches = {};
@@ -439,7 +441,7 @@ const TeamOverview = () => {
             }
             branches[commit.branchName].push(new Date(commit.commitTime));
         });
-
+        console.log(branches)
 
         // Find the end time for each branch (last commit time)
         const branchEndTimes = {};
@@ -472,6 +474,7 @@ const TeamOverview = () => {
                 }
             });
         }
+        console.log(branchCommitCounts)
 
         // Output the commit counts for each branch
 
@@ -485,8 +488,6 @@ const TeamOverview = () => {
             if (dataRows[i + 1][1])
                 tooltipDataArray[0][dataRows.length - 1 + i] = dataRows[i + 1][1];
         }
-        console.log(dataRows.length)
-        console.log(tooltipDataArray)
 
         let j = 0;
         for (const branch in branchCommitCounts) {
@@ -499,6 +500,7 @@ const TeamOverview = () => {
             }
             j++;
         }
+        console.log(tooltipDataArray)
 
         //調整資料以符合需求
         console.log(dataRows)
@@ -508,7 +510,7 @@ const TeamOverview = () => {
                 tooltipDataArray[i].splice(dataRows.length, 0, 'main');
             } else {
                 tooltipDataArray[i].splice(0, 0, "");
-                tooltipDataArray[i].splice(dataRows.length, 1, null);
+                tooltipDataArray[i].splice(dataRows.length, 0, null);
             }
         }
 
@@ -662,18 +664,42 @@ const TeamOverview = () => {
     const handleCreateBranch = async () => {
         try {
             const regex = /^(?!\.)(?!.*\/$)(?!.*\.\.)(?!.*[@{}:^~?*[\]\\])(?!.*\s)(?!.*\/\.\/)(?!.*\/\.\.$)[A-Za-z0-9/_-]+$/;
-            if(!regex.test(newBranchName)){
+            if (!regex.test(newBranchName)) {
                 setNewBranchName('');
                 throw new Error('分支名稱格式錯誤：名稱應符合 Git 分支命名規則，不包含空格或特殊字符，且不能以 . 或 / 結尾');
             }
-            const createBranchRes = await fetch(`http://localhost:8080/branch/create/${teamData.owner}/${repoName}?newBranchName=${encodeURIComponent(newBranchName)}`, {
+            const enNewBranchName = encodeURIComponent(newBranchName);
+            const createBranchRes = await fetch(`http://localhost:8080/branch/create/${teamData.owner}/${repoName}?newBranchName=${enNewBranchName}`, {
                 method: 'POST'
             });
-            if(!createBranchRes.ok){
+            if (!createBranchRes.ok) {
                 throw new Error('創建分支失敗');
+            }
+            const responseMessage = await createBranchRes.text();
+            console.log(responseMessage)
+            const pushBranchRes = await fetch(`http://localhost:3001/branch/create?token=${token}&owner=${teamData.owner}&repo=${repoName}&ref=${enNewBranchName}&sha=${responseMessage}`,{
+                method: 'POST'
+            });
+            if(!pushBranchRes.ok){
+                throw new Error('上傳分支失敗');
+            }
+            const getCurBranchRes = await fetch(`http://localhost:8080/branch/${teamData.owner}/${repoName}`, {
+                method: 'GET'
+            });
+            if (!getCurBranchRes.ok) {
+                throw new Error('獲取當前分支時出錯');
+            }
+            const curBranch = await getCurBranchRes.text();
+            console.log(curBranch);
+            const uploadBranchRes = await fetch(`http://localhost:8080/branch/upload/${teamData.owner}/${repoName}?branch=${curBranch}`, {
+                method: 'POST'
+            });
+            if (!uploadBranchRes.ok) {
+                throw new Error('更新分支到雲端資料時出錯');
             }
             window.alert('創建分支成功');
             setIsCreateOpen(false);
+            window.location.reload();
         } catch (error) {
             window.alert(error);
         }
