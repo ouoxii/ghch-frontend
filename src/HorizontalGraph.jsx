@@ -215,15 +215,6 @@ const HorizontalGraph = () => {
                 throw new Error('Push GitHub時出錯');
             }
 
-            // const getCurBranchRes = await fetch(`http://localhost:8080/branch/${teamData.owner}/${repoName}`, {
-            //     method: 'GET'
-            // });
-            // if (!getCurBranchRes.ok) {
-            //     throw new Error('獲取當前分支時出錯');
-            // }
-            // const curBranch = await getCurBranchRes.text();
-            // console.log(curBranch);
-
             const uploadBranchRes = await fetch(`http://localhost:8080/branch/upload/${owner}/${repo}?branch=${branch}`, {
                 method: 'POST'
             });
@@ -234,6 +225,10 @@ const HorizontalGraph = () => {
         } catch (error) {
             window.alert(error);
         }
+    }
+
+    const BackToTeam = () => {
+        window.history.back(); // 返回上一页
     }
 
     return (
@@ -299,8 +294,9 @@ const HorizontalGraph = () => {
                             </table>
                         </div>
                     </div>
-                    <div className='absolute bottom-8 right-10'>
-                        <AssistnatBox text="個人分支圖提供分支內 commit 的詳細資訊，並能透過 pull request 來提出合併分支請求。" />
+                    <button className="h-10 max-w-48 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded absolute bottom-6 left-16" onClick={BackToTeam}>回到repo</button>
+                    <div className='absolute bottom-6 right-10'>
+                        <AssistnatBox text="個人分支圖提供分支內 commit 的詳細資訊，完成分支後透過 pull request 來提出合併分支請求。" />
                     </div>
                 </>
             )}
