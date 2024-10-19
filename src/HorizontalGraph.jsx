@@ -69,21 +69,21 @@ const HorizontalGraph = () => {
                     console.log(`Branch ${branch} 沒有開啟的 PR`);
                 }
 
-                // 如果尚未有 PR，檢查 diff 狀態
-                const diffResponse = await fetch(`http://localhost:3001/pr/pr-diff?owner=${owner}&repo=${repo}&base=main&head=${branch}&token=${Cookies.get('token')}`);
-                if (!diffResponse.ok) {
-                    throw new Error('無法獲取 PR DIFF 資料');
-                }
+                // // 如果尚未有 PR，檢查 diff 狀態
+                // const diffResponse = await fetch(`http://localhost:3001/pr/pr-diff?owner=${owner}&repo=${repo}&base=main&head=${branch}&token=${Cookies.get('token')}`);
+                // if (!diffResponse.ok) {
+                //     throw new Error('無法獲取 PR DIFF 資料');
+                // }
 
-                const diffData = await diffResponse.json();
-                console.log(diffData)
+                // const diffData = await diffResponse.json();
+                // console.log(diffData)
 
-                // 根據 diff 的狀態決定是否生成 PR
-                if (diffData.status === 'ahead') {
-                    handlePRgenerate(diffData); // 在這裡生成 PR
-                } else {
-                    console.log('當前狀態不需要生成 PR 描述 (status:', diffData.status, ')');
-                }
+                // // 根據 diff 的狀態決定是否生成 PR
+                // if (diffData.status === 'ahead') {
+                //     handlePRgenerate(diffData); // 在這裡生成 PR
+                // } else {
+                //     console.log('當前狀態不需要生成 PR 描述 (status:', diffData.status, ')');
+                // }
             } catch (error) {
                 console.error("加載個人分支圖錯誤:", error);
                 setError(error);
@@ -286,6 +286,25 @@ const HorizontalGraph = () => {
         window.history.back(); // 返回上一页
     }
 
+    const handlePR = async () => {
+         // 如果尚未有 PR，檢查 diff 狀態
+         const diffResponse = await fetch(`http://localhost:3001/pr/pr-diff?owner=${owner}&repo=${repo}&base=main&head=${branch}&token=${Cookies.get('token')}`);
+         if (!diffResponse.ok) {
+             throw new Error('無法獲取 PR DIFF 資料');
+         }
+
+         const diffData = await diffResponse.json();
+         console.log(diffData)
+
+         // 根據 diff 的狀態決定是否生成 PR
+         if (diffData.status === 'ahead') {
+             await handlePRgenerate(diffData); // 在這裡生成 PR
+         } else {
+             console.log('當前狀態不需要生成 PR 描述 (status:', diffData.status, ')');
+         }
+         setShowForm(true)
+    }
+
     return (
         <div className="container mx-auto p-4">
             <div className="flex justify-between items-center p-4 border-b border-gray-300">
@@ -309,7 +328,7 @@ const HorizontalGraph = () => {
                             <button className="ml-4 bg-blue-500 text-white px-4 py-2 rounded" onClick={gitHubPush}>Push</button>
                             <button className="ml-4 bg-blue-500 text-white px-4 py-2 rounded" onClick={mergeMain}>Merge main</button>
                             {prData.length <= 0 && (
-                                <button className="ml-4 bg-blue-500 text-white px-4 py-2 rounded" onClick={() => setShowForm(true)}>
+                                <button className="ml-4 bg-blue-500 text-white px-4 py-2 rounded" onClick={handlePR}>
                                     Pull Request
                                 </button>
                             )}
