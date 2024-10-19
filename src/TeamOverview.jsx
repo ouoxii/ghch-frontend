@@ -19,6 +19,7 @@ const TeamOverview = () => {
     const [teamData, setTeamData] = useState({ id: '', teamName: '', owner: '' });
     const [prData, setPrData] = useState([]);
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+    const [isCreatBranchOpen, setIsCreateOpen] = useState(false);
     const [timelineData, setTimelineData] = useState([]);
     const [selectedBranch, setSelectedBranch] = useState('main');
     const [selectedPR, setSelectedPR] = useState("default");
@@ -29,6 +30,7 @@ const TeamOverview = () => {
     const [localTimelineData, setLocalTimelineData] = useState([]);
     const [chartFinish, setChartsfinish] = useState(false);
     const [loading, setLoading] = useState(true);  // 新增 loading 狀態
+    const [newBranchName, setNewBranchName] = useState('');
 
     useEffect(() => {
         const fetchTeamData = async () => {
@@ -187,9 +189,24 @@ const TeamOverview = () => {
             }
         }
 
+        const pullRepo = async () => {
+            try {
+                const gitHubPullRes = await fetch(`http://localhost:8080/branch/pull/${teamData.owner}/${repoName}`, {
+                    method: 'POST'
+                });
+                if (!gitHubPullRes.ok) {
+                    throw new Error('Pull GitHub時出錯');
+                }
+                window.alert('pull成功')
+            } catch (error) {
+                window.alert(error)
+            }
+        }
+
         if (repoExist) {
+            pullRepo();
             if (teamData.owner === username) {
-                fetchLocalGraphBranch();
+                fetchCloudGraphBranch(); //原本為fetchLocalGraphBranch
                 fetchUserLocalGraphBranch();
             } else {
                 fetchCloudGraphBranch();
@@ -203,34 +220,34 @@ const TeamOverview = () => {
     }, [repoExist, teamData.owner, repoName, username]);
 
     useEffect(() => {
-        if (chartsLoaded && timelineData.length > 0 && tooltipData.length > 0 && localTimelineData.length > 0) {
+        if (chartsLoaded && timelineData.length > 0 && tooltipData && localTimelineData.length > 0) {
             drawTooltipCharts();
             setChartsfinish(true);
         }
     }, [timelineData, chartsLoaded, tooltipData, localTimelineData]);
 
-    useEffect(() => {
-        const postGraphBranch = async () => {
-            // console.log(timelineData)
-            // console.log(tooltipData)
-            try {
-                const postGraphBranchResponse = await fetch(`http://localhost:8080/graph/upload?owner=${username}&repo=${repoName}`,
-                    {
-                        method: 'POST'
-                    }
-                );
-                if (!postGraphBranchResponse.ok) {
-                    throw new Error('上傳分支圖失敗');
-                }
-            } catch (error) {
-                console.log(error);
-            }
-        };
+    // useEffect(() => {
+    //     const postGraphBranch = async () => {
+    //         // console.log(timelineData)
+    //         // console.log(tooltipData)
+    //         try {
+    //             const postGraphBranchResponse = await fetch(`http://localhost:8080/graph/upload?owner=${username}&repo=${repoName}`,
+    //                 {
+    //                     method: 'POST'
+    //                 }
+    //             );
+    //             if (!postGraphBranchResponse.ok) {
+    //                 throw new Error('上傳分支圖失敗');
+    //             }
+    //         } catch (error) {
+    //             console.log(error);
+    //         }
+    //     };
 
-        if (timelineData.length > 0 && teamData.owner === username && tooltipData.length > 0) {
-            postGraphBranch();
-        }
-    }, [teamData, username, tooltipData, repoName, localTimelineData])
+    //     if (timelineData.length > 0 && teamData.owner === username && tooltipData.length > 0) {
+    //         postGraphBranch();
+    //     }
+    // }, [teamData, username, tooltipData, repoName, localTimelineData])
 
     useEffect(() => {
         const fetchLocalGraphCommit = async () => {
@@ -280,12 +297,12 @@ const TeamOverview = () => {
         };
 
         if (teamData.owner === username) {
-            fetchLocalGraphCommit();
+            fetchCloudGraphCommit();
         } else {
             fetchCloudGraphCommit();
         }
 
-    }, [teamData, username, teamRepoId, repoName])
+    }, [teamData, username, teamRepoId, repoName, localTimelineData])
 
     const drawTooltipCharts = () => {
 
@@ -319,8 +336,8 @@ const TeamOverview = () => {
         };
 
         // Convert times to Date objects and then to timestamps (milliseconds)
-        const startTimes = timelineData.map(item => new Date(item.startTime).getTime());
-        const endTimes = timelineData.map(item => new Date(item.endTime).getTime());
+        const startTimes = localTimelineData.map(item => new Date(item.startTime).getTime());
+        const endTimes = localTimelineData.map(item => new Date(item.endTime).getTime());
 
         // Find the earliest start time and the latest end time
         const earliestStart = new Date(Math.min(...startTimes));
@@ -410,6 +427,7 @@ const TeamOverview = () => {
             return rows;
         });
 
+
         //調整資料以符合需求
         for (let i = 0; i < dataRows.length; i++) {
             dataRows[i].splice(2, 0, null);
@@ -423,6 +441,7 @@ const TeamOverview = () => {
             }
             branches[commit.branchName].push(new Date(commit.commitTime));
         });
+
 
         // Find the end time for each branch (last commit time)
         const branchEndTimes = {};
@@ -465,11 +484,13 @@ const TeamOverview = () => {
 
         for (let i = 0; i < dataRows.length - 1; i++) {
             tooltipDataArray[0][i] = 'date';
-            tooltipDataArray[0][dataRows.length - 1 + i] = dataRows[i + 1][1];
+            if (dataRows[i + 1][1])
+                tooltipDataArray[0][dataRows.length - 1 + i] = dataRows[i + 1][1];
         }
+        console.log(dataRows.length)
+        console.log(tooltipDataArray)
 
         let j = 0;
-        // console.log(branchCommitCounts);
         for (const branch in branchCommitCounts) {
 
             const day = Object.keys(branchCommitCounts[branch]);
@@ -489,7 +510,7 @@ const TeamOverview = () => {
                 tooltipDataArray[i].splice(dataRows.length, 0, 'main');
             } else {
                 tooltipDataArray[i].splice(0, 0, "");
-                tooltipDataArray[i].splice(dataRows.length, 0, null);
+                tooltipDataArray[i].splice(dataRows.length, 1, null);
             }
         }
 
@@ -546,8 +567,8 @@ const TeamOverview = () => {
 
 
         // Convert times to Date objects and then to timestamps (milliseconds)
-        const startTimes = timelineData.map(item => new Date(item.startTime).getTime());
-        const endTimes = timelineData.map(item => new Date(item.endTime).getTime());
+        const startTimes = localTimelineData.map(item => new Date(item.startTime).getTime());
+        const endTimes = localTimelineData.map(item => new Date(item.endTime).getTime());
 
         const earliestStart = new Date(Math.min(...startTimes));
         const latestEnd = new Date(Math.max(...endTimes));
@@ -633,6 +654,17 @@ const TeamOverview = () => {
 
     const handleSettingsClick = () => setIsSettingsOpen(!isSettingsOpen);
     const handleCloseSettings = () => setIsSettingsOpen(false);
+
+    const handleCreatBranchClick = () => setIsCreateOpen(true);
+    const handleCloseeCreat = () => setIsCreateOpen(false);
+    const handleCreatInputChange = (e) => {
+        const value = e.target.value;
+        const regex =  /^(?!\.)(?!.*\/$)(?!.*\.\.)(?!.*[@{}:^~?*[\]\\])(?!.*\s)(?!.*\/\.\/)(?!.*\/\.\.$)[A-Za-z0-9/_-]+$/;
+    
+        if (regex.test(value)) {
+          setNewBranchName(value);
+        }
+      };
 
     const gitHubPush = async () => {
         try {
@@ -774,7 +806,7 @@ const TeamOverview = () => {
                     </div>
                     <div className="flex flex-col flex-1">
                         <p className='font-extrabold text-2xl mt-2'>分支進度圖</p>
-                        {timelineData.length <= 1 ? (
+                        {localTimelineData.length < 1 ? (
                             <div className='p-4 mb-60'>尚無分支資料</div>
                         ) : (
                             <>
@@ -785,6 +817,7 @@ const TeamOverview = () => {
                         <div className='flex flex-col justify-between flex-1'>
                             <div className='flex justify-between'>
                                 <button className="h-10 max-w-48 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={handlePush}>push (上傳到GitHub)</button>
+                                <button className="h-10 max-w-48 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={handleCreatBranchClick}>建立分支</button>
                                 <button className="h-10 max-w-48 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={handlePull}>pull (從GitHub更新)</button>
                             </div>
                             <div className="h-10 flex my-2 justify-between items-center">
@@ -825,6 +858,32 @@ const TeamOverview = () => {
                                     <button onClick={handleDeleteClick} className="w-full bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
                                         刪除儲存庫
                                     </button>)}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+            {isCreatBranchOpen && (
+                <div className="fixed inset-0 flex items-center justify-center bg-gray-500 bg-opacity-50">
+                    <div className="flex flex-col w-[35%] h-[40%] rounded-xl shadow-lg overflow-hidden bg-white">
+                        <div className='flex flex-col h-full relative'>
+                            <div className="p-3 m-3 flex border-b">
+                                <h2>建立分支</h2>
+                                <button className='ml-auto' onClick={handleCloseeCreat}>✕</button>
+                            </div>
+                            <div className='flex justify-center w-full'>
+                                <input
+                                    type="text"
+                                    value={newBranchName}
+                                    onChange={handleCreatInputChange}
+                                    className="m-4 p-2 border border-gray-300 rounded w-full"
+                                    placeholder="e.g., feature/new-feature, bugfix/issue-123"
+                                />
+                            </div>
+                            <div className='p-5'>
+                                <button onClick={handleDeleteClick} className="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                                    建立
+                                </button>
                             </div>
                         </div>
                     </div>
