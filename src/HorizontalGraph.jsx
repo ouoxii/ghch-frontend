@@ -197,10 +197,40 @@ const HorizontalGraph = () => {
             const mergeMainRes = await fetch(`http://localhost:8080/branch/sync-main/${owner}/${repo}`, {
                 method: 'POST'
             });
-            if(!mergeMainRes.ok){
+            if (!mergeMainRes.ok) {
                 throw new Error('Merge main 失敗');
             }
             window.alert('Merge main 成功');
+        } catch (error) {
+            window.alert(error);
+        }
+    }
+
+    const gitHubPush = async () => {
+        try {
+            const gitHubPushRes = await fetch(`http://localhost:8080/branch/push/${owner}/${repo}`, {
+                method: 'POST'
+            });
+            if (!gitHubPushRes.ok) {
+                throw new Error('Push GitHub時出錯');
+            }
+
+            // const getCurBranchRes = await fetch(`http://localhost:8080/branch/${teamData.owner}/${repoName}`, {
+            //     method: 'GET'
+            // });
+            // if (!getCurBranchRes.ok) {
+            //     throw new Error('獲取當前分支時出錯');
+            // }
+            // const curBranch = await getCurBranchRes.text();
+            // console.log(curBranch);
+
+            const uploadBranchRes = await fetch(`http://localhost:8080/branch/upload/${owner}/${repo}?branch=${branch}`, {
+                method: 'POST'
+            });
+            if (!uploadBranchRes.ok) {
+                throw new Error('更新分支到雲端資料時出錯');
+            }
+            window.alert("Push成功");
         } catch (error) {
             window.alert(error);
         }
@@ -226,6 +256,7 @@ const HorizontalGraph = () => {
                     <div className="flex justify-between items-center p-4 border-b">
                         分支最近有{commitData.length}次提交
                         <div>
+                            <button className="ml-4 bg-blue-500 text-white px-4 py-2 rounded" onClick={gitHubPush}>Push</button>
                             <button className="ml-4 bg-blue-500 text-white px-4 py-2 rounded" onClick={mergeMain}>Merge main</button>
                             <button className="ml-4 bg-blue-500 text-white px-4 py-2 rounded" onClick={() => setShowForm(true)}>Pull Request</button>
                         </div>
@@ -243,31 +274,33 @@ const HorizontalGraph = () => {
                             </Gitgraph>
                         )}
                         <div id="tooltip" className="hidden absolute bg-white border border-gray-300 p-2 shadow-lg pointer-events-none z-50"></div>
-                        <table className="table-fixed mt-4">
-                            <thead>
-                                <tr>
-                                    <th className="w-1/5 px-4 py-2">Summary</th>
-                                    <th className="w-1/5 px-4 py-2">Description</th>
-                                    <th className="w-1/5 px-4 py-2">Author</th>
-                                    <th className="w-1/5 px-4 py-2">Date</th>
-                                    <th className="w-1/5 px-4 py-2">Hash</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {commitData.map((commit, index) => (
-                                    <tr key={index}>
-                                        <td className="border px-4 py-2">{commit.subject}</td>
-                                        <td className="border px-4 py-2">{commit.body}</td>
-                                        <td className="border px-4 py-2">{commit.author}</td>
-                                        <td className="border px-4 py-2">{commit.date}</td>
-                                        <td className="border px-4 py-2">{commit.hash}</td>
+                        <div className="h-60 overflow-auto">
+                            <table className="table-fixed mt-4">
+                                <thead>
+                                    <tr>
+                                        <th className="w-1/5 px-4 py-2">Summary</th>
+                                        <th className="w-1/5 px-4 py-2">Description</th>
+                                        <th className="w-1/5 px-4 py-2">Author</th>
+                                        <th className="w-1/5 px-4 py-2">Date</th>
+                                        <th className="w-1/5 px-4 py-2">Hash</th>
                                     </tr>
-                                ))}
-                            </tbody>
-                        </table>
+                                </thead>
+                                <tbody>
+                                    {commitData.map((commit, index) => (
+                                        <tr key={index}>
+                                            <td className="border px-4 py-2">{commit.subject}</td>
+                                            <td className="border px-4 py-2">{commit.body}</td>
+                                            <td className="border px-4 py-2">{commit.author}</td>
+                                            <td className="border px-4 py-2">{commit.date}</td>
+                                            <td className="border px-4 py-2">{commit.hash}</td>
+                                        </tr>
+                                    ))}
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                     <div className='absolute bottom-8 right-10'>
-                        <AssistnatBox text="個人分支圖能提供分支內有關 commit 的詳細資訊，並能透過 pull request 來提出合併分支請求。" />
+                        <AssistnatBox text="個人分支圖提供分支內 commit 的詳細資訊，並能透過 pull request 來提出合併分支請求。" />
                     </div>
                 </>
             )}
