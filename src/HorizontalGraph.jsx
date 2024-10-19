@@ -42,7 +42,7 @@ const HorizontalGraph = () => {
     useEffect(() => {
         const fetchCommitData = async () => {
             try {
-                // 先加載分支的commit數據
+                // 加載分支的 commit 數據
                 const response = await fetch(`http://localhost:8080/flow-commit/${owner}/${repo}?branch=${branch}`);
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
@@ -51,36 +51,34 @@ const HorizontalGraph = () => {
                 const transformedData = transformCommitData(data);
                 setCommitData(transformedData);
 
-                // 檢查該branch是否已有PR
+                // 檢查該 branch 是否已有 PR
                 const prResponse = await fetch(`http://localhost:3001/pr/check-pr?owner=${owner}&repo=${repo}&head=${branch}&token=${Cookies.get('token')}`);
                 if (!prResponse.ok) {
-                    throw new Error('無法檢查是否已有PR');
+                    throw new Error('無法檢查是否已有 PR');
                 }
 
                 const prData = await prResponse.json();
 
-                // 如果已有PR，記錄PR狀態
+                // 如果已有 PR，記錄 PR 狀態
                 if (prData.length > 0) {
-                    console.log(`Branch ${branch} 已經有一個開啟的PR:`, prData[0]);
+                    console.log(`Branch ${branch} 已經有一個開啟的 PR:`, prData[0]);
                     setPrData(prData);
-                    return;
+                    return; // 如果已有 PR，就結束函數
                 } else {
-                    console.log(`Branch ${branch} 沒有開啟的PR`);
+                    console.log(`Branch ${branch} 沒有開啟的 PR`);
                 }
 
-
-
-                // 如果尚未有PR，檢查diff狀態
+                // 如果尚未有 PR，檢查 diff 狀態
                 const diffResponse = await fetch(`http://localhost:3001/pr/pr-diff?owner=${owner}&repo=${repo}&base=main&head=${branch}&token=${Cookies.get('token')}`);
                 if (!diffResponse.ok) {
-                    throw new Error('無法獲取PR DIFF資料');
+                    throw new Error('無法獲取 PR DIFF 資料');
                 }
 
                 const diffData = await diffResponse.json();
 
-                // 根據 status 決定是否生成 PR
+                // 根據 diff 的狀態決定是否生成 PR
                 if (diffData.status === 'ahead') {
-                    handlePRgenerate(diffData);
+                    handlePRgenerate(diffData); // 在這裡生成 PR
                 } else {
                     console.log('當前狀態不需要生成 PR 描述 (status:', diffData.status, ')');
                 }
@@ -116,15 +114,20 @@ const HorizontalGraph = () => {
             // 提取檔案變更的差異
             const patch = diffData.files_changed.map(file => file.patch).join('\n\n');
 
+            const requestBody = {
+                prompt: "請根據上述diff指令撰寫pull request的描述，保持格式良好，易於閱讀，使用空格和換行進行分段，並使用Markdown 格式使其看起來清晰易讀，至少100字描述。\n\n範本:\n\nPull Request: 標題\n概要\n- 簡要說明此pr中所做的變更。\n- 突顯這些變更的主要特點或重要部分。\n\n變更內容\n1. 檔案變更\n- 描述修改、添加或刪除的檔案\n- 總結更改添加或刪除的程式碼行數。\n2. 功能改進\n- 列出任何功能改進或修正\n- 說明這些變更的目的",
+                diffMessage: patch,
+            };
+
+            // 在這裡輸出請求的 body
+            console.log("Request Body:", JSON.stringify(requestBody, null, 2));
+
             const generateResponse = await fetch(`http://localhost:3001/pr/generate-pr`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
                 },
-                body: JSON.stringify({
-                    prompt: "請根據上述diff指令撰寫pull request的描述，保持格式良好，易於閱讀，使用空格和換行進行分段，並使用Markdown 格式使其看起來清晰易讀，至少100字描述。\n\n範本:\n\nPull Request: 標題\n概要\n- 簡要說明此pr中所做的變更。\n- 突顯這些變更的主要特點或重要部分。\n\n變更內容\n1. 檔案變更\n- 描述修改、添加或刪除的檔案\n- 總結更改添加或刪除的程式碼行數。\n2. 功能改進\n- 列出任何功能改進或修正\n- 說明這些變更的目的",
-                    diffMessage: patch,
-                })
+                body: JSON.stringify(requestBody)
             });
 
             if (!generateResponse.ok) {
