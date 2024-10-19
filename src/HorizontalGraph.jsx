@@ -22,7 +22,6 @@ const withoutAuthor = templateExtend(TemplateName.Metro, {
 
 const HorizontalGraph = () => {
     const location = useLocation();
-    const { teamName } = location.state || {};
     const [commitData, setCommitData] = useState([]);
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(true);  // 加入 loading 狀態
@@ -38,8 +37,10 @@ const HorizontalGraph = () => {
     const branch = queryParams.get('branch');
     const repo = queryParams.get('repo');
     const owner = queryParams.get('owner');
+    const teamName = queryParams.get('teamName');
 
     useEffect(() => {
+        console.log(teamName)
         const fetchCommitData = async () => {
             try {
                 // 加載分支的 commit 數據

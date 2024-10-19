@@ -25,7 +25,7 @@ const PRDiscussion = () => {
 
     useEffect(() => {
         const fetchPRData = async () => {
-            if (!owner || !repo || !prNumber) return;
+            if (!owner || !repo || !prNumber || !teamName ) return;
 
             setLoading(true);
 
@@ -146,6 +146,7 @@ const PRDiscussion = () => {
             }
 
             try {
+                console.log(teamName)
                 const teamMembersResponse = await fetch(`https://ghch-cloud-server-b889208febef.herokuapp.com/team-members?teamName=${teamName}`, {});
                 setTeamMembers(teamMembersResponse.ok ? await teamMembersResponse.json() : []);
             } catch (error) {
