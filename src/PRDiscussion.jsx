@@ -105,7 +105,7 @@ const PRDiscussion = () => {
                 }
                 const comments = await prComments.json();
 
-                const aiCommentResponse = await fetch(`http://localhost:8081/reviews/search?&repoName=${repo}&pullNumber=${prNumber}`);
+                const aiCommentResponse = await fetch(`https://ghch-cloud-server-b889208febef.herokuapp.com/reviews/search?&repoName=${repo}&pullNumber=${prNumber}`);
                 if (!aiCommentResponse.ok) {
                     throw new Error('無法獲取AI PR comments資料');
                 }
@@ -146,7 +146,7 @@ const PRDiscussion = () => {
             }
 
             try {
-                const teamMembersResponse = await fetch(`http://localhost:8081/team-members?teamName=${teamName}`, {});
+                const teamMembersResponse = await fetch(`https://ghch-cloud-server-b889208febef.herokuapp.com/team-members?teamName=${teamName}`, {});
                 setTeamMembers(teamMembersResponse.ok ? await teamMembersResponse.json() : []);
             } catch (error) {
                 alert(error.message);
@@ -250,7 +250,7 @@ const PRDiscussion = () => {
     const handleVote = async (vote) => {
         try {
             // 提交投票請求
-            const voteResponse = await fetch(`http://localhost:8081/pr-votes`, {
+            const voteResponse = await fetch(`https://ghch-cloud-server-b889208febef.herokuapp.com/pr-votes`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

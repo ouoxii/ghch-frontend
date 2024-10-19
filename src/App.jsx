@@ -51,7 +51,7 @@ function App() {
 
   const fetchUserData = async (id) => {
     try {
-      const response = await fetch(`http://localhost:8081/app-users/${id}`);
+      const response = await fetch(`https://ghch-cloud-server-b889208febef.herokuapp.com/app-users/${id}`);
       if (response.ok) {
         const data = await response.json();
         setFirstName(data.firstName || '');

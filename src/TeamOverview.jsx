@@ -19,7 +19,7 @@ const TeamOverview = () => {
     const [teamData, setTeamData] = useState({ id: '', teamName: '', owner: '' });
     const [prData, setPrData] = useState([]);
     const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-    const [isCreatBranchOpen, setIsCreateOpen] = useState(false);
+    const [isCreateBranchOpen, setIsCreateOpen] = useState(false);
     const [timelineData, setTimelineData] = useState([]);
     const [selectedBranch, setSelectedBranch] = useState('main');
     const [selectedPR, setSelectedPR] = useState("default");
@@ -31,12 +31,13 @@ const TeamOverview = () => {
     const [chartFinish, setChartsfinish] = useState(false);
     const [loading, setLoading] = useState(true);  // 新增 loading 狀態
     const [newBranchName, setNewBranchName] = useState('');
+    const [iniPullFinish, setIniPullFinish] = useState(false);
 
     useEffect(() => {
         const fetchTeamData = async () => {
             try {
                 setLoading(true);  // 資料加載前設置 loading 為 true
-                const teamResponse = await fetch(`http://localhost:8081/teams/${teamId}`);
+                const teamResponse = await fetch(`https://ghch-cloud-server-b889208febef.herokuapp.com/teams/${teamId}`);
                 if (!teamResponse.ok) {
                     throw new Error('無法獲取團隊資料');
                 }
@@ -134,7 +135,7 @@ const TeamOverview = () => {
         const fetchCloudGraphBranch = async () => {
             try {
                 if (teamData.owner) {
-                    const cloudGraphBranchResponse = await fetch(`http://localhost:8081/cloud-graph-branch?owner=${teamData.owner}&repo=${repoName}`);
+                    const cloudGraphBranchResponse = await fetch(`https://ghch-cloud-server-b889208febef.herokuapp.com/cloud-graph-branch?owner=${teamData.owner}&repo=${repoName}`);
                     if (!cloudGraphBranchResponse.ok) {
                         if (cloudGraphBranchResponse.status === 404) {
                             setTimelineData([]);
@@ -169,6 +170,7 @@ const TeamOverview = () => {
                 const chartData = await chartDataResponse.json();
                 const newChartData = chartData.filter(branch => branch.name !== 'HEAD');
                 setLocalTimelineData(newChartData);
+                setBranches([...chartData.filter(branch => branch.name !== 'HEAD').map(branch => branch.name)]);
             } catch (error) {
                 console.log(error);
             }
@@ -197,21 +199,17 @@ const TeamOverview = () => {
                 if (!gitHubPullRes.ok) {
                     throw new Error('Pull GitHub時出錯');
                 }
+                setIniPullFinish(true);
                 window.alert('pull成功')
             } catch (error) {
                 window.alert(error)
             }
+            fetchCloudGraphBranch();
+            fetchUserLocalGraphBranch();
         }
 
         if (repoExist) {
             pullRepo();
-            if (teamData.owner === username) {
-                fetchCloudGraphBranch(); //原本為fetchLocalGraphBranch
-                fetchUserLocalGraphBranch();
-            } else {
-                fetchCloudGraphBranch();
-                fetchUserLocalGraphBranch();
-            }
         } else if (repoExist === false) {
             alert('偵測到repo不存在本地端，將自動為您clone');
             cloneRepo();
@@ -224,7 +222,7 @@ const TeamOverview = () => {
             drawTooltipCharts();
             setChartsfinish(true);
         }
-    }, [timelineData, chartsLoaded, tooltipData, localTimelineData]);
+    }, [timelineData, chartsLoaded, tooltipData, localTimelineData, iniPullFinish]);
 
     // useEffect(() => {
     //     const postGraphBranch = async () => {
@@ -274,7 +272,7 @@ const TeamOverview = () => {
         const fetchCloudGraphCommit = async () => {
             try {
                 if (teamData.owner) {
-                    const clooudGraphBranchResponse = await fetch(`http://localhost:8081/cloud-graph-commit?owner=${teamData.owner}&repo=${repoName}`,
+                    const clooudGraphBranchResponse = await fetch(`https://ghch-cloud-server-b889208febef.herokuapp.com/cloud-graph-commit?owner=${teamData.owner}&repo=${repoName}`,
                         {
                             method: 'GET'
                         }
@@ -282,6 +280,7 @@ const TeamOverview = () => {
                     if (!clooudGraphBranchResponse.ok) {
                         if (clooudGraphBranchResponse.status === 404) {
                             setTimelineData([]);
+                            setTooltipData([]);
                             throw new Error('沒有雲端commits資料');
                         } else {
                             throw new Error('獲取雲端commits資料失敗')
@@ -432,6 +431,7 @@ const TeamOverview = () => {
         for (let i = 0; i < dataRows.length; i++) {
             dataRows[i].splice(2, 0, null);
         }
+        console.log(dataRows)
 
         // Group commits by branch
         const branches = {};
@@ -441,7 +441,7 @@ const TeamOverview = () => {
             }
             branches[commit.branchName].push(new Date(commit.commitTime));
         });
-
+        console.log(branches)
 
         // Find the end time for each branch (last commit time)
         const branchEndTimes = {};
@@ -474,6 +474,7 @@ const TeamOverview = () => {
                 }
             });
         }
+        console.log(branchCommitCounts)
 
         // Output the commit counts for each branch
 
@@ -487,12 +488,10 @@ const TeamOverview = () => {
             if (dataRows[i + 1][1])
                 tooltipDataArray[0][dataRows.length - 1 + i] = dataRows[i + 1][1];
         }
-        console.log(dataRows.length)
-        console.log(tooltipDataArray)
 
         let j = 0;
         for (const branch in branchCommitCounts) {
-
+            if(branch == 'main') continue;
             const day = Object.keys(branchCommitCounts[branch]);
             for (let i = 1; i < 15; i++) {
                 tooltipDataArray[i][j] = new Date(day[i - 1]);
@@ -501,6 +500,7 @@ const TeamOverview = () => {
             }
             j++;
         }
+        console.log(tooltipDataArray)
 
         //調整資料以符合需求
         console.log(dataRows)
@@ -510,7 +510,7 @@ const TeamOverview = () => {
                 tooltipDataArray[i].splice(dataRows.length, 0, 'main');
             } else {
                 tooltipDataArray[i].splice(0, 0, "");
-                tooltipDataArray[i].splice(dataRows.length, 1, null);
+                tooltipDataArray[i].splice(dataRows.length, 0, null);
             }
         }
 
@@ -610,7 +610,7 @@ const TeamOverview = () => {
                 throw new Error('刪除git儲存庫時出錯');
             }
 
-            const deleteRepoResponse = await fetch(`http://localhost:8081/team-repos/${teamRepoId}`, {
+            const deleteRepoResponse = await fetch(`https://ghch-cloud-server-b889208febef.herokuapp.com/team-repos/${teamRepoId}`, {
                 method: 'DELETE'
             });
 
@@ -655,16 +655,55 @@ const TeamOverview = () => {
     const handleSettingsClick = () => setIsSettingsOpen(!isSettingsOpen);
     const handleCloseSettings = () => setIsSettingsOpen(false);
 
-    const handleCreatBranchClick = () => setIsCreateOpen(true);
-    const handleCloseeCreat = () => setIsCreateOpen(false);
-    const handleCreatInputChange = (e) => {
-        const value = e.target.value;
-        const regex =  /^(?!\.)(?!.*\/$)(?!.*\.\.)(?!.*[@{}:^~?*[\]\\])(?!.*\s)(?!.*\/\.\/)(?!.*\/\.\.$)[A-Za-z0-9/_-]+$/;
-    
-        if (regex.test(value)) {
-          setNewBranchName(value);
+    const handleCreateBranchClick = () => setIsCreateOpen(true);
+    const handleCloseeCreate = () => setIsCreateOpen(false);
+    const handleCreateInputChange = (e) => {
+        setNewBranchName(e.target.value);
+    };
+
+    const handleCreateBranch = async () => {
+        try {
+            const regex = /^(?!\.)(?!.*\/$)(?!.*\.\.)(?!.*[@{}:^~?*[\]\\])(?!.*\s)(?!.*\/\.\/)(?!.*\/\.\.$)[A-Za-z0-9/_-]+$/;
+            if (!regex.test(newBranchName)) {
+                setNewBranchName('');
+                throw new Error('分支名稱格式錯誤：名稱應符合 Git 分支命名規則，不包含空格或特殊字符，且不能以 . 或 / 結尾');
+            }
+            const enNewBranchName = encodeURIComponent(newBranchName);
+            const createBranchRes = await fetch(`http://localhost:8080/branch/create/${teamData.owner}/${repoName}?newBranchName=${enNewBranchName}`, {
+                method: 'POST'
+            });
+            if (!createBranchRes.ok) {
+                throw new Error('創建分支失敗');
+            }
+            const responseMessage = await createBranchRes.text();
+            console.log(responseMessage)
+            const pushBranchRes = await fetch(`http://localhost:3001/branch/create?token=${token}&owner=${teamData.owner}&repo=${repoName}&ref=${enNewBranchName}&sha=${responseMessage}`,{
+                method: 'POST'
+            });
+            if(!pushBranchRes.ok){
+                throw new Error('上傳分支失敗');
+            }
+            const getCurBranchRes = await fetch(`http://localhost:8080/branch/${teamData.owner}/${repoName}`, {
+                method: 'GET'
+            });
+            if (!getCurBranchRes.ok) {
+                throw new Error('獲取當前分支時出錯');
+            }
+            const curBranch = await getCurBranchRes.text();
+            console.log(curBranch);
+            const uploadBranchRes = await fetch(`http://localhost:8080/branch/upload/${teamData.owner}/${repoName}?branch=${curBranch}`, {
+                method: 'POST'
+            });
+            if (!uploadBranchRes.ok) {
+                throw new Error('更新分支到雲端資料時出錯');
+            }
+            window.alert('創建分支成功');
+            setIsCreateOpen(false);
+            window.location.reload();
+        } catch (error) {
+            window.alert(error);
         }
-      };
+    }
 
     const gitHubPush = async () => {
         try {
@@ -737,6 +776,7 @@ const TeamOverview = () => {
             window.alert("Pull成功");
         } catch (error) {
             window.alert(error);
+            window.location.reload();
         }
     }
 
@@ -816,8 +856,8 @@ const TeamOverview = () => {
                         )}
                         <div className='flex flex-col justify-between flex-1'>
                             <div className='flex justify-between'>
-                                <button className="h-10 max-w-48 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={handlePush}>push (上傳到GitHub)</button>
-                                <button className="h-10 max-w-48 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={handleCreatBranchClick}>建立分支</button>
+                                {/* <button className="h-10 max-w-48 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={handlePush}>push (上傳到GitHub)</button> */}
+                                <button className="h-10 max-w-48 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={handleCreateBranchClick}>建立分支</button>
                                 <button className="h-10 max-w-48 bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded" onClick={handlePull}>pull (從GitHub更新)</button>
                             </div>
                             <div className="h-10 flex my-2 justify-between items-center">
@@ -863,25 +903,25 @@ const TeamOverview = () => {
                     </div>
                 </div>
             )}
-            {isCreatBranchOpen && (
+            {isCreateBranchOpen && (
                 <div className="fixed inset-0 flex items-center justify-center bg-gray-500 bg-opacity-50">
                     <div className="flex flex-col w-[35%] h-[40%] rounded-xl shadow-lg overflow-hidden bg-white">
                         <div className='flex flex-col h-full relative'>
                             <div className="p-3 m-3 flex border-b">
                                 <h2>建立分支</h2>
-                                <button className='ml-auto' onClick={handleCloseeCreat}>✕</button>
+                                <button className='ml-auto' onClick={handleCloseeCreate}>✕</button>
                             </div>
                             <div className='flex justify-center w-full'>
                                 <input
                                     type="text"
                                     value={newBranchName}
-                                    onChange={handleCreatInputChange}
+                                    onChange={handleCreateInputChange}
                                     className="m-4 p-2 border border-gray-300 rounded w-full"
-                                    placeholder="e.g., feature/new-feature, bugfix/issue-123"
+                                    placeholder="e.g. feature/new-feature, bugfix/issue-123"
                                 />
                             </div>
                             <div className='p-5'>
-                                <button onClick={handleDeleteClick} className="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                                <button onClick={handleCreateBranch} className="w-full bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
                                     建立
                                 </button>
                             </div>

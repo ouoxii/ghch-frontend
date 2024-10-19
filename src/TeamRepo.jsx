@@ -34,25 +34,25 @@ const TeamRepo = ({ onClose }) => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const teamResponse = await fetch(`http://localhost:8081/teams/${teamId}`, {
+                const teamResponse = await fetch(`https://ghch-cloud-server-b889208febef.herokuapp.com/teams/${teamId}`, {
 
                 });
                 if (!teamResponse.ok) throw new Error('無法獲取團隊資料');
                 const teamData = await teamResponse.json();
                 setTeamData(teamData);
 
-                const repoResponse = await fetch(`http://localhost:8081/team-repos/${teamData.id}`, {
+                const repoResponse = await fetch(`https://ghch-cloud-server-b889208febef.herokuapp.com/team-repos/${teamData.id}`, {
 
                 });
                 const reposData = repoResponse.ok ? await repoResponse.json() : [];
                 setRepos(reposData);
 
-                const inviteResponse = await fetch(`http://localhost:8081/invitations?teamId=${teamData.id}`, {
+                const inviteResponse = await fetch(`https://ghch-cloud-server-b889208febef.herokuapp.com/invitations?teamId=${teamData.id}`, {
 
                 });
                 setInvitations(inviteResponse.ok ? await inviteResponse.json() : []);
 
-                const teamMembersResponse = await fetch(`http://localhost:8081/team-members?teamName=${teamData.teamName}`, {
+                const teamMembersResponse = await fetch(`https://ghch-cloud-server-b889208febef.herokuapp.com/team-members?teamName=${teamData.teamName}`, {
 
                 });
                 setTeamMembers(teamMembersResponse.ok ? await teamMembersResponse.json() : []);
@@ -68,7 +68,7 @@ const TeamRepo = ({ onClose }) => {
 
     useEffect(() => {
         const getTeamMembers = async () => {
-            const teamMembersResponse = await fetch(`http://localhost:8081/team-members?teamName=${teamData.teamName}`);
+            const teamMembersResponse = await fetch(`https://ghch-cloud-server-b889208febef.herokuapp.com/team-members?teamName=${teamData.teamName}`);
             setTeamMembers(teamMembersResponse.ok ? await teamMembersResponse.json() : []);
         }
 
@@ -129,7 +129,7 @@ const TeamRepo = ({ onClose }) => {
             });
             if (!repoResponse.ok) throw new Error('創建GitHub儲存庫失敗');
 
-            const teamRepoResponse = await fetch(`http://localhost:8081/team-repos?token=${token}`, {
+            const teamRepoResponse = await fetch(`https://ghch-cloud-server-b889208febef.herokuapp.com/team-repos?token=${token}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(teamRepoRequestData)
@@ -152,7 +152,7 @@ const TeamRepo = ({ onClose }) => {
                         teamName: teamData.teamName,
                         invitationId: id
                     };
-                    const inviteResponse = await fetch(`http://localhost:8081/repo-invitations`, {
+                    const inviteResponse = await fetch(`https://ghch-cloud-server-b889208febef.herokuapp.com/repo-invitations`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(GitinviteRequestData)
@@ -221,10 +221,10 @@ const TeamRepo = ({ onClose }) => {
         };
 
         try {
-            const inviteeResponse = await fetch(`http://localhost:8081/app-users?username=${inviteData.invitee}`, {});
+            const inviteeResponse = await fetch(`https://ghch-cloud-server-b889208febef.herokuapp.com/app-users?username=${inviteData.invitee}`, {});
             if (!inviteeResponse.ok) throw new Error('此成員不存在');
 
-            const inviteResponse = await fetch(`http://localhost:8081/invitations?token=${token}`, {
+            const inviteResponse = await fetch(`https://ghch-cloud-server-b889208febef.herokuapp.com/invitations?token=${token}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(inviteRequestData)
@@ -251,7 +251,7 @@ const TeamRepo = ({ onClose }) => {
                             teamName: teamData.teamName,
                             invitationId: id
                         };
-                        const inviteResponse = await fetch(`http://localhost:8081/repo-invitations`, {
+                        const inviteResponse = await fetch(`https://ghch-cloud-server-b889208febef.herokuapp.com/repo-invitations`, {
                             method: 'POST',
                             headers: { 'Content-Type': 'application/json' },
                             body: JSON.stringify(GitinviteRequestData)
@@ -265,7 +265,7 @@ const TeamRepo = ({ onClose }) => {
                     alert('寄出協作邀請失敗');
                 }
             }
-            const inviteRefreshResponse = await fetch(`http://localhost:8081/invitations/${username}`, {
+            const inviteRefreshResponse = await fetch(`https://ghch-cloud-server-b889208febef.herokuapp.com/invitations/${username}`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
             setInvitations(inviteRefreshResponse.ok ? await inviteRefreshResponse.json() : []);
@@ -277,7 +277,7 @@ const TeamRepo = ({ onClose }) => {
 
     const deleteInvitation = async (id) => {
         try {
-            const response = await fetch(`http://localhost:8081/invitations/${id}`, {
+            const response = await fetch(`https://ghch-cloud-server-b889208febef.herokuapp.com/invitations/${id}`, {
                 method: 'DELETE',
             });
             if (!response.ok) throw new Error('刪除邀請時錯誤');
@@ -297,13 +297,13 @@ const TeamRepo = ({ onClose }) => {
                 await deleteInvitation(invite.id);
             }
 
-            const repoResponse = await fetch(`http://localhost:8081/team-repos/${teamData.id}`, {
+            const repoResponse = await fetch(`https://ghch-cloud-server-b889208febef.herokuapp.com/team-repos/${teamData.id}`, {
                 method: 'GET',
             });
             const repos = repoResponse.ok ? await repoResponse.json() : [];
 
             for (const repo of repos) {
-                const deleteRepoResponse = await fetch(`http://localhost:8081/team-repos/${repo.id}`, {
+                const deleteRepoResponse = await fetch(`https://ghch-cloud-server-b889208febef.herokuapp.com/team-repos/${repo.id}`, {
                     method: 'DELETE',
                 });
                 if (!deleteRepoResponse.ok) throw new Error('刪除Cloud儲存庫時出錯');
@@ -314,7 +314,7 @@ const TeamRepo = ({ onClose }) => {
                 if (!deleteGitResponse.ok) throw new Error('刪除Git儲存庫時出錯');
             }
 
-            const deleteTeamMembersResponse = await fetch(`http://localhost:8081/team-members?token=${token}&teamId=${teamId}`, {
+            const deleteTeamMembersResponse = await fetch(`https://ghch-cloud-server-b889208febef.herokuapp.com/team-members?token=${token}&teamId=${teamId}`, {
                 method: 'DELETE',
             });
             if (!deleteTeamMembersResponse.ok) throw new Error('刪除team-members時出錯');

@@ -15,7 +15,7 @@ export const DataProvider = ({ children }) => {
     const navigate = useNavigate();
     const compareAndAcceptInvitations = async (teamId, token) => {
         try {
-            const fetchInviteResponse = await fetch(`http://localhost:8081/repo-invitations/${teamId}`, {
+            const fetchInviteResponse = await fetch(`https://ghch-cloud-server-b889208febef.herokuapp.com/repo-invitations/${teamId}`, {
                 method: 'GET',
             });
             const teamInvitations = await fetchInviteResponse.json();
@@ -35,7 +35,7 @@ export const DataProvider = ({ children }) => {
                         } else {
                             console.error(`接受邀請失敗 invitation_id: ${userInvite.invitation_id}`);
                         }
-                        const deleteInviteResponse = await fetch(`http://localhost:8081/repo-invitations?invitationId=${userInvite.invitation_id}`, {
+                        const deleteInviteResponse = await fetch(`https://ghch-cloud-server-b889208febef.herokuapp.com/repo-invitations?invitationId=${userInvite.invitation_id}`, {
                             method: 'DELETE',
                         });
                         if (deleteInviteResponse.ok) {
@@ -53,7 +53,7 @@ export const DataProvider = ({ children }) => {
 
     const compareAndDeclineInvitations = async (teamId, token) => {
         try {
-            const fetchInviteResponse = await fetch(`http://localhost:8081/repo-invitations/${teamId}`, {
+            const fetchInviteResponse = await fetch(`https://ghch-cloud-server-b889208febef.herokuapp.com/repo-invitations/${teamId}`, {
                 method: 'GET',
             });
             const teamInvitations = await fetchInviteResponse.json();
@@ -74,7 +74,7 @@ export const DataProvider = ({ children }) => {
                         } else {
                             console.log(`拒絕邀請失敗 ID: ${userInvite.invitation_id}`);
                         }
-                        const deleteInviteResponse = await fetch(`http://localhost:8081/repo-invitations?invitationId=${userInvite.invitation_id}`, {
+                        const deleteInviteResponse = await fetch(`https://ghch-cloud-server-b889208febef.herokuapp.com/repo-invitations?invitationId=${userInvite.invitation_id}`, {
                             method: 'DELETE',
                         });
                         if (deleteInviteResponse.ok) {
@@ -92,7 +92,7 @@ export const DataProvider = ({ children }) => {
 
     const fetchTeamData = async () => {
         try {
-            const response = await fetch(`http://localhost:8081/team-members/${username}`);
+            const response = await fetch(`https://ghch-cloud-server-b889208febef.herokuapp.com/team-members/${username}`);
             if (!response.ok) {
                 throw new Error('列出所屬 Team 錯誤');
             }
@@ -105,7 +105,7 @@ export const DataProvider = ({ children }) => {
 
     const fetchNotifications = async () => {
         try {
-            const response = await fetch(`http://localhost:8081/invitations/${username}`);
+            const response = await fetch(`https://ghch-cloud-server-b889208febef.herokuapp.com/invitations/${username}`);
             if (!response.ok) {
                 if (response.status === 404) {
                     setNotifications([]);
@@ -135,7 +135,7 @@ export const DataProvider = ({ children }) => {
         };
 
         try {
-            const response = await fetch(`http://localhost:8081/team-members`, {
+            const response = await fetch(`https://ghch-cloud-server-b889208febef.herokuapp.com/team-members`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -156,7 +156,7 @@ export const DataProvider = ({ children }) => {
         }
 
         try {
-            const response = await fetch(`http://localhost:8081/invitations/${invitationId}`, {
+            const response = await fetch(`https://ghch-cloud-server-b889208febef.herokuapp.com/invitations/${invitationId}`, {
                 method: 'DELETE',
                 headers: { 'Content-Type': 'application/json' }
             });
@@ -173,7 +173,7 @@ export const DataProvider = ({ children }) => {
 
     const rejectInvitation = async (notification, invitationId) => {
         try {
-            const response = await fetch(`http://localhost:8081/invitations/${invitationId}`, {
+            const response = await fetch(`https://ghch-cloud-server-b889208febef.herokuapp.com/invitations/${invitationId}`, {
                 method: 'DELETE'
             });
 
@@ -196,7 +196,7 @@ export const DataProvider = ({ children }) => {
         };
 
         try {
-            const response = await fetch(`http://localhost:8081/teams?token=${token}`, {
+            const response = await fetch(`https://ghch-cloud-server-b889208febef.herokuapp.com/teams?token=${token}`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
@@ -220,7 +220,7 @@ export const DataProvider = ({ children }) => {
 
     const deleteTeamData = async (teamId, token) => {
         try {
-            const response = await fetch(`http://localhost:8081/teams/${teamId}?token=${token}`, {
+            const response = await fetch(`https://ghch-cloud-server-b889208febef.herokuapp.com/teams/${teamId}?token=${token}`, {
                 method: 'DELETE',
                 headers: { 'Content-Type': 'application/json' }
             });
