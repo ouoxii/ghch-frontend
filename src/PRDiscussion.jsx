@@ -146,7 +146,7 @@ const PRDiscussion = () => {
             }
 
             try {
-                const teamMembersResponse = await fetch(`http://localhost:8081/team-members?teamName=${teamName}`, {});
+                const teamMembersResponse = await fetch(`https://ghch-cloud-server-b889208febef.herokuapp.com/team-members?teamName=${teamName}`, {});
                 setTeamMembers(teamMembersResponse.ok ? await teamMembersResponse.json() : []);
             } catch (error) {
                 alert(error.message);

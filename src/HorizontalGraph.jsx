@@ -205,7 +205,7 @@ const HorizontalGraph = () => {
             console.log("Pull Request創建成功:", result);
 
             // 使用 aiReviewComment 進行 AI 評論的創建
-            const aiReviewResponse = await fetch(`http://localhost:8081/reviews`, {
+            const aiReviewResponse = await fetch(`https://ghch-cloud-server-b889208febef.herokuapp.com/reviews`, {
                 method: "POST",
                 headers: {
                     "Content-Type": "application/json"
