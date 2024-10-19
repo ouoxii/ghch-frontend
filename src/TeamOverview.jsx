@@ -52,6 +52,7 @@ const TeamOverview = () => {
                 }
                 const prData = await prResponse.json();
                 setPrData(prData);
+                console.log(prData)
             } catch (error) {
                 console.error('獲取團隊資料時出錯:', error);
                 alert('獲取團隊資料時出錯');

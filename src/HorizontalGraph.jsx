@@ -75,6 +75,7 @@ const HorizontalGraph = () => {
                 }
 
                 const diffData = await diffResponse.json();
+                console.log(diffData)
 
                 // 根據 diff 的狀態決定是否生成 PR
                 if (diffData.status === 'ahead') {
