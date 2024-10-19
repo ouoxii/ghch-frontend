@@ -36,18 +36,35 @@ const PRDiscussion = () => {
                 }
                 const prData = await prResponse.json();
                 console.log('PR Creator:', prData.creator);
-                setPRData(prData);
-            } catch (error) {
-                alert(error.message);
-            }
+                setPRData(prData); // 設置狀態
 
-            try {
-                const prComments = await fetch(`http://localhost:3001/pr/comments?owner=${owner}&repo=${repo}&pull_number=${prNumber}&token=${token}`);
-                if (!prComments.ok) {
-                    throw new Error('無法獲取PR comments資料');
+                // 檢查更新時間
+                const updatedAtResponse = await fetch(`http://localhost:3001/pr/check-updated-at?owner=${owner}&repo=${repo}&pull_number=${prNumber}&token=${token}`);
+                if (!updatedAtResponse.ok) {
+                    throw new Error('無法檢查更新時間');
                 }
-                const comments = await prComments.json();
-                setCommentData(comments);
+                const updatedAtData = await updatedAtResponse.json();
+
+                // 使用prData來進行更新時間的比較
+                if (prData.created_at !== updatedAtData.updated_at) {
+                    alert('Contributor 已修改此分支，請重新投票！');
+
+                    // 將所有reviewers的status改成pending
+                    const updateReviewersResponse = await fetch(`http://localhost:3001/pr/reviewers/update-status?owner=${owner}&repo=${repo}&pull_number=${prNumber}&token=${token}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ state: 'PENDING' }) // 將所有reviewers的狀態改成PENDING
+                    });
+
+                    if (!updateReviewersResponse.ok) {
+                        throw new Error('無法更新reviewers狀態');
+                    }
+
+                    console.log('所有reviewers狀態已更新為PENDING');
+                }
+
             } catch (error) {
                 alert(error.message);
             }
@@ -62,7 +79,9 @@ const PRDiscussion = () => {
                 const reviewersStatus = reviewsData.map((review) => ({
                     user: review.user,
                     state: review.state,
+                    review_id: review.review_id,
                 }));
+
                 console.log('Reviewers:', reviewersStatus);
                 setReviewers(reviewersStatus);
 
@@ -76,24 +95,59 @@ const PRDiscussion = () => {
                 alert(error.message);
             }
 
+
+
             try {
-                const teamMembersResponse = await fetch(`http://localhost:8081/team-members?teamName=${teamName}`, {});
-                setTeamMembers(teamMembersResponse.ok ? await teamMembersResponse.json() : []);
+                // 獲取 PR 評論
+                const prComments = await fetch(`http://localhost:3001/pr/comments?owner=${owner}&repo=${repo}&pull_number=${prNumber}&token=${token}`);
+                if (!prComments.ok) {
+                    throw new Error('無法獲取PR comments資料');
+                }
+                const comments = await prComments.json();
+
+                const aiCommentResponse = await fetch(`http://localhost:8081/reviews/search?&repoName=${repo}&pullNumber=${prNumber}`);
+                if (!aiCommentResponse.ok) {
+                    throw new Error('無法獲取AI PR comments資料');
+                }
+                const aiComment = await aiCommentResponse.json();
+
+                const combinedComments = [];
+
+                for (const comment of comments) {
+                    combinedComments.push({
+                        id: comment.id,
+                        user: comment.user.login,
+                        created_at: comment.created_at,
+                        body: comment.body,
+                    });
+                }
+
+                if (aiComment) {
+                    combinedComments.push({
+                        id: aiComment.id || "AI-001",
+                        user: "AI Reviewer",
+                        created_at: aiComment.createdAt || new Date().toISOString(),
+                        body: (aiComment.mergeApproval ? "Approved the changes" : "Requested changes"),
+                    });
+                    combinedComments.push({
+                        id: aiComment.id || "AI-001",
+                        user: "AI Reviewer",
+                        created_at: aiComment.createdAt || new Date().toISOString(),
+                        body: aiComment.content,
+                    });
+
+                    reviewers.push({ user: "AI Reviewer", state: aiComment.mergeApproval });
+                }
+
+                setReviewers(reviewers);
+                setCommentData(combinedComments);
             } catch (error) {
                 alert(error.message);
             }
 
-            // 新增的 API 請求以檢查更新時間
             try {
-                const updatedAtResponse = await fetch(`http://localhost:3001/pr/check-updated-at?owner=${owner}&repo=${repo}&pull_number=${prNumber}&token=${token}`);
-                if (!updatedAtResponse.ok) {
-                    throw new Error('無法檢查更新時間');
-                }
-                const updatedAtData = await updatedAtResponse.json();
-                // 檢查 PR 的更新時間
-                if (PRData.updated_at !== updatedAtData.updated_at) {
-                    alert('Contributor 已修改此分支，請重新投票！');
-                }
+                const teamMembersResponse = await fetch(`http://localhost:8081/team-members?teamName=${teamName}`, {});
+                setTeamMembers(teamMembersResponse.ok ? await teamMembersResponse.json() : []);
             } catch (error) {
                 alert(error.message);
             } finally {
@@ -102,6 +156,7 @@ const PRDiscussion = () => {
         };
 
         fetchPRData();
+
     }, [owner, repo, prNumber]);
     useEffect(() => {
         const getUserRole = () => {
@@ -109,7 +164,6 @@ const PRDiscussion = () => {
 
             if (PRData.creator === Cookies.get('username')) return 'Contributor';
             if (owner === Cookies.get('username')) return 'Admin';
-
             if (reviewers.some(reviewer => reviewer.user === Cookies.get('username'))) return 'Reviewer';
 
             return 'Commenter';
