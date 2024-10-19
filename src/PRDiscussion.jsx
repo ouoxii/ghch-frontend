@@ -25,7 +25,7 @@ const PRDiscussion = () => {
 
     useEffect(() => {
         const fetchPRData = async () => {
-            if (!owner || !repo || !prNumber || !teamName ) return;
+            if (!owner || !repo || !prNumber || !teamName) return;
 
             setLoading(true);
 
@@ -96,7 +96,6 @@ const PRDiscussion = () => {
             }
 
 
-
             try {
                 // 獲取 PR 評論
                 const prComments = await fetch(`http://localhost:3001/pr/comments?owner=${owner}&repo=${repo}&pull_number=${prNumber}&token=${token}`);
@@ -112,6 +111,7 @@ const PRDiscussion = () => {
                 const aiComment = await aiCommentResponse.json();
 
                 const combinedComments = [];
+                const reviewers = []; // 確保 reviewers 在此重新初始化
 
                 for (const comment of comments) {
                     combinedComments.push({
@@ -123,6 +123,7 @@ const PRDiscussion = () => {
                 }
 
                 if (aiComment) {
+                    // 在這裡推入 AI reviewer 的資料
                     combinedComments.push({
                         id: aiComment.id || "AI-001",
                         user: "AI Reviewer",
@@ -136,14 +137,17 @@ const PRDiscussion = () => {
                         body: aiComment.content,
                     });
 
+                    // 確保 AI reviewer 的資料被正確加入 reviewers 陣列
                     reviewers.push({ user: "AI Reviewer", state: aiComment.mergeApproval });
                 }
 
-                setReviewers(reviewers);
+                // 在此設置 review 和 comment 資料
+                setReviewers(prevReviewers => [...prevReviewers, ...reviewers]);
                 setCommentData(combinedComments);
             } catch (error) {
                 alert(error.message);
             }
+
 
             try {
                 console.log(teamName)
