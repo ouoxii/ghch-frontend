@@ -21,6 +21,8 @@ const withoutAuthor = templateExtend(TemplateName.Metro, {
 });
 
 const HorizontalGraph = () => {
+    const location = useLocation();
+    const { teamName } = location.state || {};
     const [commitData, setCommitData] = useState([]);
     const [error, setError] = useState(null);
     const [loading, setLoading] = useState(true);  // 加入 loading 狀態
@@ -29,15 +31,18 @@ const HorizontalGraph = () => {
         title: "",
         description: ""
     });
+    const [prData, setPrData] = useState([]);
     const [errors, setErrors] = useState({});
     const navigate = useNavigate();
     const queryParams = new URLSearchParams(window.location.search);
     const branch = queryParams.get('branch');
     const repo = queryParams.get('repo');
     const owner = queryParams.get('owner');
+
     useEffect(() => {
         const fetchCommitData = async () => {
             try {
+                // 先加載分支的commit數據
                 const response = await fetch(`http://localhost:8080/flow-commit/${owner}/${repo}?branch=${branch}`);
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
@@ -46,7 +51,26 @@ const HorizontalGraph = () => {
                 const transformedData = transformCommitData(data);
                 setCommitData(transformedData);
 
-                // 在這裡檢查 status 是否為 ahead
+                // 檢查該branch是否已有PR
+                const prResponse = await fetch(`http://localhost:3001/pr/check-pr?owner=${owner}&repo=${repo}&head=${branch}&token=${Cookies.get('token')}`);
+                if (!prResponse.ok) {
+                    throw new Error('無法檢查是否已有PR');
+                }
+
+                const prData = await prResponse.json();
+
+                // 如果已有PR，記錄PR狀態
+                if (prData.length > 0) {
+                    console.log(`Branch ${branch} 已經有一個開啟的PR:`, prData[0]);
+                    setPrData(prData);
+                    return;
+                } else {
+                    console.log(`Branch ${branch} 沒有開啟的PR`);
+                }
+
+
+
+                // 如果尚未有PR，檢查diff狀態
                 const diffResponse = await fetch(`http://localhost:3001/pr/pr-diff?owner=${owner}&repo=${repo}&base=main&head=${branch}&token=${Cookies.get('token')}`);
                 if (!diffResponse.ok) {
                     throw new Error('無法獲取PR DIFF資料');
@@ -199,7 +223,7 @@ const HorizontalGraph = () => {
             }
 
             // 創建成功後導航到 PR 討論頁面或其他頁面
-            // navigate('/PRDiscussion');
+            navigate(`/PRDiscussion?number=${result.pullNumber}&title=${encodeURIComponent(inputData.title)}`, { state: { owner: owner, repo: repo, teamName: teamName } });
         } catch (error) {
             console.error("創建拉取請求錯誤:", error);
             setError(error);
@@ -237,8 +261,13 @@ const HorizontalGraph = () => {
                 <>
                     <div className="flex justify-between items-center p-4 border-b">
                         分支最近有{commitData.length}次提交
-                        <button className="ml-4 bg-blue-500 text-white px-4 py-2 rounded" onClick={() => setShowForm(true)}>Pull Request</button>
+                        {prData.length <= 0 && (
+                            <button className="ml-4 bg-blue-500 text-white px-4 py-2 rounded" onClick={() => setShowForm(true)}>
+                                Pull Request
+                            </button>
+                        )}
                     </div>
+
                     <div className="flex flex-col h-full p-4 relative">
                         {commitData.length > 0 && (
                             <Gitgraph
@@ -326,6 +355,7 @@ const HorizontalGraph = () => {
 };
 
 function initGraph(gitgraph, commitData) {
+    console.log("Commit Data:", commitData);
     if (!commitData || commitData.length === 0) return;
 
     let branches = {};
@@ -364,7 +394,7 @@ function showTooltip(commit) {
     tooltip.innerHTML = `
     <strong>${commit.subject}</strong><br>
     ${commit.body}<br>
-    <em>${commit.author.name}</em><br>
+    <em>${commit.author}</em><br>
     <span>Hash: ${commit.hash}</span>
   `;
     tooltip.classList.remove("hidden");
