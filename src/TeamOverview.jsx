@@ -203,7 +203,7 @@ const TeamOverview = () => {
                 setIniPullFinish(true);
                 console.log('pull成功')
             } catch (error) {
-                window.alert(error)
+                console.log(error)
             }
             fetchCloudGraphBranch();
             fetchUserLocalGraphBranch();

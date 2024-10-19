@@ -47,7 +47,7 @@ const PRDiscussion = () => {
 
                 // 使用prData來進行更新時間的比較
                 if (prData.created_at !== updatedAtData.updated_at) {
-                    alert('Contributor 已修改此分支，請重新投票！');
+                    // alert('Contributor 已修改此分支，請重新投票！');
 
                     // // 將所有reviewers的status改成pending
                     // const updateReviewersResponse = await fetch(`http://localhost:3001/pr/reviewers/update-status?owner=${owner}&repo=${repo}&pull_number=${prNumber}&token=${token}`, {
@@ -328,6 +328,13 @@ const PRDiscussion = () => {
             const mergeResult = await mergeResponse.json();
             console.log('合併結果:', mergeResult);
 
+            const uploadBranchRes = await fetch(`http://localhost:8080/branch/upload/${owner}/${repo}?branch=${PRData.head}`, {
+                method: 'POST'
+            });
+            if (!uploadBranchRes.ok) {
+                throw new Error('更新分支到雲端資料時出錯');
+            }
+
             alert(`成功合併 PR #${prNumber}！`);
             setPRData({ ...PRData, state: 'closed' });  // 更新 PR 狀態為 closed
         } catch (error) {
@@ -465,9 +472,9 @@ const PRDiscussion = () => {
                     </div>
                     <div className='absolute bottom-6 right-10'>
                         {userRole === 'Contributor' && reviewers.length === 1 && reviewers[0].user === 'AI Reviewer' ? (<AssistnatBox text="請新增reviwer對PR進行檢視。" />)
-                            : userRole === 'Contributor' && checkReviewer() ? (<AssistnatBox text="所有reviewer已同意PR合併，請按下合併按鈕。" />)
-                                : userRole === 'Contributor' ? (<AssistnatBox text="等待所有reviewer同意PR合併。" />)
-                                    : userRole === 'Contributor' && PRData.state === 'closed' ? (<AssistnatBox text="PR已合併完畢請刪除分支。" />)
+                            : userRole === 'Contributor' && PRData.state === 'closed' ? (<AssistnatBox text="PR已合併完畢請刪除分支。" />)
+                                : userRole === 'Contributor' && checkReviewer() ? (<AssistnatBox text="所有reviewer已同意PR合併，請按下合併按鈕。" />)
+                                    : userRole === 'Contributor' ? (<AssistnatBox text="等待所有reviewer同意PR合併。" />)
                                         : userRole === 'Reviewer' && reviewerState === 'PENDING' ? (<AssistnatBox text="請在檢視PR後決定是否同意合併。" />)
                                             : userRole === 'Reviewer' ? (<AssistnatBox text="您已投票完畢，可以在評論區發表你的看法。" />)
                                                 : null
