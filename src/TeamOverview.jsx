@@ -201,7 +201,7 @@ const TeamOverview = () => {
                     throw new Error('Pull GitHub時出錯');
                 }
                 setIniPullFinish(true);
-                window.alert('pull成功')
+                console.log('pull成功')
             } catch (error) {
                 window.alert(error)
             }
