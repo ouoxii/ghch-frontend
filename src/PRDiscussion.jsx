@@ -48,6 +48,21 @@ const PRDiscussion = () => {
                 // 使用prData來進行更新時間的比較
                 if (prData.created_at !== updatedAtData.updated_at) {
                     alert('Contributor 已修改此分支，請重新投票！');
+
+                    // 將所有reviewers的status改成pending
+                    const updateReviewersResponse = await fetch(`http://localhost:3001/pr/reviewers/update-status?owner=${owner}&repo=${repo}&pull_number=${prNumber}&token=${token}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({ state: 'PENDING' }) // 將所有reviewers的狀態改成PENDING
+                    });
+
+                    if (!updateReviewersResponse.ok) {
+                        throw new Error('無法更新reviewers狀態');
+                    }
+
+                    console.log('所有reviewers狀態已更新為PENDING');
                 }
 
             } catch (error) {
@@ -64,7 +79,9 @@ const PRDiscussion = () => {
                 const reviewersStatus = reviewsData.map((review) => ({
                     user: review.user,
                     state: review.state,
+                    review_id: review.review_id,
                 }));
+
                 console.log('Reviewers:', reviewersStatus);
                 setReviewers(reviewersStatus);
 
@@ -77,6 +94,8 @@ const PRDiscussion = () => {
             } catch (error) {
                 alert(error.message);
             }
+
+
 
             try {
                 // 獲取 PR 評論
@@ -145,7 +164,6 @@ const PRDiscussion = () => {
 
             if (PRData.creator === Cookies.get('username')) return 'Contributor';
             if (owner === Cookies.get('username')) return 'Admin';
-
             if (reviewers.some(reviewer => reviewer.user === Cookies.get('username'))) return 'Reviewer';
 
             return 'Commenter';
