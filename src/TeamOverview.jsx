@@ -52,6 +52,7 @@ const TeamOverview = () => {
                 }
                 const prData = await prResponse.json();
                 setPrData(prData);
+                console.log(prData)
             } catch (error) {
                 console.error('獲取團隊資料時出錯:', error);
                 alert('獲取團隊資料時出錯');
@@ -200,9 +201,9 @@ const TeamOverview = () => {
                     throw new Error('Pull GitHub時出錯');
                 }
                 setIniPullFinish(true);
-                window.alert('pull成功')
+                console.log('pull成功')
             } catch (error) {
-                window.alert(error)
+                console.log(error)
             }
             fetchCloudGraphBranch();
             fetchUserLocalGraphBranch();
@@ -637,7 +638,7 @@ const TeamOverview = () => {
         if (e.target.value === "main") return;
         const branch = e.target.value;
         setSelectedBranch(branch);
-        navigate(`/gitgraph?repo=${repoName}&branch=${branch}&owner=${teamData.owner}`);
+        navigate(`/gitgraph?repo=${repoName}&branch=${branch}&owner=${teamData.owner}&teamName=${teamName}`);
     };
 
     const handlePRChange = (e) => {
@@ -649,7 +650,7 @@ const TeamOverview = () => {
         console.log("Selected PR Number:", selectedPR.number);
         console.log("Selected PR Title:", selectedPR.title);
 
-        navigate(`/PRDiscussion?number=${selectedPR.number}&title=${encodeURIComponent(selectedPR.title)}`, { state: { owner: teamData.owner, repo: repoName, teamName: teamData.teamName } });
+        navigate(`/PRDiscussion?number=${selectedPR.number}&title=${encodeURIComponent(selectedPR.title)}`, { state: { owner: teamData.owner, repo: repoName, teamName: teamName } });
     };
 
     const handleSettingsClick = () => setIsSettingsOpen(!isSettingsOpen);
