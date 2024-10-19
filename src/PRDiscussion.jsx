@@ -25,7 +25,7 @@ const PRDiscussion = () => {
 
     useEffect(() => {
         const fetchPRData = async () => {
-            if (!owner || !repo || !prNumber) return;
+            if (!owner || !repo || !prNumber || !teamName) return;
 
             setLoading(true);
 
@@ -47,22 +47,22 @@ const PRDiscussion = () => {
 
                 // 使用prData來進行更新時間的比較
                 if (prData.created_at !== updatedAtData.updated_at) {
-                    alert('Contributor 已修改此分支，請重新投票！');
+                    // alert('Contributor 已修改此分支，請重新投票！');
 
-                    // 將所有reviewers的status改成pending
-                    const updateReviewersResponse = await fetch(`http://localhost:3001/pr/reviewers/update-status?owner=${owner}&repo=${repo}&pull_number=${prNumber}&token=${token}`, {
-                        method: 'PUT',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                        body: JSON.stringify({ state: 'PENDING' }) // 將所有reviewers的狀態改成PENDING
-                    });
+                    // // 將所有reviewers的status改成pending
+                    // const updateReviewersResponse = await fetch(`http://localhost:3001/pr/reviewers/update-status?owner=${owner}&repo=${repo}&pull_number=${prNumber}&token=${token}`, {
+                    //     method: 'PUT',
+                    //     headers: {
+                    //         'Content-Type': 'application/json',
+                    //     },
+                    //     body: JSON.stringify({ state: 'PENDING' }) // 將所有reviewers的狀態改成PENDING
+                    // });
 
-                    if (!updateReviewersResponse.ok) {
-                        throw new Error('無法更新reviewers狀態');
-                    }
+                    // if (!updateReviewersResponse.ok) {
+                    //     throw new Error('無法更新reviewers狀態');
+                    // }
 
-                    console.log('所有reviewers狀態已更新為PENDING');
+                    // console.log('所有reviewers狀態已更新為PENDING');
                 }
 
             } catch (error) {
@@ -96,7 +96,6 @@ const PRDiscussion = () => {
             }
 
 
-
             try {
                 // 獲取 PR 評論
                 const prComments = await fetch(`http://localhost:3001/pr/comments?owner=${owner}&repo=${repo}&pull_number=${prNumber}&token=${token}`);
@@ -112,6 +111,7 @@ const PRDiscussion = () => {
                 const aiComment = await aiCommentResponse.json();
 
                 const combinedComments = [];
+                const reviewers = []; // 確保 reviewers 在此重新初始化
 
                 for (const comment of comments) {
                     combinedComments.push({
@@ -123,6 +123,7 @@ const PRDiscussion = () => {
                 }
 
                 if (aiComment) {
+                    // 在這裡推入 AI reviewer 的資料
                     combinedComments.push({
                         id: aiComment.id || "AI-001",
                         user: "AI Reviewer",
@@ -136,16 +137,20 @@ const PRDiscussion = () => {
                         body: aiComment.content,
                     });
 
+                    // 確保 AI reviewer 的資料被正確加入 reviewers 陣列
                     reviewers.push({ user: "AI Reviewer", state: aiComment.mergeApproval });
                 }
 
-                setReviewers(reviewers);
+                // 在此設置 review 和 comment 資料
+                setReviewers(prevReviewers => [...prevReviewers, ...reviewers]);
                 setCommentData(combinedComments);
             } catch (error) {
                 alert(error.message);
             }
 
+
             try {
+                console.log(teamName)
                 const teamMembersResponse = await fetch(`https://ghch-cloud-server-b889208febef.herokuapp.com/team-members?teamName=${teamName}`, {});
                 setTeamMembers(teamMembersResponse.ok ? await teamMembersResponse.json() : []);
             } catch (error) {
@@ -323,6 +328,13 @@ const PRDiscussion = () => {
             const mergeResult = await mergeResponse.json();
             console.log('合併結果:', mergeResult);
 
+            const uploadBranchRes = await fetch(`http://localhost:8080/branch/upload/${owner}/${repo}?branch=${PRData.head}`, {
+                method: 'POST'
+            });
+            if (!uploadBranchRes.ok) {
+                throw new Error('更新分支到雲端資料時出錯');
+            }
+
             alert(`成功合併 PR #${prNumber}！`);
             setPRData({ ...PRData, state: 'closed' });  // 更新 PR 狀態為 closed
         } catch (error) {
@@ -330,6 +342,25 @@ const PRDiscussion = () => {
         }
     };
 
+    const handleDeleteBranch = async () => {
+        try {
+            const deleteBranchRes = await fetch(`http://localhost:3001/branch/delete?token=${token}&owner=${owner}&repo=${repo}&ref=${PRData.head}`, {
+                method: 'POST'
+            });
+
+            if (!deleteBranchRes.ok) {
+                throw new Error('刪除分支失敗');
+            }
+
+            alert(`成功刪除分支:${PRData.head}`);
+        } catch (error) {
+            alert(error.message);
+        }
+    };
+
+    const checkReviewer = () => {
+        return reviewers.every(reviewer => reviewer.state === 'APPROVED') ? 1 : 0;
+    };
 
     return (
         <div className="container flex p-4">
@@ -359,16 +390,28 @@ const PRDiscussion = () => {
                     </h1>
                     <p className="text-gray-500 mt-2"> {PRData.creator} 希望將 {PRData.head} 合併到 {PRData.base} </p>
                     {/* 新增合併 PR 按鈕 */}
-                    {userRole === 'Contributor' && PRData.state === 'open' && reviewers.every(reviewer => reviewer.state === 'APPROVED') && (
-                        <div className="flex mt-5">
-                            <button
-                                className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mr-3"
-                                onClick={handleMergePR}
-                            >
-                                合併 PR
-                            </button>
-                        </div>
-                    )}
+                    {userRole === 'Contributor' && PRData.state === 'open' && reviewers.every(reviewer => reviewer.state === 'APPROVED') ?
+                        (
+                            <div className="flex mt-5">
+                                <button
+                                    className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mr-3"
+                                    onClick={handleMergePR}
+                                >
+                                    合併 PR
+                                </button>
+                            </div>
+                        ) : userRole === 'Contributor' && PRData.state === 'closed' ?
+                            (
+                                <div className="flex mt-5">
+                                    <button
+                                        className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mr-3"
+                                        onClick={handleDeleteBranch}
+                                    >
+                                        刪除分支
+                                    </button>
+                                </div>
+                            ) : null
+                    }
                     {/* 新增投票按鈕 */}
                     {reviewerState === 'PENDING' ? (userRole === 'Reviewer' && PRData.state === 'open' && (
                         < div className="flex mt-5">
@@ -428,7 +471,15 @@ const PRDiscussion = () => {
 
                     </div>
                     <div className='absolute bottom-6 right-10'>
-                        <AssistnatBox text="PR討論區能協助進行檢視完PR後的討論，並提供投票系統以簡化合併過程。" />
+                        {userRole === 'Contributor' && reviewers.length === 1 && reviewers[0].user === 'AI Reviewer' ? (<AssistnatBox text="請新增reviwer對PR進行檢視。" />)
+                            : userRole === 'Contributor' && PRData.state === 'closed' ? (<AssistnatBox text="PR已合併完畢請刪除分支。" />)
+                                : userRole === 'Contributor' && checkReviewer() ? (<AssistnatBox text="所有reviewer已同意PR合併，請按下合併按鈕。" />)
+                                    : userRole === 'Contributor' ? (<AssistnatBox text="等待所有reviewer同意PR合併。" />)
+                                        : userRole === 'Reviewer' && reviewerState === 'PENDING' ? (<AssistnatBox text="請在檢視PR後決定是否同意合併。" />)
+                                            : userRole === 'Reviewer' ? (<AssistnatBox text="您已投票完畢，可以在評論區發表你的看法。" />)
+                                                : null
+                        }
+
                     </div>
                 </div>
             )}
