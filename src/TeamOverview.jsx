@@ -347,6 +347,7 @@ const TeamOverview = () => {
 
         // console.log(timelineData);
         const localBranch = [];
+        const cloudBranch = [];
         // Adjust endTime if the duration is less than minTimeUnit
         const dataRows = localTimelineData.flatMap(item => {
             let localStartTime = new Date(item.startTime);
@@ -380,6 +381,7 @@ const TeamOverview = () => {
             else if (localEndTime > endTime && endTime !== 0) { //本地端進度超前的分支
                 let localBranchName = item.name + "(not push yet)"
                 localBranch.push(localBranchName);
+                cloudBranch.push(item.name);
 
                 startTime = localStartTime;
                 localStartTime = endTime;
@@ -414,6 +416,7 @@ const TeamOverview = () => {
                 if (duration < minTimeUnit) {
                     adjEndTime = new Date(localStartTime.getTime() + minTimeUnit);
                 }
+                cloudBranch.push(item.name);
 
                 rows.push([
                     item.committer || item.name,
@@ -484,20 +487,31 @@ const TeamOverview = () => {
             tooltipDataArray[i] = [];
         }
 
-        for (let i = 0; i < dataRows.length - 1; i++) {
+        for (let i = 0; i < dataRows.length; i++) {
             tooltipDataArray[0][i] = 'date';
-            if (dataRows[i + 1][1])
-                tooltipDataArray[0][dataRows.length - 1 + i] = dataRows[i + 1][1];
+            if (dataRows[i][1])
+                tooltipDataArray[0][dataRows.length + i] = dataRows[i][1];
         }
+
+
+        // 找cloudBranch對應的位址
+        let index = cloudBranch.indexOf("main");
+        if (index != -1) {
+            cloudBranch.splice(index, 1);
+        }
+        const cloudBranchInd = cloudBranch.map(name => {
+            return tooltipDataArray[0].indexOf(name);
+        });
+        console.log(cloudBranchInd)
 
         let j = 0;
         for (const branch in branchCommitCounts) {
-            if(branch == 'main') continue;
+            if (branch == 'main') continue;
             const day = Object.keys(branchCommitCounts[branch]);
             for (let i = 1; i < 15; i++) {
-                tooltipDataArray[i][j] = new Date(day[i - 1]);
+                tooltipDataArray[i][cloudBranchInd[j]-dataRows.length] = new Date(day[i - 1]);
                 const num = branchCommitCounts[branch][day[i - 1]];
-                tooltipDataArray[i][j + dataRows.length - 1] = num;
+                tooltipDataArray[i][cloudBranchInd[j]] = num;
             }
             j++;
         }
@@ -505,30 +519,30 @@ const TeamOverview = () => {
 
         //調整資料以符合需求
         console.log(dataRows)
-        for (let i = 0; i < tooltipDataArray.length; i++) {
-            if (i === 0) {
-                tooltipDataArray[i].splice(0, 0, 'date');
-                tooltipDataArray[i].splice(dataRows.length, 0, 'main');
-            } else {
-                tooltipDataArray[i].splice(0, 0, "");
-                tooltipDataArray[i].splice(dataRows.length, 0, null);
-            }
-        }
+        // for (let i = 0; i < tooltipDataArray.length; i++) {
+        //     if (i === 0) {
+        //         tooltipDataArray[i].splice(0, 0, 'date');
+        //         tooltipDataArray[i].splice(dataRows.length, 0, 'main');
+        //     } else {
+        //         tooltipDataArray[i].splice(0, 0, "");
+        //         tooltipDataArray[i].splice(dataRows.length, 0, null);
+        //     }
+        // }
 
         // 找localbranch對應的位址
-        const localBranchInd = localBranch.map(name => {
-            return tooltipDataArray[0].indexOf(name);
-        });
+        // const localBranchInd = localBranch.map(name => {
+        //     return tooltipDataArray[0].indexOf(name);
+        // });
 
-        console.log(localBranchInd);
-        localBranchInd.forEach(index => {
-            for (let i = 1; i < tooltipDataArray.length; i++) {
-                tooltipDataArray[i][index - dataRows.length] = '';
-                tooltipDataArray[i][index] = '';
-            }
-        });
+        // console.log(localBranchInd);
+        // localBranchInd.forEach(index => {
+        //     for (let i = 1; i < tooltipDataArray.length; i++) {
+        //         tooltipDataArray[i][index - dataRows.length] = '';
+        //         tooltipDataArray[i][index] = '';
+        //     }
+        // });
 
-        console.log(tooltipDataArray);
+        // console.log(tooltipDataArray);
 
         const data = new window.google.visualization.arrayToDataTable(tooltipDataArray);
         const view = new window.google.visualization.DataView(data);
@@ -678,10 +692,10 @@ const TeamOverview = () => {
             }
             const responseMessage = await createBranchRes.text();
             console.log(responseMessage)
-            const pushBranchRes = await fetch(`http://localhost:3001/branch/create?token=${token}&owner=${teamData.owner}&repo=${repoName}&ref=${enNewBranchName}&sha=${responseMessage}`,{
+            const pushBranchRes = await fetch(`http://localhost:3001/branch/create?token=${token}&owner=${teamData.owner}&repo=${repoName}&ref=${enNewBranchName}&sha=${responseMessage}`, {
                 method: 'POST'
             });
-            if(!pushBranchRes.ok){
+            if (!pushBranchRes.ok) {
                 throw new Error('上傳分支失敗');
             }
             const getCurBranchRes = await fetch(`http://localhost:8080/branch/${teamData.owner}/${repoName}`, {
