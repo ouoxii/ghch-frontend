@@ -392,7 +392,7 @@ const PRDiscussion = () => {
                     {/* 新增合併 PR 按鈕 */}
                     {userRole === 'Contributor' && PRData.state === 'open' && reviewers.every(reviewer => reviewer.state === 'APPROVED') ?
                         (
-                            <div className="flex mt-5">
+                            <div className="flex mt-3">
                                 <button
                                     className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mr-3"
                                     onClick={handleMergePR}
@@ -402,7 +402,7 @@ const PRDiscussion = () => {
                             </div>
                         ) : userRole === 'Contributor' && PRData.state === 'closed' ?
                             (
-                                <div className="flex mt-5">
+                                <div className="flex mt-3">
                                     <button
                                         className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mr-3"
                                         onClick={handleDeleteBranch}
@@ -414,7 +414,7 @@ const PRDiscussion = () => {
                     }
                     {/* 新增投票按鈕 */}
                     {reviewerState === 'PENDING' ? (userRole === 'Reviewer' && PRData.state === 'open' && (
-                        < div className="flex mt-5">
+                        < div className="flex mt-3">
                             <button
                                 className={`bg-green-700 hover:bg-green-800 text-white font-bold py-2 px-4 rounded mr-3`}
                                 onClick={() => handleVote(true)}
@@ -431,13 +431,13 @@ const PRDiscussion = () => {
                             </button>
                         </div>
                     )) : (
-                        < div className="flex mt-5">
+                        < div className="flex">
                             {reviewerState === "CHANGES_REQUESTED" ? "您已經拒絕了" : ""}
                             {reviewerState === "APPROVED" ? "您已經同意了" : ""}
                         </div>
                     )}
-                    <div className="flex flex-col w-full mt-5">
-                        <div className="flex flex-col h-full overflow-auto">
+                    <div className="flex flex-col w-full h-3/5 overflow-auto mt-3">
+                        <div className="flex flex-col ">
                             {commentData.length > 0 ? (
                                 commentData.map(comment => (
                                     <div key={comment.id} className="flex justify-between items-center mb-2">
@@ -453,22 +453,22 @@ const PRDiscussion = () => {
                             ) : (
                                 <p>尚無評論</p>
                             )}
-                            <div className="flex flex-col mt-5 w-full">
-                                <textarea
-                                    className="w-full h-24 p-3 mb-3 border border-gray-300 rounded-md"
-                                    placeholder="輸入評論"
-                                    value={newComment}
-                                    onChange={(e) => setNewComment(e.target.value)}
-                                />
-                                <button
-                                    className="bg-green-700 hover:bg-green-800 text-white font-bold text-sm px-5 py-2.5 text-center me-2 mb-2 rounded-md self-end "
-                                    onClick={handleCommentSubmit}
-                                >
-                                    Comment
-                                </button>
-                            </div>
-                        </div>
 
+                        </div>
+                    </div>
+                    <div className="flex flex-col w-1/2 ml-14">
+                        <textarea
+                            className="w-full h-20 p-3 mb-3 border border-gray-300 rounded-md mt-3"
+                            placeholder="輸入評論"
+                            value={newComment}
+                            onChange={(e) => setNewComment(e.target.value)}
+                        />
+                        <button
+                            className="bg-green-700 hover:bg-green-800 text-white font-bold text-sm px-5 py-2.5 text-center me-2 mb-2 rounded-md self-end "
+                            onClick={handleCommentSubmit}
+                        >
+                            Comment
+                        </button>
                     </div>
                     <div className='absolute bottom-6 right-10'>
                         {userRole === 'Contributor' && reviewers.length === 1 && reviewers[0].user === 'AI Reviewer' ? (<AssistnatBox text="請新增reviwer對PR進行檢視。" />)
@@ -522,7 +522,7 @@ const PRDiscussion = () => {
 
             {
                 showNewBlock && (
-                    <div className="flex-shrink-0 bg-blue-100 p-5 rounded-xl mt-4" style={{ width: '20%' }}>
+                    <div className="absolute right-64 top-32 w-52 h-72 bg-blue-100 p-5 rounded-xl mt-4 shadow-lg overflow-auto justify-center">
                         <h3 className="text-xl font-bold">邀請 reviewer</h3>
                         <ul>
                             {teamMembers
