@@ -536,17 +536,17 @@ const TeamOverview = () => {
         // }
 
         // 找localbranch對應的位址
-        // const localBranchInd = localBranch.map(name => {
-        //     return tooltipDataArray[0].indexOf(name);
-        // });
+        const localBranchInd = localBranch.map(name => {
+            return tooltipDataArray[0].indexOf(name);
+        });
 
-        // console.log(localBranchInd);
-        // localBranchInd.forEach(index => {
-        //     for (let i = 1; i < tooltipDataArray.length; i++) {
-        //         tooltipDataArray[i][index - dataRows.length] = '';
-        //         tooltipDataArray[i][index] = '';
-        //     }
-        // });
+        console.log(localBranchInd);
+        localBranchInd.forEach(index => {
+            for (let i = 1; i < tooltipDataArray.length; i++) {
+                tooltipDataArray[i][index - dataRows.length] = '';
+                tooltipDataArray[i][index] = '';
+            }
+        });
 
         // console.log(tooltipDataArray);
 
