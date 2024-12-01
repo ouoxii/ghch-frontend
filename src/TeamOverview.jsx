@@ -509,7 +509,7 @@ const TeamOverview = () => {
             if (branch == 'main') continue;
             const day = Object.keys(branchCommitCounts[branch]);
             for (let i = 1; i < 15; i++) {
-                tooltipDataArray[i][cloudBranchInd[j]-dataRows.length] = new Date(day[i - 1]);
+                tooltipDataArray[i][cloudBranchInd[j] - dataRows.length] = new Date(day[i - 1]);
                 const num = branchCommitCounts[branch][day[i - 1]];
                 tooltipDataArray[i][cloudBranchInd[j]] = num;
             }
@@ -517,7 +517,13 @@ const TeamOverview = () => {
         }
         console.log(tooltipDataArray)
 
-        //調整資料以符合需求
+        //如果只有main分支
+        if (dataRows.length == 1) {
+            for (let i = 1; i < tooltipDataArray.length; i++) {
+                tooltipDataArray[i].splice(0, 0, "");
+                tooltipDataArray[i].splice(dataRows.length, 0, null);
+            }
+        }
         console.log(dataRows)
         // for (let i = 0; i < tooltipDataArray.length; i++) {
         //     if (i === 0) {
